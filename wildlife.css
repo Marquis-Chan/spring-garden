@@ -122,25 +122,47 @@
 @keyframes quiet-tail{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(4deg)}}
 @keyframes dog-wag{0%,100%{transform:rotate(-9deg)}50%{transform:rotate(10deg)}}
 @keyframes bird-balance{0%,70%,100%{transform:rotate(0)}80%{transform:rotate(3deg)}}
-@keyframes monkey-reach{35%,60%{transform:rotate(-24deg)}48%{transform:rotate(-19deg)}}
+@keyframes monkey-reach{18%,32%{transform:rotate(-62deg)}50%,72%{transform:rotate(35deg)}}
 @keyframes small-look{40%,60%{transform:rotate(-4deg)}}
-@keyframes browse-neck{45%,65%{transform:rotate(3.5deg)}}
-@keyframes small-chew{50%{transform:rotate(1.8deg)}}
+@keyframes browse-neck{45%,65%{transform:rotate(6deg)}}
+@keyframes small-chew{50%{transform:rotate(3deg)}}
 @keyframes hoof-place{30%,45%{transform:rotate(-9deg)}65%{transform:rotate(2deg)}}
-@keyframes hippo-look{40%,60%{transform:rotate(-2deg)}}
-@keyframes hippo-jaw{40%,60%{transform:rotate(10deg)}}
-@keyframes rhino-sniff{35%,60%{transform:rotate(4deg)}}
-@keyframes turtle-retreat{30%,55%{transform:translateX(-12px)}}
-@keyframes penguin-sway{0%,100%{transform:rotate(0)}25%{transform:rotate(-3deg)}75%{transform:rotate(3deg)}}
+@keyframes hippo-look{40%,60%{transform:rotate(-4deg)}}
+@keyframes hippo-jaw{40%,60%{transform:rotate(17deg)}}
+@keyframes rhino-sniff{35%,60%{transform:rotate(6deg)}75%{transform:rotate(-3deg)}}
+@keyframes turtle-retreat{30%,55%{transform:translateX(-16px)}75%{transform:translateX(3px)}}
+@keyframes penguin-sway{0%,100%{transform:rotate(0)}25%{transform:rotate(-4deg)}75%{transform:rotate(4deg)}}
 @keyframes gill-breathe{50%{transform:scaleX(.84)}}
 @keyframes mouth-breathe{50%{transform:scaleY(.65)}}
-@keyframes elephant-ear{50%{transform:rotate(-4deg)}}
+@keyframes elephant-ear{35%{transform:rotate(-8deg)}70%{transform:rotate(3deg)}}
 @keyframes celestial-rays{to{transform:rotate(360deg)}}
 @keyframes cat-back-stretch{45%{transform:scale(1.025,.96)}}
 @keyframes cat-front-stretch{45%{transform:rotate(-6deg)}}
 @keyframes cat-head-stretch{45%{transform:rotate(5deg)}}
-@keyframes dog-look{50%{transform:rotate(-4deg)}}
+@keyframes dog-look{50%{transform:rotate(-8deg)}}
 #scene[data-time=night] .creature:not(.reacting)[data-kind=bird] .eyes{animation:night-blink 9s ease-in-out infinite}
 #scene[data-time=night] .creature.perching[data-kind=butterfly] .wings{animation:butterfly-night 12s ease-in-out infinite}
 @keyframes night-blink{0%,35%,100%{transform:scaleY(.5)}48%,88%{transform:scaleY(.12)}}
 @keyframes butterfly-night{0%,100%{transform:scaleX(.2)}50%{transform:scaleX(.24)}}
+
+/* Clock-driven cloud carriers keep translation independent of the touch puff. */
+#clouds > .cloud{animation:none!important;transform-box:view-box}
+#clouds > .cloud.touched > path{transform-origin:center;transform-box:fill-box;animation:cloud-puff 1.5s ease-in-out}
+
+.creature.reacting[data-kind=monkey] .paw{transform-origin:123px 100px;animation-duration:3.4s}
+.creature.reacting[data-kind=monkey] .monkey-forearm{transform-origin:143px 122px;animation:monkey-fold 3.4s ease-in-out}
+.held-banana,.browse-leaf{opacity:0}
+.creature.reacting .held-banana{animation:banana-offer 3.4s ease-in-out}
+.creature.reacting[data-kind=giraffe] .browse-leaf{animation:leaf-bite 2.6s ease-in-out}
+.creature.reacting[data-kind=tiger] .leg.near.leg-front{transform-origin:131px 134px;animation:tiger-paw 2.5s ease-in-out}
+.creature.reacting[data-kind=peacock] .head{transform-origin:115px 61px;animation:peacock-nod 1.6s ease-in-out 3}
+.creature.reacting[data-kind=dog] .ears{transform-origin:129px 56px;animation:dog-listen .8s ease-in-out 3}
+@keyframes monkey-fold{18%,32%{transform:rotate(-10deg)}50%,72%{transform:rotate(130deg)}}
+@keyframes banana-offer{0%,35%,100%{opacity:0}45%,78%{opacity:1}}
+@keyframes leaf-bite{0%,20%,100%{opacity:0}35%,60%{opacity:1}80%{opacity:0}}
+@keyframes tiger-paw{25%,40%{transform:rotate(-12deg)}55%{transform:rotate(-6deg)}}
+@keyframes peacock-nod{50%{transform:rotate(5deg)}}
+@keyframes dog-listen{50%{transform:rotate(9deg)}}
+
+.creature.perching.reacting[data-kind=butterfly] .wings{animation:butterfly-greet 1s ease-in-out}
+@keyframes butterfly-greet{0%,100%{transform:scaleX(.32)}45%{transform:scaleX(.92)}}
