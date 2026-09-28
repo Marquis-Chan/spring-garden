@@ -1,0 +1,135 @@
+[
+  {
+    "id": "cat",
+    "file": "audio/cat.mp3",
+    "author": "d.n.audio.uk",
+    "source": "https://freesound.org/people/d.n.audio.uk/sounds/264507/",
+    "license": "CC0-1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "recording": "Male cat Renly, recorded indoors in 2011",
+    "offset": 0,
+    "duration": 1.96
+  },
+  {
+    "id": "dog",
+    "file": "audio/dog-barking-mono.wav",
+    "author": "Brandon Morris (HaelDB)",
+    "source": "https://opengameart.org/content/dog-barking-mono",
+    "license": "CC0-1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "recording": "Dog barking recorded with portable Tascam; environmental noise reduced",
+    "offset": 0,
+    "duration": 1.8
+  },
+  {
+    "id": "bird",
+    "file": "audio/bird-chirping-sounds.mp3",
+    "author": "syncopika",
+    "source": "https://opengameart.org/content/bird-chirping-sounds",
+    "license": "CC0-1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "recording": "Bird chirping recorded in the author's backyard",
+    "offset": 0.15,
+    "duration": 2.5
+  },
+  {
+    "id": "elephant",
+    "file": "audio/elephant.mp3",
+    "author": "ikbenraar",
+    "source": "https://freesound.org/people/ikbenraar/sounds/819668/",
+    "license": "CC0-1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "recording": "Elephant field recording at zoo in Brugelette, Belgium",
+    "offset": 0,
+    "duration": 3
+  },
+  {
+    "id": "giraffe",
+    "file": "audio/giraffe/giraffe_hum.ogg",
+    "author": "Anton Baotic, Florian Sicks and Angela S. Stoeger; audio processed by AntumDeluge",
+    "source": "https://opengameart.org/content/giraffe-hum",
+    "originalSource": "https://bmcresnotes.biomedcentral.com/articles/10.1186/s13104-015-1394-3",
+    "license": "CC-BY-SA-4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "recording": "Giraffe nighttime hum from published research; processed OpenGameArt package distributed under CC-BY-SA-4.0",
+    "offset": 0,
+    "duration": 2.7
+  },
+  {
+    "id": "monkey",
+    "file": "audio/monkey.mp3",
+    "author": "itsmrjack",
+    "source": "https://freesound.org/people/itsmrjack/sounds/123044/",
+    "license": "CC0-1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "recording": "Howler monkeys in Palenque jungle, Chiapas, Mexico; Zoom H4n field recording",
+    "offset": 0,
+    "duration": 2.8
+  },
+  {
+    "id": "peacock",
+    "file": "audio/peacock-call.mp3",
+    "author": "Kinoton",
+    "source": "https://freesound.org/people/Kinoton/sounds/688203/",
+    "license": "CC0-1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "recording": "Isolated call of a male Indian peafowl (Pavo cristatus), recorded with iThing; source author applied denoising, EQ and reverb",
+    "offset": 0.2,
+    "duration": 2.1
+  },
+  {
+    "id": "tiger",
+    "file": "audio/tiger.mp3",
+    "author": "schots",
+    "source": "https://freesound.org/people/schots/sounds/439280/",
+    "license": "CC0-1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "recording": "Tiger in a cage, growling and snarling; playback volume reduced",
+    "offset": 0,
+    "duration": 2.5
+  },
+  {
+    "id": "zebra",
+    "file": "audio/zebra-whinny.ogg",
+    "author": "Peet J van Eeden; audio extracted and noise reduced by AntumDeluge",
+    "source": "https://opengameart.org/content/zebra-whinny",
+    "license": "CC-BY-3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+    "recording": "Zebra whinny extracted from the author's video",
+    "offset": 0,
+    "duration": 2.22
+  },
+  {
+    "id": "hippo",
+    "file": "audio/hippo.mp3",
+    "author": "Yle / Finnish Broadcasting Company Archives (YleArkisto)",
+    "source": "https://freesound.org/people/YleArkisto/sounds/253082/",
+    "license": "CC-BY-4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "recording": "Hippos calling nearby in the river; Nagra tape, Luangwa National Park, Zambia, 1976",
+    "offset": 0,
+    "duration": 3
+  },
+  {
+    "id": "rhino",
+    "file": "audio/rhino.mp3",
+    "author": "Breviceps",
+    "source": "https://freesound.org/people/Breviceps/sounds/535810/",
+    "license": "CC0-1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "recording": "Indian rhinoceros, recorded using mobile phone",
+    "offset": 0,
+    "duration": 2.5
+  },
+  {
+    "id": "penguin",
+    "file": "audio/penguin/ogg/penguin_01.ogg",
+    "author": "Bidone; audio extracted and noise reduced by AntumDeluge",
+    "source": "https://opengameart.org/content/penguin-sounds",
+    "license": "CC0-1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "recording": "Penguin vocalization extracted and noise reduced by AntumDeluge from Bidone recording of penguins at Leipzig Zoo (Freesound 66150)",
+    "offset": 0,
+    "duration": 0.46
+  }
+]

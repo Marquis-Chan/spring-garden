@@ -1,0 +1,9 @@
+const{test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');const sandbox={window:{}};const file=path.resolve(__dirname,'../src/motion.js');if(fs.existsSync(file))vm.runInNewContext(fs.readFileSync(file,'utf8'),sandbox);const M=sandbox.window.SpringGarden?.motion||{};
+test('harvesting transfers each apple once and basket spilling/collecting preserves all four',()=>{
+ assert.equal(typeof M.Harvest,'function');const h=new M.Harvest(['a','b','c','d']);assert.equal(h.counts().tree,4);assert.equal(h.pick('a'),true);assert.equal(h.pick('a'),false);assert.equal(h.counts().tree,3);assert.equal(h.counts().moving,1);h.land('a');assert.equal(h.counts().basket,1);
+ for(const id of ['b','c','d']){h.pick(id);h.land(id)}assert.equal(h.counts().basket,4);assert.equal(h.drop().length,4);assert.equal(h.drop().length,0);for(const id of ['a','b','c','d'])h.land(id);assert.equal(h.counts().ground,4);assert.equal(h.collect('a'),true);assert.equal(h.collect('a'),false);h.land('a');assert.equal(h.counts().basket,1);assert.equal(h.counts().ground,3);assert.equal(h.counts().total,4);
+});
+test('flight routes go around occupied silhouettes and remain inside the garden',()=>{
+ assert.equal(typeof M.flightRoute,'function');assert.equal(typeof M.routePoint,'function');const from={x:60,y:650},to={x:400,y:650},obstacles=[{x:150,y:580,w:160,h:150}],bounds={x:24,y:80,w:1552,h:704};const route=M.flightRoute(from,to,obstacles,bounds);assert.ok(route&&route.length>2);assert.deepEqual(JSON.parse(JSON.stringify(route[0])),from);assert.deepEqual(JSON.parse(JSON.stringify(route.at(-1))),to);
+ let prior=M.routePoint(route,0);for(let i=1;i<=200;i++){const p=M.routePoint(route,i/200);assert.ok(p.x>=24&&p.x<=1576&&p.y>=80&&p.y<=784);assert.ok(!(p.x>150&&p.x<310&&p.y>580&&p.y<730));assert.ok(Math.hypot(p.x-prior.x,p.y-prior.y)<8);prior=p}
+});

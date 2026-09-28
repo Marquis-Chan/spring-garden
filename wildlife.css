@@ -1,0 +1,146 @@
+/* Anatomy-driven movement: feet stay grounded at rest; flight has its own state. */
+.creature .tail{transform-box:view-box;transform-origin:var(--tail-x,40px) var(--tail-y,115px)}
+.creature[data-kind=cat] .tail{--tail-x:43px;--tail-y:118px}
+.creature[data-kind=monkey] .tail{--tail-x:69px;--tail-y:138px}
+.creature[data-kind=fish] .tail{--tail-x:65px;--tail-y:112px}
+.creature[data-kind=bird] .tail{--tail-x:77px;--tail-y:117px}
+.creature[data-kind=rhino] .tail{--tail-x:36px;--tail-y:109px}
+.creature .body{animation:none}
+.creature .facing{transform-origin:100px 100px;transition:transform .25s}
+.creature.facing-left .facing{transform:scaleX(-1)}
+.creature .leg{transform-origin:var(--joint-x,100px) var(--joint-y,135px)}
+.creature.moving .leg.near.leg-front,.creature.moving .leg.far.leg-back{animation:ground-stride .7s ease-in-out infinite}
+.creature.moving .leg.far.leg-front,.creature.moving .leg.near.leg-back{animation:ground-stride .7s ease-in-out -.35s infinite}
+.creature.moving[data-kind=turtle] .leg{animation-duration:1.8s}
+.creature.moving[data-kind=turtle] .leg.near.leg-back{animation-delay:-.9s}
+.creature.moving[data-kind=fish] .tail{animation:fish-stroke .28s ease-in-out infinite}
+.creature.moving[data-kind=fish] .wings{animation:fin-stroke .4s ease-in-out infinite}
+.creature.reacting[data-kind=zebra] .animal-motion{animation:none}
+.creature.reacting[data-kind=zebra] .leg.near.leg-front,.creature.reacting[data-kind=zebra] .leg.far.leg-back{animation:ground-stride .6s ease-in-out 4}
+.creature.reacting[data-kind=zebra] .leg.far.leg-front,.creature.reacting[data-kind=zebra] .leg.near.leg-back{animation:ground-stride .6s ease-in-out -.3s 4}
+.creature.reacting[data-kind=penguin] .wings{animation:none}
+.creature.reacting[data-kind=penguin] .flipper-left{transform-origin:72px 91px;animation:penguin-flipper .6s ease-in-out 4}
+.creature.reacting[data-kind=penguin] .flipper-right{transform-origin:129px 90px;animation:penguin-flipper .6s ease-in-out reverse 4}
+.creature.reacting[data-kind=cat] .animal-motion{animation:none}
+.creature.reacting[data-kind=cat] .spine{transform-origin:55px 138px;animation:cat-back-stretch 2.2s ease-in-out}
+.creature.reacting[data-kind=cat] .leg-front{animation:cat-front-stretch 2.2s ease-in-out}
+.creature.reacting[data-kind=cat] .head{transform-origin:135px 113px;animation:cat-head-stretch 2.2s ease-in-out}
+.creature.reacting:not(.moving)[data-kind=dog] .paw{transform-origin:133px 134px;animation:dog-paw-lift .75s ease-in-out 3}
+.creature.moving[data-kind=dog] .leg.dog-leg{animation:none;transform:none}
+.creature[data-kind=dog] .tail{transform-box:view-box;transform-origin:45px 113px}
+.creature.reacting[data-kind=tiger] .animal-motion{animation:none}
+.creature.reacting[data-kind=tiger] .head{transform-origin:145px 100px;animation:tiger-observe 2.5s ease-in-out}
+.creature.arriving[data-kind=penguin] .animal-motion{transform-origin:100px 170px;animation:waddle .6s ease-in-out 2}
+@keyframes tiger-observe{40%{transform:rotate(-4deg)}70%{transform:rotate(3deg)}}
+.creature.reacting[data-kind=dog] .head{transform-origin:128px 85px;animation:dog-look .8s ease-in-out 3}
+.creature.reacting[data-kind=monkey] .paw{transform-origin:122px 100px;animation:monkey-wave .65s ease-in-out 3}
+.creature.reacting[data-kind=giraffe] .head{transform-origin:130px 48px;animation:giraffe-browse 2.5s ease-in-out}
+.creature[data-kind=peacock] .fan{transform-origin:100px 139px;transform:scaleX(.5);transition:transform 1.1s ease-in-out}
+.creature[data-kind=peacock].reacting .fan{transform:scaleX(1)}
+[data-kind=bird] .wing-flight{display:none}
+.creature.flying[data-kind=bird] .wing-flight,.creature.taking-off[data-kind=bird] .wing-flight{display:inline}
+.creature.flying[data-kind=bird] .wing-folded,.creature.taking-off[data-kind=bird] .wing-folded{display:none}
+.creature[data-kind=bird] .wing-front{transform-origin:103px 101px}
+.creature[data-kind=bird] .wing-back{transform-origin:98px 101px}
+.creature.flying[data-kind=bird] .wing-front,.creature.taking-off[data-kind=bird] .wing-front{animation:bird-front-stroke .25s ease-in-out infinite}
+.creature.flying[data-kind=bird] .wing-back,.creature.taking-off[data-kind=bird] .wing-back{animation:bird-back-stroke .25s ease-in-out -.04s infinite}
+.creature.landing[data-kind=bird] .wing-front,.creature.landing[data-kind=bird] .wing-back{animation-duration:.37s}
+.creature[data-kind=bird] .bird-feet{transform-origin:102px 132px;transition:transform .25s}
+.creature.flying:not(.landing)[data-kind=bird] .bird-feet{transform:rotate(-35deg) scaleY(.45)}
+.creature.taking-off[data-kind=bird] .bird-pose{transform-origin:100px 151px;animation:bird-launch .23s ease-out}
+.creature.flying[data-kind=bird] .bird-pose{transform-origin:100px 100px;transform:rotate(var(--flight-pitch,0deg))}
+.creature[data-kind=butterfly] .wings{transform-box:view-box;transform-origin:100px 112px;animation:butterfly-nectar 7s ease-in-out infinite}
+.creature.flying[data-kind=butterfly] .wings{animation:butterfly-flight .34s ease-in-out infinite}
+.creature[data-kind=butterfly] .butterfly-pose{transform-origin:100px 139px;transform:rotate(14deg)}
+.creature.flying[data-kind=butterfly] .butterfly-pose{transform:rotate(var(--butterfly-pitch,0deg))}
+.creature.flying[data-kind=butterfly] .proboscis{opacity:0}
+.creature.flying[data-kind=butterfly] .butterfly-feet{opacity:.5}
+.creature.reacting[data-kind=elephant] .trunk{animation:none;transform:none}
+#basket{cursor:none}
+#basket.basket-touched{transform-origin:332px 565px;animation:basket-tilt .8s ease-in-out}
+@keyframes basket-tilt{30%{rotate:-5deg}65%{rotate:4deg}}
+@keyframes elephant-aim{0%,100%{transform:rotate(0deg)}15%,74%{transform:rotate(-32deg)}90%{transform:rotate(-8deg)}}
+.portrait .creature-art *{animation:none!important;transition:none!important}
+.portrait[data-summon=peacock] .fan{transform-origin:100px 139px;transform:scaleX(.85)}
+.flower[data-flower=hydrangea].touched .bloom{filter:brightness(1.08)}
+.flower[data-flower=poppy].touched .bloom{transform:rotate(9deg) scale(1.13)}
+@keyframes ground-stride{0%,100%{transform:rotate(11deg)}50%{transform:rotate(-11deg)}}
+@keyframes fish-stroke{0%,100%{transform:scaleX(.8) rotate(-6deg)}50%{transform:scaleX(1) rotate(6deg)}}
+@keyframes fin-stroke{50%{transform:scaleX(.8) rotate(12deg)}}
+@keyframes penguin-flipper{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(14deg)}}
+@keyframes cat-back-stretch{45%{transform:scale(1.07,.91)}}
+@keyframes cat-front-stretch{45%{transform:rotate(-13deg)}}
+@keyframes cat-head-stretch{45%{transform:rotate(12deg) translateY(4px)}}
+@keyframes dog-paw-lift{45%,70%{transform:rotate(-33deg) translateY(-4px)}}
+@keyframes dog-look{50%{transform:rotate(-7deg)}}
+@keyframes monkey-wave{50%{transform:rotate(-63deg)}}
+@keyframes giraffe-browse{50%{transform:rotate(17deg)}}
+@keyframes bird-launch{45%{transform:translateY(4px) scaleY(.93)}100%{transform:translateY(-3px)}}
+@keyframes bird-front-stroke{0%,100%{transform:rotate(-17deg) scaleY(1)}50%{transform:rotate(70deg) scaleY(.42)}}
+@keyframes bird-back-stroke{0%,100%{transform:rotate(-11deg) scaleY(.9)}50%{transform:rotate(61deg) scaleY(.38)}}
+@keyframes butterfly-rest{50%{transform:scaleX(.78)}}
+@keyframes butterfly-flight{50%{transform:scaleX(.2)}}
+@keyframes butterfly-nectar{0%,32%,100%{transform:scaleX(.32)}44%,56%{transform:scaleX(.54)}68%{transform:scaleX(.32)}}
+@media(prefers-reduced-motion:reduce){.creature.flying[data-kind=bird] .wing-front,.creature.flying[data-kind=bird] .wing-back{animation-duration:.65s}.creature.flying[data-kind=butterfly] .wings{animation-duration:.8s}}
+
+/* A species moves from its own joints, without the former universal fast wag. */
+.creature .tail,.creature.reacting .tail{animation:quiet-tail 4.8s ease-in-out infinite}
+.creature.reacting[data-kind=dog] .tail{animation:dog-wag .48s ease-in-out infinite}
+.creature.reacting[data-kind=cat] .tail{animation:quiet-tail 2.8s ease-in-out infinite}
+.creature[data-kind=tiger] .tail{animation:quiet-tail 5.5s ease-in-out infinite}
+.creature[data-kind=monkey] .tail{animation:quiet-tail 6s ease-in-out infinite}
+.creature[data-kind=fish] .tail{animation:fish-stroke 1s ease-in-out infinite}
+.creature.moving[data-kind=fish] .tail{animation-duration:.45s}
+.creature[data-kind=fish] .wings{transform-box:view-box;transform-origin:110px 105px;animation:fin-stroke 1.5s ease-in-out infinite}
+.creature[data-kind=fish] .gill{transform-box:view-box;transform-origin:139px 109px;animation:gill-breathe 2.4s ease-in-out infinite}
+.creature[data-kind=fish] .fish-mouth{transform-origin:173px 117px;animation:mouth-breathe 2.4s ease-in-out infinite}
+.creature[data-kind=bird] .tail{animation:bird-balance 5s ease-in-out infinite}
+.creature.reacting[data-kind=monkey] .animal-motion{animation:none}
+.creature.reacting[data-kind=monkey] .paw{animation:monkey-reach 2.4s ease-in-out}
+.creature.reacting[data-kind=monkey] .head{transform-origin:105px 96px;animation:small-look 2.4s ease-in-out}
+.creature.reacting[data-kind=giraffe] .browsing-neck{transform-origin:115px 112px;animation:browse-neck 2.6s ease-in-out}
+.creature.reacting[data-kind=giraffe] .head{transform-origin:135px 61px;animation:small-chew 1.3s ease-in-out 2}
+.creature.reacting[data-kind=zebra] .leg.near.leg-front,.creature.reacting[data-kind=zebra] .leg.far.leg-back,.creature.reacting[data-kind=zebra] .leg.far.leg-front,.creature.reacting[data-kind=zebra] .leg.near.leg-back{animation:none}
+.creature.reacting[data-kind=zebra] .leg.near.leg-front{animation:hoof-place 2.4s ease-in-out}
+.creature.reacting[data-kind=zebra] .head{transform-origin:137px 81px;animation:small-look 2.4s ease-in-out}
+.creature.reacting[data-kind=hippo] .head{transform-origin:125px 127px;animation:hippo-look 2.6s ease-in-out}
+.creature.reacting[data-kind=hippo] .hippo-jaw{transform-box:view-box;transform-origin:129px 133px;animation:hippo-jaw 2.6s ease-in-out}
+.creature.reacting[data-kind=rhino] .head{transform-origin:117px 117px;animation:rhino-sniff 2.6s ease-in-out}
+.creature.reacting[data-kind=turtle] .head{animation:turtle-retreat 2.6s ease-in-out}
+.creature.reacting[data-kind=penguin] .animal-motion,.creature.arriving[data-kind=penguin] .animal-motion{animation:none}
+.creature.reacting[data-kind=penguin] .penguin-upper,.creature.arriving[data-kind=penguin] .penguin-upper{transform-origin:100px 165px;animation:penguin-sway 1.2s ease-in-out 2}
+.creature.reacting[data-kind=penguin] .flipper-left,.creature.reacting[data-kind=penguin] .flipper-right{animation-duration:1.2s}
+.creature[data-kind=peacock] .fan,.creature.reacting[data-kind=peacock] .fan{transform:none;transition:none;opacity:0}
+.portrait[data-summon=peacock] .fan{transform:none;opacity:1}
+.portrait[data-summon=peacock] .resting-train{opacity:0}
+.creature.reacting[data-kind=elephant] .ears{transform-origin:135px 103px;animation:elephant-ear 1.3s ease-in-out 2}
+#sun{cursor:none;outline:none}
+#sun:focus-visible{filter:drop-shadow(0 0 8px #fff3bc)}
+#sun .sun-rays{transform-origin:1185px 137px;animation:celestial-rays 18s linear infinite}
+#sun.noticed #celestialGlow{stroke:#f8edc5;stroke-width:3}
+#cursor{filter:drop-shadow(0 0 5px #fff4c3)}
+@keyframes quiet-tail{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(4deg)}}
+@keyframes dog-wag{0%,100%{transform:rotate(-9deg)}50%{transform:rotate(10deg)}}
+@keyframes bird-balance{0%,70%,100%{transform:rotate(0)}80%{transform:rotate(3deg)}}
+@keyframes monkey-reach{35%,60%{transform:rotate(-24deg)}48%{transform:rotate(-19deg)}}
+@keyframes small-look{40%,60%{transform:rotate(-4deg)}}
+@keyframes browse-neck{45%,65%{transform:rotate(3.5deg)}}
+@keyframes small-chew{50%{transform:rotate(1.8deg)}}
+@keyframes hoof-place{30%,45%{transform:rotate(-9deg)}65%{transform:rotate(2deg)}}
+@keyframes hippo-look{40%,60%{transform:rotate(-2deg)}}
+@keyframes hippo-jaw{40%,60%{transform:rotate(10deg)}}
+@keyframes rhino-sniff{35%,60%{transform:rotate(4deg)}}
+@keyframes turtle-retreat{30%,55%{transform:translateX(-12px)}}
+@keyframes penguin-sway{0%,100%{transform:rotate(0)}25%{transform:rotate(-3deg)}75%{transform:rotate(3deg)}}
+@keyframes gill-breathe{50%{transform:scaleX(.84)}}
+@keyframes mouth-breathe{50%{transform:scaleY(.65)}}
+@keyframes elephant-ear{50%{transform:rotate(-4deg)}}
+@keyframes celestial-rays{to{transform:rotate(360deg)}}
+@keyframes cat-back-stretch{45%{transform:scale(1.025,.96)}}
+@keyframes cat-front-stretch{45%{transform:rotate(-6deg)}}
+@keyframes cat-head-stretch{45%{transform:rotate(5deg)}}
+@keyframes dog-look{50%{transform:rotate(-4deg)}}
+#scene[data-time=night] .creature:not(.reacting)[data-kind=bird] .eyes{animation:night-blink 9s ease-in-out infinite}
+#scene[data-time=night] .creature.perching[data-kind=butterfly] .wings{animation:butterfly-night 12s ease-in-out infinite}
+@keyframes night-blink{0%,35%,100%{transform:scaleY(.5)}48%,88%{transform:scaleY(.12)}}
+@keyframes butterfly-night{0%,100%{transform:scaleX(.2)}50%{transform:scaleX(.24)}}
