@@ -1,9 +1,9 @@
 (function(){
  'use strict';const G=window.SpringGarden;
  const scenes={
-  meadow:{region:'meadow',roster:['cat','dog','bird','butterfly','giraffe','zebra','hippo','turtle','fish','penguin'],residents:['bird','butterfly','fish'],guests:['giraffe','zebra','hippo','turtle','penguin'],starts:['giraffe'],flowers:[{x:90,y:755},{x:330,y:755},{x:585,y:755},{x:840,y:755},{x:1090,y:755},{x:1470,y:755}],water:{x:1190,y:570,w:340,h:175},pads:[{x:670,y:495},{x:1010,y:610}],portals:[{to:'asian',x:1510,y:405}]},
+  meadow:{region:'meadow',roster:['cat','dog','bird','butterfly','giraffe','zebra','hippo','turtle','fish','penguin','lion'],residents:['bird','butterfly','fish'],guests:['giraffe','zebra','hippo','turtle','penguin','lion'],starts:['giraffe'],flowers:[{x:90,y:755},{x:330,y:755},{x:585,y:755},{x:840,y:755},{x:1090,y:755},{x:1470,y:755}],water:{x:1190,y:570,w:340,h:175},pads:[{x:670,y:495},{x:1010,y:610}],portals:[{to:'asian',x:1510,y:405}]},
   asian:{region:'asian',roster:['owl','bear','bee','tiger','elephant','peacock','rhino','squirrel','woodpecker','butterfly'],residents:['owl','bee','squirrel','woodpecker','butterfly'],guests:['tiger','bear','elephant','peacock','rhino'],starts:['elephant'],flowers:[{x:360,y:756},{x:510,y:750},{x:805,y:745},{x:1100,y:755},{x:1430,y:755}],water:{x:1000,y:563,w:540,h:155},pads:[{x:740,y:620},{x:1250,y:630}],portals:[{to:'meadow',x:83,y:405},{to:'canopy',x:1510,y:405}]},
-  canopy:{region:'neotropical',roster:['sloth','monkey','butterfly'],residents:['sloth','monkey','butterfly'],guests:[],starts:[],flowers:[{x:320,y:745},{x:625,y:755},{x:975,y:748},{x:1290,y:755}],water:{x:680,y:620,w:320,h:125},pads:[],portals:[{to:'asian',x:83,y:405}]}
+  canopy:{region:'neotropical',roster:['sloth','monkey','toucan','butterfly'],residents:['sloth','monkey','toucan','butterfly'],guests:[],starts:[],flowers:[{x:320,y:745},{x:625,y:755},{x:975,y:748},{x:1290,y:755}],water:{x:680,y:620,w:320,h:125},pads:[],portals:[{to:'asian',x:83,y:405}]}
  };
  class SceneLedger{
   constructor(){this.current='meadow';this.epoch=0;this.states=Object.fromEntries(Object.keys(scenes).map(id=>[id,{visited:false,actors:[],grown:[],materials:null}]));this.pending=[]}
@@ -35,7 +35,7 @@
    if(this.state==='carrying'){this.ball.x=mouth.x;this.ball.y=mouth.y;if(Math.hypot(mouth.x-this.home.x,mouth.y-this.home.y)<9){this.state='rest';Object.assign(this.ball,this.home)}}return this.state;
   }
  }
- function activity(id,time){if(id==='owl')return time==='day'?'sleep':'awake';if(id==='sloth')return time==='day'?'rest':'forage';if(['bee','bird','butterfly','woodpecker','monkey','peacock'].includes(id)&&time==='night')return'rest';return'awake'}
+ function activity(id,time){if(id==='owl')return time==='day'?'sleep':'awake';if(id==='sloth')return time==='day'?'rest':'forage';if(['bee','bird','butterfly','woodpecker','monkey','peacock','toucan'].includes(id)&&time==='night')return'rest';return'awake'}
  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),ease=t=>{t=clamp(t,0,1);return t*t*(3-2*t)};
  function bezier(points,t){const u=1-t;return{x:u*u*u*points[0].x+3*u*u*t*points[1].x+3*u*t*t*points[2].x+t*t*t*points[3].x,y:u*u*u*points[0].y+3*u*u*t*points[1].y+3*u*t*t*points[2].y+t*t*t*points[3].y}}
  function scaleAt(size,y){return size*(.78+.22*clamp((y-420)/300,0,1))}

@@ -2,22 +2,34 @@
 #scene .natural .animal-motion,#scene .natural .body,#scene .natural .trunk,#scene .natural .browsing-neck,#scene .natural .monkey-arm,#scene .natural .monkey-forearm{animation:none!important;transform:none}
 #scene .natural .leg{animation:none!important}
 #scene .natural .head{animation:none!important;transform-box:view-box}
+#scene .natural .hippo-jaw{animation:none!important}
+/* Scripted SVG rotations already include their joint coordinates. */
+#scene .natural :is(.head,.hippo-jaw,.squirrel-tail,.peacock-flight-wing,.flipper-left,.flipper-right,.leg,.foot,.facing){transform-origin:0 0!important;transform-box:view-box;transition:none!important}
 #scene .natural[data-kind=cat] .tail{animation:none!important;transform:none!important}
 #scene .natural[data-kind=cat] .spine{animation:none!important}
 #scene .natural[data-kind=elephant] .ears{animation:none!important}
 #scene .natural[data-kind=giraffe] .browse-leaf{display:none}
 #scene .natural[data-kind=monkey] .held-banana{display:none}
 #scene .natural[data-kind=monkey] .tail{animation:none!important;stroke:#706a53}
+#scene .natural[data-kind=monkey] .monkey-closed-eyes{opacity:0}
+#scene .natural[data-kind=monkey].sleeping .eyes{opacity:0;animation:none!important}
+#scene .natural[data-kind=monkey].sleeping .monkey-closed-eyes{opacity:1}
 #scene .natural[data-kind=monkey] .body>ellipse:first-of-type{fill:#756e58}
 #scene .natural[data-kind=monkey] .head>path:first-of-type{fill:#756e58}
 #scene .natural[data-kind=monkey] .paw>path,#scene .natural[data-kind=monkey] .monkey-forearm>path{stroke:#756e58}
 #scene .natural[data-kind=sloth] .sloth-reach{animation:none!important;transform:none!important}
 #scene .natural[data-kind=squirrel] .tail{animation:none!important}
+#scene .natural[data-kind=lion] :is(.lion-tail,.lion-jaw){animation:none!important;transform-origin:0 0!important;transform-box:view-box;transition:none!important}
 #scene .natural[data-kind=peacock] .fan{transform:none;transition:none;opacity:0}
 #scene .natural[data-kind=butterfly].sleeping .wings{animation:butterfly-night 12s ease-in-out infinite}
 #scene .natural[data-kind=bird].sleeping .eyes{transform:scaleY(.12);transform-origin:center;transform-box:fill-box;animation:none!important}
+#scene .natural[data-kind=owl].flying .wing-flight{display:inline}
+#scene .natural[data-kind=owl].flying .wing-folded{display:none}
+#scene .natural[data-kind=owl].sleeping .owl-open{opacity:0}
+#scene .natural[data-kind=owl].sleeping .owl-closed{opacity:1}
 #scene .natural[data-kind=peacock].sleeping:not(.flying) .eyes{transform:scaleY(.14);transform-origin:center;transform-box:fill-box;animation:none!important}
-#scene .natural[data-kind=fish] .fish-pose{transform:rotate(var(--fish-turn,0deg));transform-origin:100px 110px}
+#scene .natural[data-kind=fish] .fish-pose{transform-origin:0 0;transform-box:view-box}
+#scene .natural[data-kind=bird] .bird-feet{transform:none!important;transition:none}
 .scene-gate{cursor:none;isolation:isolate}.gate-preview{transition:fill .35s,opacity .35s}.gate-halo{transition:opacity .3s}.scene-gate.hovered .gate-halo,.scene-gate:focus .gate-halo{opacity:.7;animation:gate-breathe 2s ease-in-out infinite}.scene-gate.hovered .gate-preview{fill:#b6cca5}
 .scene-gate:focus{outline:none}.scene-gate:focus-visible .gate-halo{stroke-width:6;opacity:1}
 .scene-shortcut{cursor:none}.scene-shortcut.hovered>circle{fill:#fff5d9;stroke:#d4b986;stroke-width:4}.leaf-blade{transform-origin:0px 0px;transform-box:view-box;transition:transform .7s ease-in-out}#broadLeaf.leaf-held .leaf-blade{transform:rotate(-12deg);animation:none}#broadLeaf.touched:not(.leaf-held) .leaf-blade{animation:broadleaf-release 1.4s ease-in-out}#forestLightPatch{transition:cx .9s ease-in-out}
@@ -33,3 +45,21 @@
 #cursor.pressed svg{transform:scale(.82);animation:none}#cursor svg{transition:transform .12s}#sun.hovered .sun-rays{transform-origin:1185px 137px;animation:sun-twirl 6s ease-in-out infinite}
 @keyframes gate-breathe{50%{stroke-width:5;opacity:.9}}@keyframes fern-sway{25%{transform:rotate(-7deg)}65%{transform:rotate(4deg)}}@keyframes leaf-rustle{30%{transform:translate(7px,-3px) rotate(13deg)}70%{transform:translate(10px,0) rotate(17deg)}}
 @media(prefers-reduced-motion:reduce){.scene-gate.hovered .gate-halo{animation:none}.natural .bee-wing-side{animation-duration:1s}#forestSnail{transition-duration:6s}}
+/* Both toucan perches have a flat top at the exact foot-anchor height. */
+#scene .natural[data-kind=toucan] .wing-flight{display:none;transform-box:view-box}
+#scene .natural[data-kind=toucan].flying .wing-flight{display:inline}
+#scene .natural[data-kind=toucan].flying .wing-folded{display:none}
+#scene .natural[data-kind=toucan] .toucan-wing-front{transform-origin:85px 111px}
+#scene .natural[data-kind=toucan] .toucan-wing-back{transform-origin:110px 110px}
+#scene .natural[data-kind=toucan].flying .toucan-wing-front{animation:toucan-flap .38s ease-in-out infinite}
+#scene .natural[data-kind=toucan].flying .toucan-wing-back{animation:toucan-flap-back .38s ease-in-out -.03s infinite}
+#scene .natural[data-kind=toucan] .toucan-closed{opacity:0}
+#scene .natural[data-kind=toucan].sleeping .toucan-open{opacity:0}
+#scene .natural[data-kind=toucan].sleeping .toucan-closed{opacity:1}
+#scene .natural[data-kind=toucan] .toucan-tail{transform-origin:0 0!important;transform-box:view-box;transform:none!important}
+#scene .natural[data-kind=bear] .bear-pose{transform-origin:0 0;transform-box:view-box}
+#scene .natural[data-kind=bear] .bear-chest{animation:none!important}
+.portrait.requested .portrait-circle{fill:#faedca;stroke:#c6a572;stroke-width:5}
+@keyframes toucan-flap{0%,100%{transform:rotate(-12deg) scaleY(1)}50%{transform:rotate(58deg) scaleY(.6)}}
+@keyframes toucan-flap-back{0%,100%{transform:rotate(12deg) scaleY(1)}50%{transform:rotate(-58deg) scaleY(.6)}}
+@media(prefers-reduced-motion:reduce){#scene .natural[data-kind=toucan].flying .wing-flight{animation-duration:1.2s}}

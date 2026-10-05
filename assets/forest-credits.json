@@ -70,5 +70,32 @@
     "activeDbfs": -28.0,
     "peakDbfs": -12.69,
     "sampleRate": 32000
+  },
+  {
+    "id": "bear",
+    "file": "audio/forest/bear.wav",
+    "species": "Ursus thibetanus",
+    "commonName": "Asian black bear",
+    "sourceSpecies": "Ursus thibetanus",
+    "kind": "vocalization",
+    "author": "Günter Tembrock; Museum für Naturkunde Berlin / Tierstimmenarchiv",
+    "source": "https://suche.tierstimmenarchiv.de/search/showdetails.html?unique_identifier=TSA:Ursus_thibetanus_V_2108_26_2&language=deutsch&from_search=true",
+    "downloadUrl": "https://suche.tierstimmenarchiv.de/download.mp3?unique_identifier=TSA:Ursus_thibetanus_V_2108_26_2",
+    "license": "CC-BY-SA-3.0-DE",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/de/",
+    "recording": "Three Asian black bears calling while being fed. Archive notes unspecified bird voices in the surrounding environment. Selected short low-frequency call excerpt; stationary hiss attenuated, no substitution of a different bear species.",
+    "recordingDate": "2003-10-19",
+    "region": "Zoo Halle, Germany",
+    "archiveId": "TSA:Ursus_thibetanus_V_2108_26_2",
+    "offset": 0,
+    "duration": 1.2,
+    "originalFile": "audio/forest/raw/bear-ursus-thibetanus-feeding.mp3",
+    "originalOffset": 2.9,
+    "originalDuration": 1.2,
+    "sourceSha256": "7e5b1fdd61a2c61323ee81a7fba1685a3518b0c9b7e5d3dcf5fc3423a6d351b1",
+    "processing": "Mono 32 kHz native decoding; original excerpt; stationary noise attenuation using an adjacent source noise profile (85% subtraction, 20% floor); 45 Hz rumble removal; gain to -18 dBFS active-call target, gentle soft peak limiting only if needed with -2 dBFS ceiling; 18 ms edge fades; original pitch and timing retained",
+    "activeDbfs": -18.0,
+    "peakDbfs": -6.98,
+    "sampleRate": 32000
   }
 ]

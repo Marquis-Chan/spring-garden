@@ -85,12 +85,22 @@
     </g>`;
   }
 
-  const models = { owl, bear, sloth, bee, squirrel, woodpecker };
+  function toucan() {
+    return `<g class="toucan-pose"><path class="toucan-tail" d="M82 120L53 166Q68 173 84 166l26-42" fill="#425953" stroke="#344b43" stroke-width="2"/>
+      <g class="wing-flight toucan-wing-back"><path d="M110 110Q155 93 172 44l8 9-5 17 13-3-9 17 10-1q-23 34-72 43" fill="#526b60" stroke="#344b43" stroke-width="2"/>${stroke('M122 112L172 59m-45 61 52-38','#94a888',2)}</g>
+      <path d="M78 82Q60 101 68 134Q80 162 112 153Q135 140 132 112L126 86Z" fill="#475c51" stroke="#344b43" stroke-width="2"/><path d="M101 92q-7 29 12 51l17-13-1-30" fill="#efddaa"/>
+      <g class="wing-folded"><path d="M87 93Q65 105 77 143l18 8 22-28Q115 101 87 93" fill="#4e685b" stroke="#344b43" stroke-width="2"/>${stroke('M91 111l-4 30m11-25-1 27m10-24-5 25','#829b7c',1.5)}</g>
+      <g class="wing-flight toucan-wing-front"><path d="M85 111Q42 94 23 44l-9 8 5 16-13-3 10 18-11-1q25 36 72 47Z" fill="#536d5e" stroke="#344b43" stroke-width="2"/>${stroke('M75 115L22 58m45 64L16 82','#94a888',2)}</g>
+      <g class="head toucan-head"><path d="M89 54q20-19 42 0l3 35q-9 23-31 19-26-14-14-54Z" fill="#43594d" stroke="#344b43" stroke-width="2"/><path d="M109 74q10-16 24-4l-1 27q-10 15-23 8" fill="#efdea3"/>
+      <path d="M129 57Q160 36 194 54Q198 74 172 85L129 82Z" fill="#a3c18b" stroke="#6a936e" stroke-width="2"/><path d="M131 59Q165 40 187 53L151 67 129 69Z" fill="#e5d187"/><path d="M153 70l27-13 11 2q-4 12-19 18Z" fill="#dfa580"/><path d="M185 51q13 10 8 21l-13 8 3-17Z" fill="#94777c"/>${stroke('M130 77q32 1 61-10','#638665',1.5)}<g class="toucan-open"><circle cx="117" cy="65" r="7" fill="#a2c6bc"/>${eye(118,65,2.7)}</g><g class="toucan-closed">${stroke('M112 67q6 4 12-1','#344b43',2)}</g>${anchor('beak',193,68)}${anchor('mouth',136,82)}</g>
+      <g class="toucan-feet"><path d="M89 150l-2 22m27-22 1 22" fill="none" stroke="#819b9c" stroke-width="5"/>${stroke('M87 172l-11 6m11-6-1 7m1-7 10 5m18-5-9 6m9-6 2 7m-2-7 11 5','#627e80',2)}${anchor('left-foot',87,177)}${anchor('right-foot',115,177)}</g></g>`;
+  }
+  const models = { owl, bear, sloth, bee, squirrel, woodpecker, toucan };
   function animal(id) {
     if (!Object.prototype.hasOwnProperty.call(models, id)) return '';
     return `<g class="creature-art forest-creature-art" data-kind="${id}"><g class="animal-motion"><g class="facing"><g class="body" stroke-linecap="round" stroke-linejoin="round">${models[id]()}</g></g></g></g>`;
   }
   // Coordinates are in the host's 0 0 200 200 SVG viewBox. Transform each hidden
-  // anchor's center through its own getCTM() to follow the exact moving limb.
+  // anchor's center through getScreenCTM() and the scene's inverse matrix.
   G.forestArt = { animal };
 })();

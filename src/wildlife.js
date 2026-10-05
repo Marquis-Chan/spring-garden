@@ -2,7 +2,13 @@
  'use strict';const G=window.SpringGarden;
  const eye=(x,y,r=2.6)=>`<g class="eyes"><ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r*1.12}" fill="#374b46"/><circle cx="${x+.7}" cy="${y-.9}" r=".8" fill="#fffdf0"/></g>`;
  const line=(d,c='#8c7860',w=1.8)=>`<path d="${d}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round"/>`;
- const leg=(x,y,length,color,side,front=false,detail='')=>`<g class="leg ${side} ${front?'leg-front':'leg-back'}${front&&side==='near'?' paw':''}" style="--joint-x:${x}px;--joint-y:${y}px"><path d="M${x} ${y}l${front?2:-3} ${length-10}q-3 12 7 12h9" fill="none" stroke="${color}" stroke-width="11" stroke-linecap="round"/>${detail==='hoof'?line(`M${x-2} ${y+length+2}h18`,'#7a806b',4):detail==='toe'?line(`M${x+4} ${y+length-2}v4m5-4v4m5-4v4`,'#d7dbcc',1.6):detail==='stripe'?line(`M${x-3} ${y+length-15}h10m-10 10h10`,'#606e60',3):''}</g>`;
+ const leg=(x,y,length,color,side,front=false,detail='')=>{
+  const foot={x:x+(front?9:4),y:y+length+2},bone=(length+2)*.56;
+  const pose=G.rig.limb({x,y},foot,bone,bone,front?1:-1);
+  const marking=detail==='stripe'?`<path class="leg-markings" d="${G.rig.markings(pose.knee,foot)}" fill="none" stroke="#606e60" stroke-width="3" stroke-linecap="round"/>`:'';
+  const toes=detail==='hoof'?line('M-6 1h13','#7a806b',4):detail==='toe'?line('M-3-1v3m4-3v3m4-3v3','#d7dbcc',1.6):'';
+  return `<g class="leg ${side} ${front?'leg-front':'leg-back'}${front&&side==='near'?' paw':''}" data-hip-x="${x}" data-hip-y="${y}" data-foot-x="${foot.x}" data-foot-y="${foot.y}" style="--joint-x:${x}px;--joint-y:${y}px"><path class="limb" d="${pose.d}" fill="none" stroke="${color}" stroke-width="11" stroke-linecap="round"/>${marking}<g class="foot" transform="translate(${foot.x} ${foot.y})"><path d="M-4-3q5-4 10 0l2 4H-5Z" fill="${color}"/>${toes}</g></g>`;
+ };
  const dogLeg=(x,y,color,side,front=false)=>{const p=G.core.dogLegPose(.32,x,y,front);return `<g class="leg dog-leg ${side} ${front?'leg-front':'leg-back'}${front&&side==='near'?' paw':''}" data-hip-x="${x}" data-hip-y="${y}" style="--joint-x:${x}px;--joint-y:${y}px"><path class="limb" d="M${x} ${y}L${p.knee.x} ${p.knee.y}L${p.foot.x} ${p.foot.y}" fill="none" stroke="${color}" stroke-width="9"/><g class="foot" transform="translate(${p.foot.x} ${p.foot.y})"><path d="M-2-2q5-7 12-2l3 5H-2z" fill="${color}"/><path d="M6 0v2m4-2v2" stroke="#a47e58" stroke-width=".8"/></g></g>`};
  function animal(id){let a='';
   if(id==='cat')a=`
@@ -14,6 +20,22 @@
    ${leg(53,139,36,'#e6b17a','near')}${leg(130,139,36,'#e6b17a','near',true)}
    <g class="head"><path d="M129 94l-3-39 22 15 15-16 13 36" fill="#e4ac72" stroke="#b88558" stroke-width="2.5"/><path d="M132 63l2 18 11-7m21-12-9 13 14 5" fill="#ddb09e"/><path d="M126 87q10-21 30-12 23 6 25 29-2 27-27 28-30-3-28-45" fill="#e9b783" stroke="#b88558" stroke-width="2.5"/><path d="M149 102q21-5 24 11-7 16-26 6" fill="#fae5c5"/>${eye(145,95)}${eye(166,98,2.2)}<path d="M159 110l7-2-3 5z" fill="#b77c73"/>
    ${line('M162 113v6m0-1q-4 5-9 2m10-1 5 3','#866650',1.4)}${line('M146 111l-24-1m23 7-23 5m48-7 20-2m-20 9 20 4','#9e795a',1.2)}${line('M149 77l1 9m10-7-2 8','#bd8555',3)}</g>`;
+  if(id==='lion')a=`
+   <g class="tail lion-tail"><path d="M39 119Q16 123 17 103Q18 84 8 76" fill="none" stroke="#caa164" stroke-width="5"/><path class="lion-tuft" d="M7 70Q-3 73 1 83L9 92l6-12Q16 71 7 70Z" fill="#947651" stroke="#7d674c" stroke-width="1.4"/></g>
+   ${leg(58,133,40,'#b5915e','far')}${leg(132,130,43,'#b5915e','far',true)}
+   <path d="M34 113Q34 78 84 82Q124 74 143 105L147 142Q89 157 39 138Z" fill="#d9b47a" stroke="#a4875b" stroke-width="2.5"/><path d="M44 136Q80 149 120 139" fill="none" stroke="#ecce99" stroke-width="9"/>
+   ${leg(49,138,37,'#d9b47a','near')}${leg(133,132,43,'#d9b47a','near',true)}
+   <g class="head lion-head">
+    <path class="lion-mane" d="M111 63L119 50l13 2 12-10 12 10 15-1 8 13 11 8-5 15 7 14-11 14 1 18-14 7-9 18-14-7-15 6-10-14-17-4 1-17-9-13 7-15-5-15Z" fill="#ad895d" stroke="#896e50" stroke-width="2.3"/>
+    ${line('M121 60l-5 17m-9 18 10 15m4 18 11 13m17-3 3 12m15-29 6 7m8-51-7 8m-21-35-3 14','#c5a375',2.4)}
+    <path d="M124 72Q113 56 124 51Q137 50 139 68m19-2q-1-17 11-16 14 7 1 23" fill="#d4aa72" stroke="#987b53" stroke-width="2"/><path d="M125 57q-5 3 0 11m43-12q5 6-2 12" fill="none" stroke="#aa8c6a" stroke-width="4"/>
+    <path d="M123 77Q128 59 152 64Q174 69 172 90L186 99Q186 114 171 118L149 128Q126 119 121 98Z" fill="#e0bb80" stroke="#a4875b" stroke-width="2.1"/>
+    <path class="lion-mouth" d="M151 104Q166 111 180 104L181 123Q166 135 151 118Z" fill="#866e62" opacity="0"/>
+    <g class="lion-jaw"><path d="M146 105Q161 112 182 105L180 115Q167 129 150 119Z" fill="#f0d8b0" stroke="#a98d63" stroke-width="1.6"/>${line('M161 115q9 4 17-2','#987b60',1.2)}</g>
+    <path d="M154 98q9-6 17 1 8-3 14 2l-4 10-14 1-14-6Z" fill="#f3deba"/>
+    ${eye(150,83,2.6)}${eye(167,86,2)}<path d="M169 99l9-1-4 7-5-2Z" fill="#786753"/>
+    ${line('M174 104v5m-15-5-15-3m14 8-16 2m37-5 17-2m-17 8 16 2','#a88a66',1)}${line('M139 76l10-2m9 3 9 3','#b39264',2)}
+   </g>`;
   if(id==='dog')a=`
    <path class="tail" d="M45 113q-20-1-25-21l-8-17" fill="none" stroke="#a87951" stroke-width="12" stroke-linecap="round"/>
    ${dogLeg(64,134,'#aa7954','far')}${dogLeg(139,132,'#aa7954','far',true)}
@@ -43,7 +65,8 @@
    <g class="head"><circle cx="79" cy="68" r="12" fill="#ba946d" stroke="#896b4b" stroke-width="2"/><circle cx="132" cy="68" r="12" fill="#ba946d" stroke="#896b4b" stroke-width="2"/><path d="M76 57q7-30 34-21 35 6 25 43-8 23-30 21-29-2-29-43" fill="#9e7c55" stroke="#896b4b" stroke-width="2.5"/><path d="M91 53q12-13 19 2 17-13 20 9l-5 19q-24 18-39-1z" fill="#e1caa5"/>${eye(100,64,2.5)}${eye(118,65,2.5)}<ellipse cx="113" cy="79" rx="11" ry="7" fill="#ccb18b"/>${line('M111 77l4 0m-9 10q7 4 13-1','#806c51',1.4)}</g>`;
   if(id==='peacock'){
    let fan='';for(let i=0;i<19;i++){const angle=-64+i*128/18;fan+=`<g class="train-feather" data-angle="${angle}" data-order="${i}" transform="rotate(${angle} 100 139)"><path d="M100 141Q89 93 94 30q6-23 12 0 5 61-6 111" fill="${i%2?'#689f86':'#82b59a'}" stroke="#4d8774" stroke-width="1.2"/><path d="M100 139V31m0 8-5 12m5-2 5 12m-5 2-5 12m5-2 5 12m-5 2-4 12m4-2 4 12" fill="none" stroke="#aec7a1" stroke-width=".7"/><ellipse cx="100" cy="43" rx="6.4" ry="10" fill="#dec68a"/><ellipse cx="100" cy="43" rx="4.3" ry="7.4" fill="#5d99a5"/><ellipse cx="100" cy="44" rx="2.5" ry="4.4" fill="#305e77"/><path d="M97 38q4-3 6 0" fill="none" stroke="#b3d5c5" stroke-width="1"/></g>`}
-   a=`<g class="resting-train"><path d="M103 139Q63 138 8 157q30 15 89-6" fill="#75a28a" stroke="#518675" stroke-width="2"/>${Array.from({length:5},(_,i)=>`<ellipse cx="${23+i*15}" cy="${158-i*2}" rx="6" ry="3.8" fill="#cebd82"/><ellipse cx="${23+i*15}" cy="${158-i*2}" rx="3.5" ry="2.2" fill="#4d8394"/>`).join('')}</g><g class="fan">${fan}</g><path d="M94 150l-5 28m19-29 4 29" stroke="#a69f73" stroke-width="4"/>${line('M83 180h14m11 0h14','#9a9062',2)}<ellipse cx="100" cy="134" rx="22" ry="29" fill="#4e9397" stroke="#3b7885" stroke-width="2"/><path d="M103 128q-14-37-4-59l10-13 13 7q-15 16-9 41l1 29" fill="#529da9" stroke="#3b7885" stroke-width="2"/><g class="head"><path d="M106 61q-10-18 9-24 18-3 20 11-2 13-22 15" fill="#4f99a5" stroke="#3b7885" stroke-width="2"/><path d="M129 49l16 4-14 7" fill="#c8b379"/>${eye(123,47,2)}<path d="M111 38l-6-17m11 15 1-18m4 20 8-17" stroke="#659c95" stroke-width="2"/><circle cx="105" cy="21" r="3" fill="#6199a2"/><circle cx="117" cy="18" r="3" fill="#6199a2"/><circle cx="129" cy="21" r="3" fill="#6199a2"/></g><path d="M88 118q-20 23 5 39" fill="#79aca4" stroke="#4f8c8b" stroke-width="2"/>`;
+   const feet=[{name:'left',hip:{x:94,y:150},foot:{x:89,y:178},side:'far'},{name:'right',hip:{x:108,y:149},foot:{x:112,y:178},side:'near'}].map(f=>{const p=G.rig.limb(f.hip,f.foot,17,17,1);return `<g class="leg peacock-leg-${f.name} ${f.side} leg-front" data-hip-x="${f.hip.x}" data-hip-y="${f.hip.y}" data-foot-x="${f.foot.x}" data-foot-y="${f.foot.y}"><path class="limb" d="${p.d}" fill="none" stroke="#a69f73" stroke-width="4"/><g class="foot" data-foot-name="${f.name}" transform="translate(${f.foot.x} ${f.foot.y})">${line('M-6 2h14M0 0l-2 4','#9a9062',2)}</g></g>`}).join('');
+   a=`<g class="resting-train"><path d="M103 139Q63 138 8 157q30 15 89-6" fill="#75a28a" stroke="#518675" stroke-width="2"/>${Array.from({length:5},(_,i)=>`<ellipse cx="${23+i*15}" cy="${158-i*2}" rx="6" ry="3.8" fill="#cebd82"/><ellipse cx="${23+i*15}" cy="${158-i*2}" rx="3.5" ry="2.2" fill="#4d8394"/>`).join('')}</g><g class="fan">${fan}</g><g class="peacock-feet">${feet}</g><ellipse cx="100" cy="134" rx="22" ry="29" fill="#4e9397" stroke="#3b7885" stroke-width="2"/><path d="M103 128q-14-37-4-59l10-13 13 7q-15 16-9 41l1 29" fill="#529da9" stroke="#3b7885" stroke-width="2"/><g class="head"><path d="M106 61q-10-18 9-24 18-3 20 11-2 13-22 15" fill="#4f99a5" stroke="#3b7885" stroke-width="2"/><path d="M129 49l16 4-14 7" fill="#c8b379"/>${eye(123,47,2)}<path d="M111 38l-6-17m11 15 1-18m4 20 8-17" stroke="#659c95" stroke-width="2"/><circle cx="105" cy="21" r="3" fill="#6199a2"/><circle cx="117" cy="18" r="3" fill="#6199a2"/><circle cx="129" cy="21" r="3" fill="#6199a2"/></g><path d="M88 118q-20 23 5 39" fill="#79aca4" stroke="#4f8c8b" stroke-width="2"/>`;
   }
   if(id==='tiger')a=`
    <g class="tail" style="--tail-x:41px;--tail-y:114px"><path class="tail-shape" d="M41 114q-29-1-26-33l3-12" fill="none" stroke="#d49c58" stroke-width="11" stroke-linecap="round"/><g class="tail-markings">${line('M15 80l9 2m-9 11 8 2','#655d46',4)}</g></g>
@@ -78,7 +101,7 @@
    <path d="M88 90l-22 19 2 25 23 12 23-15-3-25zM39 113l27-4m-30 27 32-2m23 12v11m23-26 26 7m-29-31 23-9" stroke="#d1cd93" stroke-width="3" fill="none"/>
    `;
   if(id==='penguin')a=`
-   <g class="penguin-feet"><path d="M79 164l-17 13q16 10 31-3m25-10 18 13q-15 10-29-3" fill="#d2b076" stroke="#b29662" stroke-width="1.5"/>
+   <g class="penguin-feet"><g class="penguin-foot-left"><path d="M79 164L62 177Q78 187 93 174" fill="#d2b076" stroke="#b29662" stroke-width="1.5"/></g><g class="penguin-foot-right"><path d="M118 164L136 177Q121 187 108 174" fill="#d2b076" stroke="#b29662" stroke-width="1.5"/></g>
    </g><g class="penguin-upper"><g class="wings" fill="#526d74" stroke="#405e67" stroke-width="2"><path class="flipper-left" d="M72 91q-20 10-24 49 11 13 22-18"/><path class="flipper-right" d="M129 90q22 16 22 49-10 12-20-18"/></g>
    <path d="M67 131q-6-47 10-76 10-28 34-25 32 4 28 43 12 31 2 71-11 39-44 35-25-2-30-48" fill="#586f75" stroke="#405e67" stroke-width="2.4"/><path d="M80 77q9-19 21-5 18-9 24 12 21 66-24 82-39-11-21-89" fill="#faf2dc"/>
    <g class="head"><path d="M94 50q9-14 25-6l5 20-25 7" fill="#687e82"/>${eye(113,51,2.4)}<path d="M124 55l23 10-25 6z" fill="#d5b172" stroke="#b79961" stroke-width="1.2"/></g></g>`;
@@ -100,6 +123,7 @@
    <path d="M95 102L48 57m48 54L43 87m53 33-38 20m47-38 47-45m-48 54 53-24m-53 33 38 20" fill="none" stroke="#c39aa9" stroke-width="1"/>
    <ellipse cx="60" cy="79" rx="9" ry="14" fill="#efd9aa"/><ellipse cx="140" cy="79" rx="9" ry="14" fill="#efd9aa"/><ellipse cx="64" cy="136" rx="6" ry="7" fill="#b1bacb"/><ellipse cx="136" cy="136" rx="6" ry="7" fill="#b1bacb"/></g>
    ${line('M97 88q-9-20-16-17m22 17q9-20 16-17','#767c70',1.8)}<ellipse cx="100" cy="112" rx="3" ry="25" fill="#6e776b"/><circle cx="100" cy="87" r="4" fill="#6e776b"/><path class="butterfly-feet" d="M98 124l-7 10 9 5m3-17 7 12-10 5" fill="none" stroke="#76816e" stroke-width="1.2"/><path class="proboscis" d="M101 92q23 38-1 47" fill="none" stroke="#8d856c" stroke-width="1"/><circle data-anchor="butterfly-feet" cx="100" cy="139" r=".1" opacity="0"/></g>`;
+  if(id==='fish')a=`<g class="fish-pose">${a}</g>`;
   return `<g class="creature-art" data-kind="${id}"><g class="animal-motion"><g class="facing"><g class="body" stroke-linecap="round" stroke-linejoin="round">${a}</g></g></g></g>`;
  }
  G.art.animal=animal;
