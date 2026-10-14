@@ -8,6 +8,8 @@
 
 **[🌿 直接在线玩](https://marquis-chan.github.io/spring-garden/)** · **[⬇ 下载离线版（单个 HTML 文件，约 2.7 MB）](https://github.com/Marquis-Chan/spring-garden/releases/latest/download/spring-garden.html)** · [所有版本](https://github.com/Marquis-Chan/spring-garden/releases) · [反馈问题或想法](https://github.com/Marquis-Chan/spring-garden/issues)
 
+![春日小花园实际游戏画面：苹果树、小鸟、河马与动物图案](docs/preview.png)
+
 ## 下载后怎么玩
 
 1. 点击上面的下载链接，保存 `spring-garden.html`。

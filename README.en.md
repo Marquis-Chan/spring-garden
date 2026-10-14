@@ -8,6 +8,8 @@ There are no scores, levels, or reading tasks. Tap an animal and watch it respon
 
 **[🌿 Play online](https://marquis-chan.github.io/spring-garden/)** · **[⬇ Download the offline game (one HTML file, about 2.7 MB)](https://github.com/Marquis-Chan/spring-garden/releases/latest/download/spring-garden.html)** · [All releases](https://github.com/Marquis-Chan/spring-garden/releases) · [Feedback and ideas](https://github.com/Marquis-Chan/spring-garden/issues)
 
+![Spring Garden gameplay: an apple tree, a bird, a hippo, and animal icons](docs/preview.png)
+
 ## Download and play
 
 1. Download `spring-garden.html` using the link above.
