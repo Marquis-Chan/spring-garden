@@ -13,15 +13,22 @@
     "region": "Parambikulam, Kerala, India",
     "file": "audio/forest/owl.wav",
     "offset": 0,
-    "duration": 0.9,
+    "duration": 3.06,
     "originalFile": "audio/forest/raw/owl-otus-sunia.ogg",
     "originalOffset": 0.98,
     "originalDuration": 0.9,
     "sourceSha256": "4c9e24d9e19d0604be82eb676f2b7bd1d37ddb597ef8c499cc22bb29d9de2d28",
-    "processing": "Mono at 32 kHz; original excerpt; conservative spectral noise attenuation (45% subtraction, 55% floor) and 45 Hz rumble removal; linear gain to target -18 dBFS active level, peak cap -2 dBFS, 16 ms edge fades; original pitch and timing retained",
+    "processing": "Mono at 32 kHz; original excerpt; conservative spectral noise attenuation (45% subtraction, 55% floor) and 45 Hz rumble removal; linear gain to target -18 dBFS active level, peak cap -2 dBFS, 16 ms edge fades; original pitch and timing retained; Feedback revision: original-speed complete processed call repeated 3 times with 0.18s gaps; no pitch/time change; original call level preserved",
     "activeDbfs": -18.0,
     "peakDbfs": -6.63,
-    "sampleRate": 32000
+    "sampleRate": 32000,
+    "responseSequence": {
+      "repetitions": 3,
+      "callSeconds": 0.9,
+      "gapSeconds": 0.18,
+      "preservedCallFile": "audio/feedback-original/owl.wav",
+      "preservedCallSha256": "729f31b7c22138098d750c19c58a3ab34fe30a5ff55a0967c337ac06aff1c4fb"
+    }
   },
   {
     "id": "woodpecker",
@@ -37,15 +44,22 @@
     "region": "Germany (50.973805, 6.882097); species identity given by recorder; no Asian recording-location claim",
     "file": "audio/forest/woodpecker.wav",
     "offset": 0,
-    "duration": 0.85,
+    "duration": 3.05,
     "originalFile": "audio/forest/raw/woodpecker-dendrocopos-major.ogg",
     "originalOffset": 0.65,
     "originalDuration": 0.85,
     "sourceSha256": "a763e9e0952bd26e4e50b7e79fe49d3a7944be9396073f0bd7034c0d0a3d9ecf",
-    "processing": "Mono at 32 kHz; original excerpt; DC removal only; linear gain to target -18 dBFS active level, peak cap -2 dBFS, 16 ms edge fades; original pitch and timing retained",
+    "processing": "Mono at 32 kHz; original excerpt; DC removal only; linear gain to target -18 dBFS active level, peak cap -2 dBFS, 16 ms edge fades; original pitch and timing retained; Feedback revision: original-speed complete processed call repeated 3 times with 0.25s gaps; no pitch/time change; original call level preserved",
     "activeDbfs": -18.61,
     "peakDbfs": -2.0,
-    "sampleRate": 32000
+    "sampleRate": 32000,
+    "responseSequence": {
+      "repetitions": 3,
+      "callSeconds": 0.85,
+      "gapSeconds": 0.25,
+      "preservedCallFile": "audio/feedback-original/woodpecker.wav",
+      "preservedCallSha256": "c1f110f28a851259475d18253338fd937f541009e6885363bb74e76690eb946b"
+    }
   },
   {
     "id": "bee",
@@ -88,14 +102,21 @@
     "region": "Zoo Halle, Germany",
     "archiveId": "TSA:Ursus_thibetanus_V_2108_26_2",
     "offset": 0,
-    "duration": 1.2,
+    "duration": 2.58,
     "originalFile": "audio/forest/raw/bear-ursus-thibetanus-feeding.mp3",
     "originalOffset": 2.9,
     "originalDuration": 1.2,
     "sourceSha256": "7e5b1fdd61a2c61323ee81a7fba1685a3518b0c9b7e5d3dcf5fc3423a6d351b1",
-    "processing": "Mono 32 kHz native decoding; original excerpt; stationary noise attenuation using an adjacent source noise profile (85% subtraction, 20% floor); 45 Hz rumble removal; gain to -18 dBFS active-call target, gentle soft peak limiting only if needed with -2 dBFS ceiling; 18 ms edge fades; original pitch and timing retained",
+    "processing": "Mono 32 kHz native decoding; original excerpt; stationary noise attenuation using an adjacent source noise profile (85% subtraction, 20% floor); 45 Hz rumble removal; gain to -18 dBFS active-call target, gentle soft peak limiting only if needed with -2 dBFS ceiling; 18 ms edge fades; original pitch and timing retained; Feedback revision: original-speed complete processed call repeated 2 times with 0.18s gaps; no pitch/time change; original call level preserved",
     "activeDbfs": -18.0,
     "peakDbfs": -6.98,
-    "sampleRate": 32000
+    "sampleRate": 32000,
+    "responseSequence": {
+      "repetitions": 2,
+      "callSeconds": 1.2,
+      "gapSeconds": 0.18,
+      "preservedCallFile": "audio/feedback-original/bear.wav",
+      "preservedCallSha256": "7e1a4bf30943a0ce1d1e4aeacfc1df0e241a449cf59e2945308d65643b6cf68c"
+    }
   }
 ]

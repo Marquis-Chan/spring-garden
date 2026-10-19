@@ -6,7 +6,7 @@
 
 没有分数、闯关或识字任务。点一下动物，看它动一动、听听声音；陪孩子摘苹果、看小狗捡球、让大象喷水，白天和夜晚都能慢慢逛。
 
-**[🌿 直接在线玩](https://marquis-chan.github.io/spring-garden/)** · **[⬇ 下载离线版（单个 HTML 文件，约 2.7 MB）](https://github.com/Marquis-Chan/spring-garden/releases/latest/download/spring-garden.html)** · [所有版本](https://github.com/Marquis-Chan/spring-garden/releases) · [反馈问题或想法](https://github.com/Marquis-Chan/spring-garden/issues)
+**[🌿 直接在线玩](https://marquis-chan.github.io/spring-garden/)** · **[⬇ 下载离线版（单个 HTML 文件，约 4.2 MB）](https://github.com/Marquis-Chan/spring-garden/releases/latest/download/spring-garden.html)** · [所有版本](https://github.com/Marquis-Chan/spring-garden/releases) · [反馈问题或想法](https://github.com/Marquis-Chan/spring-garden/issues)
 
 ![春日小花园实际游戏画面：苹果树、小鸟、河马与动物图案](docs/preview.png)
 
@@ -20,10 +20,10 @@
 
 ## 小花园里有什么
 
-- 草地、亚洲树林、美洲树冠三个场景，23 类动物形象。
-- 点动物看互动，点动物图案邀请它；穿过叶拱门、藤门去另一个场景。
+- 草地和一片合并后的树林，23 类动物形象；猴子、树懒、巨嘴鸟与原树林动物在同一页，水池也有鱼。
+- 点动物看互动，点动物图案邀请它；点叶拱门在草地与树林之间往返。
 - 摘苹果、倒出再捡回；小狗捡球、大象喷水、蜜蜂采蜜，还有动物取食和休息。
-- 点太阳或月亮切换昼夜，拖动云朵；17 项真实动物及自然录音，部分动物保持安静。
+- 点太阳或月亮切换昼夜，拖动云朵；17 项真实动物及自然录音，部分动物保持安静。短录音以原速多次短叫回应，狗声更清楚，老虎恢复叫声。
 - 右上角可关闭声音、切换全屏；电脑上按 **Ctrl + Shift + P** 打开家长设置，可调音量和游玩时长。
 
 这是一个持续完善的小作品，欢迎家长分享实际使用感受。它的出发点是陪孩子玩乐和探索，不宣称特定的早教效果。

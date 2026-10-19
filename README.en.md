@@ -6,7 +6,7 @@ I first made this little garden for a **child around age 2 who loves animals**: 
 
 There are no scores, levels, or reading tasks. Tap an animal and watch it respond, pick apples, watch a dog fetch its ball, or let an elephant spray water. Wander through the garden by day or night, at your own pace.
 
-**[🌿 Play online](https://marquis-chan.github.io/spring-garden/)** · **[⬇ Download the offline game (one HTML file, about 2.7 MB)](https://github.com/Marquis-Chan/spring-garden/releases/latest/download/spring-garden.html)** · [All releases](https://github.com/Marquis-Chan/spring-garden/releases) · [Feedback and ideas](https://github.com/Marquis-Chan/spring-garden/issues)
+**[🌿 Play online](https://marquis-chan.github.io/spring-garden/)** · **[⬇ Download the offline game (one HTML file, about 4.2 MB)](https://github.com/Marquis-Chan/spring-garden/releases/latest/download/spring-garden.html)** · [All releases](https://github.com/Marquis-Chan/spring-garden/releases) · [Feedback and ideas](https://github.com/Marquis-Chan/spring-garden/issues)
 
 ![Spring Garden gameplay: an apple tree, a bird, a hippo, and animal icons](docs/preview.png)
 
@@ -20,10 +20,10 @@ There are no scores, levels, or reading tasks. Tap an animal and watch it respon
 
 ## Inside the garden
 
-- Three illustrated habitats: a meadow, an Asian woodland, and an American canopy, with 23 kinds of animal characters.
+- Two illustrated scenes: a meadow and one shared woodland, with 23 kinds of animal characters. The monkey, sloth and toucan share the woodland with its other residents, and fish swim in the pool.
 - Tap animals to interact, use animal icons to invite visitors, and use the leafy gates to change habitats.
 - Pick and collect apples, play fetch, watch an elephant spray water and bees forage, and discover animals eating or resting.
-- Switch between day and night, drag the clouds, and hear 17 real animal and nature recordings. Some animals remain quiet.
+- Switch between day and night, drag the clouds, and hear 17 real animal and nature recordings. Some animals remain quiet. Short recordings use repeated real calls at their original speed; dog feedback is louder and the tiger voice is restored.
 - Sound and fullscreen controls are at the top right. On a computer, **Ctrl + Shift + P** opens parent settings for volume and session length.
 
 This is a small project that is still being improved. Feedback from families is welcome. It is made for shared play and exploration, without claims of specific educational outcomes.

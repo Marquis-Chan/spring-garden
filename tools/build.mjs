@@ -1,7 +1,7 @@
 import fs from 'node:fs';import path from 'node:path';import {fileURLToPath} from 'node:url';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 const credits=[...JSON.parse(read('assets/credits.json')),...JSON.parse(read('assets/forest-credits.json'))];const data={};
-for(const c of credits){const bytes=fs.readFileSync(path.join(root,'assets',c.file));if(bytes.length<1000)throw new Error('Missing or invalid recording '+c.id);data[c.id]={data:bytes.toString('base64'),offset:c.offset,duration:c.duration,normalized:!!c.processing};}
+for(const c of credits){const bytes=fs.readFileSync(path.join(root,'assets',c.file));if(bytes.length<1000)throw new Error('Missing or invalid recording '+c.id);data[c.id]={data:bytes.toString('base64'),offset:c.offset,duration:c.duration,normalized:!!c.processing,sequence:c.responseSequence};}
 let html=read('index.template.html');const slots={'STYLES':'styles.css','CORE':'src/core.js','MOTION':'src/motion.js','NATURE':'src/nature.js','DAYNIGHT':'src/daynight.js','ART':'src/illustrations.js','RIG':'src/rig.js','WILDLIFE':'src/wildlife.js','WORLD':'src/world.js','FOREST_ART':'src/forest-art.js','SCENERY':'src/scenery.js','AUDIO':'src/audio.js','GAME':'src/garden-engine.js'};
 for(const [marker,p]of Object.entries(slots))html=html.replace('/* '+marker+' */',()=>read(p)+(marker==='STYLES'?'\n'+read('wildlife.css')+'\n'+read('forest.css')+'\n'+read('interactions.css'):''));
 html=html.replace('/* AUDIO_DATA */',()=>`window.SpringGarden={audioData:${JSON.stringify(data)},audioCredits:${JSON.stringify(credits)}};`);

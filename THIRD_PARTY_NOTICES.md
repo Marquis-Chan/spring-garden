@@ -46,3 +46,10 @@
 | `assets/audio/forest/raw/bear-ursus-thibetanus.mp3`（备用原录音） | Günter Tembrock；Museum für Naturkunde Berlin / Tierstimmenarchiv；[TSA:Ursus_thibetanus_S_598_1_1](https://suche.tierstimmenarchiv.de/search/showdetails.html?unique_identifier=TSA:Ursus_thibetanus_S_598_1_1&language=deutsch&from_search=true) | [CC BY-SA 3.0 DE](https://creativecommons.org/licenses/by-sa/3.0/de/) |
 
 其他转码或重复副本沿用其对应原件的许可。更早的加工与来源核验记录保留在 [素材来源.md](素材来源.md) 和 [树林音频说明](docs/forest-audio-notes.md) 中；当前播放绑定以两个 credits JSON 为准。
+
+
+## 2026-10-19：短声反馈组合
+
+原始录音、原截取区间、作者和许可证保持不变。过短的处理片段现在以原速重复完整短声，段间留 0.18 秒（啄木鸟 0.25 秒），不放慢、不变调、不把停顿称作持续长叫。猫 1.96 秒、河马 2.2 秒保留为参考；猴子四次短叫约 2.86 秒，狗两段约 3.78 秒，狗额外提高约 3dB，峰值约 −2.55dBFS。角鸮三段约 3.06 秒，叫完才飞；啄木鸟三个鼓击段约 3.05 秒。所有 17 项反馈不少于猫叫长度。
+
+复现：`tools/prepare-feedback-audio.py`；单次处理片段保存在 `assets/audio/feedback-original/`，处理组合写入各录音的 `responseSequence` 与 `processing`。原速重复组合及备份仍沿用原录音许可；这不表示新增了野外连续鸣叫录音。

@@ -18,7 +18,8 @@
    if(exclusive){this.stopAll();this.pendingForeground=this.epoch}else if(this.sources.size||this.pendingForeground!==null)return false;
    const epoch=this.epoch,requested=performance.now();await this.unlock();
    if(exclusive&&this.pendingForeground===epoch)this.pendingForeground=null;
-   if(this.muted||this.paused||epoch!==this.epoch||performance.now()-requested>1200||!this.buffers.has(id)||(!exclusive&&(this.sources.size||this.pendingForeground!==null))||!this.gate.take(id,performance.now()))return false;
+   // 首次解码较慢时保留最后一次主动点击；旧页面、静音与新点击仍会取消它。
+   if(this.muted||this.paused||epoch!==this.epoch||(!exclusive&&performance.now()-requested>1200)||!this.buffers.has(id)||(!exclusive&&(this.sources.size||this.pendingForeground!==null))||!this.gate.take(id,performance.now()))return false;
    try{
     const asset=G.audioData[id],buffer=this.buffers.get(id),source=this.ctx.createBufferSource(),gain=this.ctx.createGain();
     source.buffer=buffer;const offset=Math.min(asset.offset||0,Math.max(0,buffer.duration-.1));const duration=Math.min(asset.duration||2.8,buffer.duration-offset);

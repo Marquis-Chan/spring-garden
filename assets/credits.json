@@ -14,7 +14,7 @@
     "originalDuration": 1.96,
     "sourceSha256": "d1c316a3dbe8b24f7b699eba133320476d0d6428497df24433448b12f8f71f15",
     "processing": "Local mono excerpt; conservative spectral background reduction (reference cat/peacock exempt), rumble removal, active-call loudness matching, soft peak limiting, 28ms fades; natural pitch and timing retained",
-    "activeDbfs": -18,
+    "activeDbfs": -18.0,
     "peakDbfs": -6.19
   },
   {
@@ -26,14 +26,21 @@
     "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
     "recording": "Dog barking recorded with portable Tascam; environmental noise reduced",
     "offset": 0,
-    "duration": 1.8,
+    "duration": 3.78,
     "originalFile": "audio/dog-barking-mono.wav",
     "originalOffset": 0,
     "originalDuration": 1.8,
     "sourceSha256": "bbd0f908b3514dd3bd7d2bc04dcf64f8d360a161e7f43cac5d6761e7add79451",
-    "processing": "Local mono excerpt; conservative spectral background reduction (reference cat/peacock exempt), rumble removal, active-call loudness matching, soft peak limiting, 28ms fades; natural pitch and timing retained",
-    "activeDbfs": -18.24,
-    "peakDbfs": -5.55
+    "processing": "Local mono excerpt; conservative spectral background reduction (reference cat/peacock exempt), rumble removal, active-call loudness matching, soft peak limiting, 28ms fades; natural pitch and timing retained; Feedback revision: original-speed complete processed call repeated 2 times with 0.18s gaps; no pitch/time change; dog gain +3dB subject to -2dBFS peak ceiling",
+    "activeDbfs": -15.24,
+    "peakDbfs": -2.55,
+    "responseSequence": {
+      "repetitions": 2,
+      "callSeconds": 1.8,
+      "gapSeconds": 0.18,
+      "preservedCallFile": "audio/feedback-original/dog.wav",
+      "preservedCallSha256": "54948672a1a7d22e2c543b2d82f3a8888a5484cf9b188bcf690fed389adbf104"
+    }
   },
   {
     "id": "bird",
@@ -50,7 +57,7 @@
     "originalDuration": 2.5,
     "sourceSha256": "40310829b1f5a295731a974f7da783be5a46e77b9859a930cce19eca13430cb6",
     "processing": "Local mono excerpt; conservative spectral background reduction (reference cat/peacock exempt), rumble removal, active-call loudness matching, soft peak limiting, 28ms fades; natural pitch and timing retained",
-    "activeDbfs": -18,
+    "activeDbfs": -18.0,
     "peakDbfs": -3.04
   },
   {
@@ -62,14 +69,21 @@
     "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
     "recording": "Asian elephant trumpeting; author-owned recording dated 2011-02-01, Wikimedia Commons",
     "offset": 0,
-    "duration": 1.43671875,
+    "duration": 3.0534375,
     "originalFile": "audio/elephant-trumpeting-commons.ogg",
     "originalOffset": 0,
     "originalDuration": 1.43671875,
     "sourceSha256": "e5f3120e5eaca87cc080bbf57bd185c96d52fd0f63cc1dfe33228c8bfa29f3bc",
-    "processing": "Local mono excerpt; conservative spectral background reduction (reference cat/peacock exempt), rumble removal, active-call loudness matching, soft peak limiting, 28ms fades; natural pitch and timing retained",
+    "processing": "Local mono excerpt; conservative spectral background reduction (reference cat/peacock exempt), rumble removal, active-call loudness matching, soft peak limiting, 28ms fades; natural pitch and timing retained; Feedback revision: original-speed complete processed call repeated 2 times with 0.18s gaps; no pitch/time change; original call level preserved",
     "activeDbfs": -18.0,
-    "peakDbfs": -4.24
+    "peakDbfs": -4.24,
+    "responseSequence": {
+      "repetitions": 2,
+      "callSeconds": 1.43671875,
+      "gapSeconds": 0.18,
+      "preservedCallFile": "audio/feedback-original/elephant.wav",
+      "preservedCallSha256": "27e0c6a344599dfbbfa0a2468eae382faef79b5b2f831470c41c79d5d15668a9"
+    }
   },
   {
     "id": "giraffe",
@@ -87,7 +101,7 @@
     "originalDuration": 2.7,
     "sourceSha256": "2500430872ea6d25277688b67840b5faa5dd7d4684b55aa712011e1fe641914d",
     "processing": "Local mono excerpt; conservative spectral background reduction (reference cat/peacock exempt), rumble removal, active-call loudness matching, soft peak limiting, 28ms fades; natural pitch and timing retained",
-    "activeDbfs": -18,
+    "activeDbfs": -18.0,
     "peakDbfs": -2.84
   },
   {
@@ -107,15 +121,22 @@
     "region": "Tierpark Berlin, Germany",
     "archiveId": "TSA:Cebus_apella_V_2119_1_1",
     "offset": 0,
-    "duration": 0.58,
+    "duration": 2.86,
     "originalFile": "audio/forest/raw/monkey-capuchin-feeding.mp3",
     "originalOffset": 2.35,
     "originalDuration": 0.58,
     "sourceSha256": "18f38f0b26e2bfde4ecbb9c46dc12a6445a23812c97f951f8e68f5e04c7ba3d8",
-    "processing": "Mono 32 kHz native decoding; original excerpt; stationary noise attenuation using an adjacent source noise profile (85% subtraction, 20% floor); 70 Hz rumble removal; gain to -18 dBFS active-call target, gentle soft peak limiting only if needed with -2 dBFS ceiling; 18 ms edge fades; original pitch and timing retained",
+    "processing": "Mono 32 kHz native decoding; original excerpt; stationary noise attenuation using an adjacent source noise profile (85% subtraction, 20% floor); 70 Hz rumble removal; gain to -18 dBFS active-call target, gentle soft peak limiting only if needed with -2 dBFS ceiling; 18 ms edge fades; original pitch and timing retained; Feedback revision: original-speed complete processed call repeated 4 times with 0.18s gaps; no pitch/time change; original call level preserved",
     "activeDbfs": -18.0,
-    "peakDbfs": -2.39,
-    "sampleRate": 32000
+    "peakDbfs": -2.4,
+    "sampleRate": 32000,
+    "responseSequence": {
+      "repetitions": 4,
+      "callSeconds": 0.58,
+      "gapSeconds": 0.18,
+      "preservedCallFile": "audio/feedback-original/monkey.wav",
+      "preservedCallSha256": "95fa6d6f83543f5811ce58ca221f0d66eea9fc7f719c2635b3f7485f2b852468"
+    }
   },
   {
     "id": "peacock",
@@ -132,7 +153,7 @@
     "originalDuration": 2.1,
     "sourceSha256": "af3702350e7215ed232216f2637ed6cc071e7e108876c3c75fa2a0dcbdc9e87c",
     "processing": "Local mono excerpt; conservative spectral background reduction (reference cat/peacock exempt), rumble removal, active-call loudness matching, soft peak limiting, 28ms fades; natural pitch and timing retained",
-    "activeDbfs": -18,
+    "activeDbfs": -18.0,
     "peakDbfs": -7.6
   },
   {
@@ -150,7 +171,7 @@
     "originalDuration": 2.5,
     "sourceSha256": "b09c5db77b4fb00bd66b7cce12e2c8cd6b045a18f150cb53b49f85de9732970b",
     "processing": "Local mono excerpt; conservative spectral background reduction (reference cat/peacock exempt), rumble removal, active-call loudness matching, soft peak limiting, 28ms fades; natural pitch and timing retained",
-    "activeDbfs": -18,
+    "activeDbfs": -18.0,
     "peakDbfs": -5.68
   },
   {
@@ -168,7 +189,7 @@
     "originalDuration": 2.22,
     "sourceSha256": "bf86ad3b577de097126643af56ac5513dd6cd9d8d56fb71482a1b2f950181712",
     "processing": "Local mono excerpt; conservative spectral background reduction (reference cat/peacock exempt), rumble removal, active-call loudness matching, soft peak limiting, 28ms fades; natural pitch and timing retained",
-    "activeDbfs": -18,
+    "activeDbfs": -18.0,
     "peakDbfs": -2.93
   },
   {
@@ -198,14 +219,21 @@
     "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
     "recording": "Indian rhinoceros, recorded using mobile phone",
     "offset": 0,
-    "duration": 1.25,
+    "duration": 2.68,
     "originalFile": "audio/rhino.mp3",
     "originalOffset": 7.9,
     "originalDuration": 1.25,
     "sourceSha256": "be9db47b20ed53b2d5a32278ed465144da091d42bf65e3c26320d2a829451e02",
-    "processing": "Local mono excerpt; conservative spectral background reduction (reference cat/peacock exempt), rumble removal, active-call loudness matching, soft peak limiting, 28ms fades; natural pitch and timing retained",
-    "activeDbfs": -18,
-    "peakDbfs": -8.2
+    "processing": "Local mono excerpt; conservative spectral background reduction (reference cat/peacock exempt), rumble removal, active-call loudness matching, soft peak limiting, 28ms fades; natural pitch and timing retained; Feedback revision: original-speed complete processed call repeated 2 times with 0.18s gaps; no pitch/time change; original call level preserved",
+    "activeDbfs": -18.0,
+    "peakDbfs": -8.2,
+    "responseSequence": {
+      "repetitions": 2,
+      "callSeconds": 1.25,
+      "gapSeconds": 0.18,
+      "preservedCallFile": "audio/feedback-original/rhino.wav",
+      "preservedCallSha256": "acc2f960737a7be2120e8c2296ce0ddcb46406c801f6075d0456bb1007624887"
+    }
   },
   {
     "id": "penguin",
@@ -216,14 +244,21 @@
     "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
     "recording": "Penguin vocalization extracted and noise reduced by AntumDeluge from Bidone recording of penguins at Leipzig Zoo (Freesound 66150)",
     "offset": 0,
-    "duration": 0.46,
+    "duration": 3.02,
     "originalFile": "audio/penguin/ogg/penguin_01.ogg",
     "originalOffset": 0,
     "originalDuration": 0.46,
     "sourceSha256": "d983bc83f13d544df19eebd2d0f43b9ef8865bcf736e1263f020291f6f175767",
-    "processing": "Local mono excerpt; conservative spectral background reduction (reference cat/peacock exempt), rumble removal, active-call loudness matching, soft peak limiting, 28ms fades; natural pitch and timing retained",
-    "activeDbfs": -18,
-    "peakDbfs": -10.29
+    "processing": "Local mono excerpt; conservative spectral background reduction (reference cat/peacock exempt), rumble removal, active-call loudness matching, soft peak limiting, 28ms fades; natural pitch and timing retained; Feedback revision: original-speed complete processed call repeated 5 times with 0.18s gaps; no pitch/time change; original call level preserved",
+    "activeDbfs": -18.0,
+    "peakDbfs": -10.29,
+    "responseSequence": {
+      "repetitions": 5,
+      "callSeconds": 0.46,
+      "gapSeconds": 0.18,
+      "preservedCallFile": "audio/feedback-original/penguin.wav",
+      "preservedCallSha256": "a07d7f39fb0a0f3742522709c40d1d6d5f515f01f69bd287e8f0dbbe9e01bc4c"
+    }
   },
   {
     "id": "lion",

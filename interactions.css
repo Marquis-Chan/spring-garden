@@ -56,7 +56,7 @@
 #scene .natural[data-kind=toucan] .toucan-closed{opacity:0}
 #scene .natural[data-kind=toucan].sleeping .toucan-open{opacity:0}
 #scene .natural[data-kind=toucan].sleeping .toucan-closed{opacity:1}
-#scene .natural[data-kind=toucan] .toucan-tail{transform-origin:0 0!important;transform-box:view-box;transform:none!important}
+#scene .natural[data-kind=toucan] .toucan-tail{transform-origin:0 0!important;transform-box:view-box}
 #scene .natural[data-kind=bear] .bear-pose{transform-origin:0 0;transform-box:view-box}
 #scene .natural[data-kind=bear] .bear-chest{animation:none!important}
 .portrait.requested .portrait-circle{fill:#faedca;stroke:#c6a572;stroke-width:5}

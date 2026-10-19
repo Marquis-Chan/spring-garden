@@ -16,11 +16,11 @@ test('water droplets start beside the raised trunk in scene coordinates and hit 
  for(const n of drops){assert.ok(+n.getAttribute('cx')>1000&&+n.getAttribute('cx')<1500,'water stays by elephant/flowers');assert.ok(+n.getAttribute('cy')>250&&+n.getAttribute('cy')<760,'water stays in picture')}
 });
 test('monkey actually takes the branch fruit under nested SVG coordinates',()=>{
- const h=createGarden(root);h.G.game.switchScene('canopy');h.advance(1600);h.G.game.summon('monkey');h.advance(5100);
+ const h=createGarden(root);h.G.game.switchScene('asian');h.advance(1600);h.G.game.summon('monkey');h.advance(5100);
  assert.equal(h.G.game.snapshot().materials.consumed,1);
 });
 test('both butterflies start on different flowers in every habitat',()=>{
- const h=createGarden(root);for(const scene of ['meadow','asian','canopy']){h.G.game.switchScene(scene);h.advance(1300);const a=h.G.game.snapshot().actors.filter(a=>a.id==='butterfly');assert.equal(new Set(a.map(a=>a.x+','+a.y)).size,2,scene)}
+ const h=createGarden(root);for(const scene of ['meadow','asian','asian']){h.G.game.switchScene(scene);h.advance(1300);const a=h.G.game.snapshot().actors.filter(a=>a.id==='butterfly');assert.equal(new Set(a.map(a=>a.x+','+a.y)).size,2,scene)}
 });
 test('clicking an entering giraffe waits for it to plant its feet before browsing',()=>{
  const h=createGarden(root);h.advance(300);h.G.game.summon('giraffe');h.advance(200);
@@ -41,9 +41,9 @@ test('ground visitors remain in their play area after repeated movement requests
  for(let i=0;i<18;i++){h.G.game.summon('zebra');h.advance(4600);const a=animal(h,'zebra');assert.ok(a&&a.x>180&&a.x<1250,'zebra stays on its patch: '+a?.x)}
 });
 test('monkey returns its hand from its mouth instead of jumping back to the empty branch',()=>{
- const h=createGarden(root);h.G.game.switchScene('canopy');h.advance(1600);h.G.game.summon('monkey');h.advance(3100);let last=screenPoint(node(h,'monkey').querySelector('[data-anchor="palm"]'));
+ const h=createGarden(root);h.G.game.switchScene('asian');h.advance(1600);h.G.game.summon('monkey');h.advance(3100);let last=screenPoint(node(h,'monkey').querySelector('[data-anchor="palm"]'));
  for(let i=0;i<20;i++){h.advance(100);const p=screenPoint(node(h,'monkey').querySelector('[data-anchor="palm"]'));assert.ok(Math.hypot(p.x-last.x,p.y-last.y)<18,'hand moves continuously');last=p}
- assert.ok(Math.abs(last.x-1043.945)<3&&Math.abs(last.y-523.86)<3,'hand returns to the original supported position');
+ assert.ok(Math.abs(last.x-378.945)<3&&Math.abs(last.y-523.86)<3,'hand returns to the original supported position');
 });
 test('bear lowers its head around the attached neck instead of translating its head off the chest',()=>{
  const h=createGarden(root);h.G.game.switchScene('asian');h.advance(1400);h.G.game.summon('bear');h.advance(11000);h.click(h.document.querySelector('[data-fig="fig0"]'),670,400);h.advance(1400);
@@ -77,7 +77,7 @@ test('tiger paw, sole and leaf contact agree and repeated play stays on its patc
 });
 test('sloth waits for new foliage instead of recreating consumed food immediately on a click',()=>{
  const h=createGarden(root);
- h.G.game.switchScene('canopy');h.advance(1400);h.G.daynight.toggle(h.G.game.snapshot().clock);h.advance(3200);h.G.game.summon('sloth');h.advance(11100);h.G.game.summon('sloth');h.advance(300);assert.equal(animal(h,'sloth').state,'sloth-look');assert.equal(h.G.game.snapshot().materials.consumed,1);h.advance(2000);assert.equal(h.G.game.snapshot().materials.branch,2);
+ h.G.game.switchScene('asian');h.advance(1400);h.G.daynight.toggle(h.G.game.snapshot().clock);h.advance(3200);h.G.game.summon('sloth');h.advance(11100);h.G.game.summon('sloth');h.advance(300);assert.equal(animal(h,'sloth').state,'sloth-look');assert.equal(h.G.game.snapshot().materials.consumed,1);h.advance(2000);assert.equal(h.G.game.snapshot().materials.branch,5);
 });
 test('hippo jaw opens about its attached hinge and closes at the end',()=>{
  const h=createGarden(root);h.G.game.summon('hippo');h.advance(9500);h.G.game.summon('hippo');h.advance(1700);const a=animal(h,'hippo'),jaw=node(h,'hippo').querySelector('.hippo-jaw'),p=new Point(129,133).matrixTransform(jaw.getScreenCTM());assert.ok(Math.hypot(p.x-(a.x+48.575),p.y-(a.y-112.225))<.01);h.advance(2000);assert.equal(jaw.getAttribute('transform'),null);

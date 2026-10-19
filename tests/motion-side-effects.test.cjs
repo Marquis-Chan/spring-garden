@@ -1,0 +1,38 @@
+const test=require('node:test'),assert=require('node:assert/strict'),path=require('node:path'),fs=require('node:fs');
+const {createGarden,Point}=require('./engine-harness.cjs'),root=path.join(__dirname,'..');
+const n=(h,id)=>h.document.querySelector('.creature[data-kind="'+id+'"]'),a=(h,id)=>h.G.game.snapshot().actors.find(a=>a.id===id);
+test('flight planning retains obstacles whose extra margin would cover a safe landing point',()=>{
+ const h=createGarden(root),box={x:400,y:350,w:200,h:200},from={x:750,y:280},to={x:590,y:560},route=h.G.world.safeFlight(from,to,[box]);assert.ok(route,'a nearby safe endpoint remains reachable');for(let i=1;i<route.length;i++)assert.ok(h.G.motion.segmentClear(route[i-1],route[i],[box]),'every smoothed segment clears the original obstacle');
+ assert.equal(h.G.world.safeFlight(from,{x:500,y:450},[box]),null,'an endpoint inside an animal cannot be accepted');
+});
+function forest(){const h=createGarden(root);h.G.game.switchScene('asian');h.advance(1600);return h}
+test('peacock recalled during its night ascent resumes flight continuously and reaches its branch',()=>{
+ const h=forest();h.G.game.summon('peacock');h.advance(8000);h.G.daynight.toggle(h.G.game.snapshot().clock);h.advance(4200);assert.equal(a(h,'peacock').state,'flight');h.G.game.summon('tiger');h.advance(200);const before=a(h,'peacock');h.G.game.summon('peacock');assert.equal(a(h,'peacock').x,before.x);assert.equal(a(h,'peacock').y,before.y);for(let i=0;i<300;i++){const prev=a(h,'peacock');h.advance(20);const next=a(h,'peacock');assert.ok(Math.hypot(next.x-prev.x,next.y-prev.y)<7,'no recall jump');}assert.equal(a(h,'peacock').y,355);assert.equal(a(h,'peacock').state,'rest');
+});
+test('inviting a guest returns flying bees without teleporting them or leaving flight state at home',()=>{
+ const h=forest();h.advance(6400);h.click(h.document.getElementById('forestHive'),1340,454);h.advance(2200);const before=h.G.game.snapshot().actors.filter(a=>a.id==='bee');h.G.game.summon('tiger');for(const b of before){const after=h.G.game.snapshot().actors.find(a=>a.key===b.key);assert.ok(Math.hypot(after.x-b.x,after.y-b.y)<.01,b.key+' did not teleport');}for(let i=0;i<350;i++){const prev=h.G.game.snapshot().actors.filter(a=>a.id==='bee');h.advance(20);for(const b of prev){const next=h.G.game.snapshot().actors.find(a=>a.key===b.key);assert.ok(Math.hypot(next.x-b.x,next.y-b.y)<12,b.key+' moves continuously');}}assert.equal(h.G.game.snapshot().bee,null);assert.ok(a(h,'tiger'));assert.equal(n(h,'bee').dataset.state,'idle');assert.ok(!n(h,'bee').classList.contains('flying'));
+});
+test('side bees settle continuously instead of snapping home at nightfall',()=>{
+ const h=forest();h.advance(6400);h.click(h.document.getElementById('forestHive'),1340,454);h.advance(500);h.G.daynight.toggle(h.G.game.snapshot().clock);for(let i=0;i<250;i++){const prev=h.G.game.snapshot().actors.filter(a=>a.id==='bee');h.advance(20);for(const b of prev){const next=h.G.game.snapshot().actors.find(a=>a.key===b.key);assert.ok(Math.hypot(next.x-b.x,next.y-b.y)<12,b.key+' has a continuous dusk return');}}assert.ok(h.document.querySelectorAll('.creature[data-kind="bee"]').every(n=>!n.classList.contains('flying')));
+});
+test('sloth finishes held-leaf handling before adopting its daytime sleeping pose',()=>{
+ const h=forest();h.G.daynight.toggle(h.G.game.snapshot().clock);h.advance(4200);h.G.game.summon('sloth');h.advance(3600);assert.ok(h.document.querySelector('[data-held-food="sloth-leaf"]'));h.G.daynight.toggle(h.G.game.snapshot().clock);h.advance(3100);assert.equal(a(h,'sloth').state,'sloth');assert.ok(!n(h,'sloth').classList.contains('sleeping'));h.advance(4700);assert.equal(h.document.querySelectorAll('[data-held-food="sloth-leaf"]').length,0);assert.ok(n(h,'sloth').classList.contains('sleeping'));
+});
+test('monkey finishes an existing meal before closing its eyes at dusk',()=>{
+ const h=forest();h.G.game.summon('monkey');h.advance(100);h.G.daynight.toggle(h.G.game.snapshot().clock);h.advance(1800);assert.equal(a(h,'monkey').state,'monkey');assert.ok(!n(h,'monkey').classList.contains('sleeping'));h.advance(3300);assert.ok(n(h,'monkey').classList.contains('sleeping'));assert.equal(h.document.querySelectorAll('[data-held-food="monkey-fruit"]').length,0);
+});
+test('bear walks back from fallen fruit before standing to browse without stretching its arm bones',()=>{
+ const h=forest();h.advance(6900);h.G.game.summon('bear');h.advance(9000);for(let i=0;i<3;i++){h.click(h.document.querySelector('[data-fig="fig'+i+'"]'),670+i*28,400);h.advance(7500)}assert.ok(a(h,'bear').x<710);h.G.game.summon('bear');assert.equal(a(h,'bear').state,'walk');let sawLeaf=false;for(let i=0;i<500;i++){const prev=a(h,'bear');h.advance(20);const next=a(h,'bear');assert.ok(Math.abs(next.x-prev.x)<1.3,'no return teleport');if(next.state==='bear-leaf'){sawLeaf=true;assert.ok(Math.abs(next.x-760)<.01);const leg=n(h,'bear').querySelector('.leg.near.leg-front'),p=leg.querySelector('.limb').getAttribute('d').match(/-?\d+(?:\.\d+)?/g).map(Number);assert.ok(Math.hypot(p[2]-p[0],p[3]-p[1])<=39.1);assert.ok(Math.hypot(p[4]-p[2],p[5]-p[3])<=39.1,'forearm keeps natural length');}}assert.ok(sawLeaf);
+});
+test('night toucan tail rotation changes the actual rendered tail rather than being cancelled by CSS',async()=>{
+ const sharp=require('C:/Users/macqi/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/sharp');
+ const h=forest(),tail=n(h,'toucan').querySelector('.toucan-tail'),d=tail.getAttribute('d'),css=['styles.css','wildlife.css','forest.css','interactions.css'].map(f=>fs.readFileSync(path.join(root,f),'utf8')).join('\n');
+ const render=rotation=>sharp(Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" id="scene" width="200" height="200"><style>'+css+'</style><g class="creature natural sleeping" data-kind="toucan"><path class="toucan-tail" d="'+d+'" fill="#425953" transform="'+rotation+'"/></g></svg>')).png().toBuffer();
+ assert.notDeepEqual(await render('rotate(18 96 126)'),await render('rotate(0 96 126)'),'the CSS must preserve SVG rotation');
+});
+test('peacock night ascent clears an owl on the second perch with its head and folded body',()=>{
+ const h=forest();h.G.daynight.toggle(h.G.game.snapshot().clock);h.advance(4200);h.G.game.summon('owl');h.advance(11000);assert.ok(a(h,'owl').x>700);h.G.game.summon('peacock');let flew=false;for(let i=0;i<450;i++){h.advance(20);if(a(h,'peacock')?.state!=='flight')continue;flew=true;const p=new Point(124,61).matrixTransform(n(h,'peacock').querySelector('.head').getScreenCTM()),o=new Point(101,69).matrixTransform(n(h,'owl').querySelector('.head').getScreenCTM());assert.ok(Math.hypot(p.x-o.x,p.y-o.y)>55,'heads remain separated');assert.equal(n(h,'peacock').querySelector('.ground-shadow').style.display,'none','no floating ground shadow');}assert.ok(flew);assert.equal(a(h,'peacock').y,355);
+});
+test('the first peacock landing frame plants both toes instead of creating a stray walking step',()=>{
+ const h=forest();h.G.game.summon('peacock');h.advance(8000);h.G.daynight.toggle(h.G.game.snapshot().clock);h.advance(4200);let landed=false;for(let i=0;i<500;i++){const wasFlying=a(h,'peacock').state==='flight';h.advance(20);if(!wasFlying||a(h,'peacock').state==='flight')continue;landed=true;for(const leg of n(h,'peacock').querySelectorAll('.leg')){const foot=leg.querySelector('.foot');assert.equal(foot.getAttribute('transform'),'translate('+leg.dataset.footX+' '+leg.dataset.footY+')','toes stay on their exact perch contact');}assert.ok(!n(h,'peacock').classList.contains('walking'));break;}assert.ok(landed);
+});
