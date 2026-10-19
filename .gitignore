@@ -6,3 +6,4 @@ progress.md
 docs/superpowers/
 .superpowers/
 /_site/
+/node_modules/

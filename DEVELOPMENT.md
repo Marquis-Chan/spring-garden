@@ -30,7 +30,7 @@
 
 开发：`node tools/build.mjs` 构建游戏，`node tools/build-audio-review.mjs` 构建家长试听页。新场景／行为实现位于 `src/world.js`、`src/scenery.js`、`src/forest-art.js`、`src/garden-engine.js`；旧 `src/game.js` 保留为原版参考，不再进入本版构建。
 
-验证：`node --test tests/*.test.cjs`；`node tests/release-audit.cjs` 检查内嵌声音、脚本语法与离线依赖。`engine-harness.cjs` 是不渲染的 SVG 状态模拟，不是浏览器。`node tools/render-habitat-qa.cjs` 生成本轮位置与取食接触的静态矢量检查图，存入 `docs/qa/habitat-refinements/`。已有使用 Playwright 的旧测试面向旧引擎，不作为此次验收依据。
+验证前先执行 `npm ci --ignore-scripts` 安装锁定的开发依赖；Sharp 仅用于静态 SVG 渲染回归测试，不进入游戏成品。验证：`node --test tests/*.test.cjs`；`node tests/release-audit.cjs` 检查内嵌声音、脚本语法与离线依赖。`engine-harness.cjs` 是不渲染的 SVG 状态模拟，不是浏览器。`node tools/render-habitat-qa.cjs` 生成本轮位置与取食接触的静态矢量检查图，存入 `docs/qa/habitat-refinements/`。已有使用 Playwright 的旧测试面向旧引擎，不作为此次验收依据。
 
 本轮完成了状态集成测试和静态插画检查。当前浏览器策略阻止自动访问本地文件，未绕过限制，尚未完成 Chrome／Edge 真机动画、触摸及孩子试玩验收；静态检查不能替代 CSS 动画观感与实际听感。
 

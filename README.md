@@ -35,6 +35,7 @@
 源码版下载：仓库右上方 **Code → Download ZIP**。解压后直接打开 `春日小花园.html` 就能玩；改动源码后，在装有 Node.js 的环境中执行：
 
 ```sh
+npm ci --ignore-scripts
 node tools/build.mjs
 node --test tests/*.test.cjs
 node tests/release-audit.cjs

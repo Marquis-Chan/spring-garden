@@ -35,6 +35,7 @@ Fork the project, open an Issue, or send a Pull Request. Improve touch support, 
 For the source archive, select **Code → Download ZIP** on GitHub. After extracting it, open `春日小花园.html` to play. To rebuild after changing the source, install Node.js and run:
 
 ```sh
+npm ci --ignore-scripts
 node tools/build.mjs
 node --test tests/*.test.cjs
 node tests/release-audit.cjs
