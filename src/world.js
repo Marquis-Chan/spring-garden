@@ -36,7 +36,7 @@
    if(this.state==='carrying'){this.ball.x=mouth.x;this.ball.y=mouth.y;if(Math.hypot(mouth.x-this.home.x,mouth.y-this.home.y)<9){this.state='rest';Object.assign(this.ball,this.home)}}return this.state;
   }
  }
- function activity(id,time){if(id==='owl')return time==='day'?'sleep':'awake';if(id==='sloth')return time==='day'?'rest':'forage';if(['bee','bird','butterfly','woodpecker','monkey','peacock','toucan'].includes(id)&&time==='night')return'rest';return'awake'}
+ function activity(id,time){if(id==='owl')return time==='day'?'sleep':'awake';if(id==='sloth')return'forage';if(['bee','bird','butterfly','woodpecker','monkey','peacock','toucan'].includes(id)&&time==='night')return'rest';return'awake'}
  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),ease=t=>{t=clamp(t,0,1);return t*t*(3-2*t)};
  function bezier(points,t){const u=1-t;return{x:u*u*u*points[0].x+3*u*u*t*points[1].x+3*u*t*t*points[2].x+t*t*t*points[3].x,y:u*u*u*points[0].y+3*u*u*t*points[1].y+3*u*t*t*points[2].y+t*t*t*points[3].y}}
  function scaleAt(size,y){return size*(.78+.22*clamp((y-420)/300,0,1))}

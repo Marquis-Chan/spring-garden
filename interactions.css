@@ -29,6 +29,9 @@
 #scene .natural[data-kind=owl].sleeping .owl-closed{opacity:1}
 #scene .natural[data-kind=peacock].sleeping:not(.flying) .eyes{transform:scaleY(.14);transform-origin:center;transform-box:fill-box;animation:none!important}
 #scene .natural[data-kind=fish] .fish-pose{transform-origin:0 0;transform-box:view-box}
+#scene .natural[data-kind=fish].swimming :is(.tail,.wings){animation:none!important;transform-origin:0 0;transform-box:view-box}
+#scene .natural[data-kind=monkey] .monkey-arm>path{stroke:#a58b64}
+#scene .natural[data-kind=monkey] .monkey-elbow{fill:#a58b64}
 #scene .natural[data-kind=bird] .bird-feet{transform:none!important;transition:none}
 .scene-gate{cursor:none;isolation:isolate}.gate-preview{transition:fill .35s,opacity .35s}.gate-halo{transition:opacity .3s}.scene-gate.hovered .gate-halo,.scene-gate:focus .gate-halo{opacity:.7;animation:gate-breathe 2s ease-in-out infinite}.scene-gate.hovered .gate-preview{fill:#b6cca5}
 .scene-gate:focus{outline:none}.scene-gate:focus-visible .gate-halo{stroke-width:6;opacity:1}
@@ -58,6 +61,8 @@
 #scene .natural[data-kind=toucan].sleeping .toucan-closed{opacity:1}
 #scene .natural[data-kind=toucan] .toucan-tail{transform-origin:0 0!important;transform-box:view-box}
 #scene .natural[data-kind=bear] .bear-pose{transform-origin:0 0;transform-box:view-box}
+#scene .natural[data-kind=bear] .bear-grip{transform-origin:0 0;transform-box:view-box}
+#scene .natural[data-kind=bear].leaf-feeding .leg.near.leg-front .foot>path{opacity:0}
 #scene .natural[data-kind=bear] .bear-chest{animation:none!important}
 .portrait.requested .portrait-circle{fill:#faedca;stroke:#c6a572;stroke-width:5}
 @keyframes toucan-flap{0%,100%{transform:rotate(-12deg) scaleY(1)}50%{transform:rotate(58deg) scaleY(.6)}}
