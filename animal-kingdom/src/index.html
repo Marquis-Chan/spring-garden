@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#e7ebc8"><title>春日小花园 · 动物王国</title>
+<meta name="description" content="春日小花园的 3D 动物探索游戏：拖动地图，走近池塘、果园、雨林和海底，和动物玩一会儿。">
+<style>/* CSS */</style>
+</head>
+<body>
+<main id="pond" aria-label="动物王国">
+  <div id="sky" aria-hidden="true">
+    <div class="sky-grain"></div>
+    <div class="hills hill-far"></div><div class="hills hill-near"></div>
+    <div id="stars"></div>
+    <div id="sky-birds" hidden>
+      <svg width="100%" height="100%" aria-hidden="true" focusable="false">
+        <defs>
+          <path id="sky-bird-far" d="M-5 1C-6-4-10-8-13-10c2-.9 5-.4 9 2 3 2 5 4 7 8Z" fill="currentColor" opacity=".58"/>
+          <path id="sky-bird-body" d="m-8 0-7-3 2 4-3 2 8-.6C-3 6 3 4 6 1l3-1 2-1-3-.6C6-5 2-4 0-2Z" fill="currentColor"/>
+          <path id="sky-bird-near" d="M1 0C-.7-5-5-10-11-12c-.2 2 1 5 3 8l-1-1C-8-1-5 1-2 2Z" fill="currentColor"/>
+        </defs>
+        <g class="sky-bird"><use href="#sky-bird-far"/><use href="#sky-bird-body"/><use href="#sky-bird-near"/></g>
+        <g class="sky-bird"><use href="#sky-bird-far"/><use href="#sky-bird-body"/><use href="#sky-bird-near"/></g>
+        <g class="sky-bird"><use href="#sky-bird-far"/><use href="#sky-bird-body"/><use href="#sky-bird-near"/></g>
+      </svg>
+    </div>
+  </div>
+  <div id="sun-art" aria-hidden="true">
+   <svg viewBox="0 0 100 100"><g class="sun-art"><g stroke="#f4be68" stroke-width="2.5" stroke-linecap="round"><path d="M50 7v9m0 68v9M7 50h9m68 0h9M20 20l6 6m49 49 6 6m0-61-6 6M26 74l-6 6"/></g><circle cx="50" cy="50" r="27" fill="#f9d985"/><circle cx="42" cy="41" r="13" fill="#ffeab0" opacity=".8"/></g><g class="moon-art"><path class="crescent" fill="#fdf2b6" d="M71 70A29 29 0 1 1 48 21a23 23 0 0 0 23 49Z"/><g class="full-moon" fill="#fdf2b6"><circle cx="50" cy="50" r="28"/><circle cx="40" cy="46" r="7" fill="#dccd90"/><circle cx="60" cy="62" r="4" fill="#dccd90"/><circle cx="57" cy="36" r="3" fill="#dccd90"/></g></g></svg>
+  </div>
+  <div id="cloud-art" aria-hidden="true">
+   <svg viewBox="0 0 184 92"><defs><linearGradient id="cloud-foam" x2="0" y2="1" gradientUnits="objectBoundingBox"><stop stop-color="#fffbed"/><stop offset="1" stop-color="#d6e5df"/></linearGradient></defs><path id="cloud-body" d="M6 61q0-23 26-23Q36 16 63 17 75 -1 97 12q21 3 26 26 31-7 47 8 13 16-1 31-8 9-32 9H38Q5 86 6 61Z" fill="url(#cloud-foam)" /><path d="M40 38q5-13 20-13m20-8q16-7 31 13" fill="none" stroke="#fffef2" stroke-width="5" opacity=".65" stroke-linecap="round"/></svg>
+  </div>
+  <canvas id="stage" aria-label="动物王国，可拖曳地图，可走近池塘、林缘、果园、草原、河岸、亚洲树林、雨林、海岸和海底"></canvas>
+  <div id="sleep-mark" aria-hidden="true" hidden><span>Z</span><span>z</span><span>z</span></div>
+  <nav id="places" aria-label="走近一处">
+   <button type="button" id="enter-pond" class="waymark" aria-label="走近池塘" hidden>
+    <svg viewBox="0 0 44 44" aria-hidden="true"><path fill="#568e61" d="M21 8C8 8 6 16 8 21c3 8 23 9 27-1l-12-3 9-6C29 9 25 8 21 8Z"/><path d="M10 32q6-4 12 0t12 0" fill="none" stroke="#5e9eaa" stroke-width="3" stroke-linecap="round"/></svg>
+   </button>
+   <button type="button" id="enter-grove" class="waymark" aria-label="走近林缘" hidden>
+    <svg viewBox="0 0 44 44" aria-hidden="true"><path fill="#94714f" d="M20 19h5v14h-5z"/><path fill="#68934f" d="M22 7a8 8 0 0 1 8 6 6.5 6.5 0 0 1 2 13H12a6 6 0 0 1-.1-12A10 10 0 0 1 22 7Z"/><path d="M15 33h16" stroke="#ba9a67" stroke-width="2.8" stroke-linecap="round"/></svg>
+   </button>
+   <button type="button" id="enter-orchard" class="waymark" aria-label="走近果园" hidden>
+    <svg viewBox="0 0 44 44" aria-hidden="true"><path fill="#cb6653" d="M22 16c5-6 15-3 15 6 0 8-6 14-11 14l-4-1-4 1C12 36 7 30 7 22c0-8 9-12 15-6Z"/><path d="M22 16V9m1 3c2-5 5-6 9-6-1 5-5 7-9 6Z" fill="#68934f" stroke="#68934f" stroke-linecap="round" stroke-width="2"/></svg>
+   </button>
+   <button type="button" id="enter-savanna" class="waymark" aria-label="走近草原" hidden>
+    <svg viewBox="0 0 44 44" aria-hidden="true"><path d="M22 34V15m0 9-7-5m7 1 7-5" fill="none" stroke="#896447" stroke-width="4" stroke-linecap="round"/><path d="M6 15c0-4 8-7 17-7 8 0 16 2 16 6s-8 6-17 6S6 19 6 15Z" fill="#859d59"/><path d="M10 34h24" stroke="#c5a060" stroke-width="3" stroke-linecap="round"/></svg>
+   </button>
+   <button type="button" id="enter-river" class="waymark" aria-label="走近河岸" hidden>
+    <svg viewBox="0 0 44 44" aria-hidden="true"><path d="M6 25c2-8 11-12 18-11 10 1 15 8 13 15-2 6-12 8-22 6-8-2-10-5-9-10Z" fill="#80aca7"/><path d="M10 26q6-4 11 0t11 0M14 31q5-2 10 0" fill="none" stroke="#f5e9c4" stroke-width="2" stroke-linecap="round"/><path d="M16 20v-9m0 6-4-5m4 7 5-5m6 4v-8" fill="none" stroke="#668651" stroke-width="2" stroke-linecap="round"/></svg>
+   </button>
+   <button type="button" id="enter-asia" class="waymark" aria-label="走近亚洲树林" hidden>
+    <svg viewBox="0 0 44 44" aria-hidden="true"><path d="M22 36V15m0 13-6-5m6 8 8-8M11 32V20m22 13V19" stroke="#835f42" stroke-width="3" stroke-linecap="round" fill="none"/><path d="M6 20c-.5-6 5-12 11-8 1-9 13-9 15-2 6-2 9 2 9 7 0 8-13 9-19 7-7 3-16 3-16-4Z" fill="#7c9a62"/><path d="M22 31q6 2 10-3-1 7-6 7Z" fill="#b8cc78"/></svg>
+   </button>
+   <button type="button" id="enter-rainforest" class="waymark" aria-label="走近雨林" hidden>
+    <svg viewBox="0 0 44 44" aria-hidden="true"><path d="M17 10c-5 9 0 18 12 19 4 0 6 3 4 6-3 3-10 1-16-3C9 26 8 17 12 10Z" fill="#dfb359"/><path d="M13 12c2-3 2-5 1-7m17 27 5 4" stroke="#8b8251" stroke-width="2.4" stroke-linecap="round"/><path d="M30 17c5-7 8-7 10-7-1 7-4 10-9 10" fill="#7d9d64"/></svg>
+   </button>
+   <button type="button" id="enter-coast" class="waymark" aria-label="走近海岸" hidden>
+    <svg viewBox="0 0 44 44" aria-hidden="true"><path d="M6 27c7 0 9-14 17-14 5 0 10 5 10 8-6-3-9 0-8 4 1 4 6 5 13 3-5 7-12 9-18 5-6 3-10 2-14-1z" fill="#5ba3ab"/><path d="M7 29c7 .1 10-11 16-12 3-.5 5 1 7 3-4-1-7 0-8 4" fill="none" stroke="#f3f0d7" stroke-width="2.2" stroke-linecap="round"/></svg>
+   </button>
+   <button type="button" id="enter-ocean" class="waymark" aria-label="潜入海底" hidden>
+    <svg viewBox="0 0 44 44" aria-hidden="true"><path d="M22 26C17 10 9 12 6 15c3 1 4 5 7 7l7 5-2 8h8l-2-8 7-5c3-2 4-6 7-7-3-3-11-5-16 11Z" fill="#418c9a"/><path d="M9 31q5-3 10 0m8 0q5-3 9 0" fill="none" stroke="#8bb9ab" stroke-width="2.6" stroke-linecap="round"/></svg>
+   </button>
+  </nav>
+  <div id="sky-hand">
+    <button type="button" id="sun" aria-label="切换到夜晚"></button>
+    <button type="button" id="cloud" aria-label="拖云遮住日月，点云让它继续飘"></button>
+   </div>
+   <button type="button" id="sound" class="shell" aria-label="静音" aria-pressed="false">
+     <svg viewBox="0 0 40 40" aria-hidden="true"><path fill="#476454" d="M9 15h6l9-7v24l-9-7H9z"/><path class="wave" d="M28 15q6 5 0 10m4-15q11 10 0 20" stroke="#476454" stroke-width="2.5" stroke-linecap="round" fill="none"/><path class="mute" d="M27 16l9 9m0-9-9 9" stroke="#476454" stroke-width="2.5" stroke-linecap="round"/></svg>
+   </button>
+   <button type="button" id="overview" class="shell" aria-label="回到全景" hidden>
+     <svg viewBox="0 0 40 40" aria-hidden="true"><path fill="#7c9d62" d="M6 26c2-4 6-4 9-7 4-5 10-6 13-3 4 2 7 4 7 9 0 4-5 8-13 9-8 1-17-1-16-8Z"/><path fill="#7bb8b4" d="M19 25c0 3-5 6-8 4-4-3 5-9 8-4Z"/><path fill="#557c52" d="M28 22h-2v-5l-5 2 6-10 7 10-6-2z"/><path d="M20 29c3-4 5-3 7-7" stroke="#f0d7a0" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+   </button>
+   <div id="loading" role="status" aria-live="polite"><span></span></div>
+   <div id="unsupported" hidden><svg viewBox="0 0 100 100" aria-hidden="true"><ellipse cx="50" cy="55" rx="32" ry="26" fill="#899d59"/><circle cx="34" cy="34" r="10" fill="#899d59"/><circle cx="66" cy="34" r="10" fill="#899d59"/><circle cx="34" cy="35" r="4" fill="#293c32"/><circle cx="66" cy="35" r="4" fill="#293c32"/></svg><p>这个浏览器未能启动 3D。请家长用启用了硬件加速的 Chrome 或 Edge 打开。</p></div>
+   <div class="sr" aria-live="polite" id="access-status"></div>
+   <div class="keyboard"><button id="key-frog">青蛙叫一声</button><button id="key-hop">跳到另一个落脚点</button><button id="key-fish">引鱼游来</button><button id="key-grass">碰一碰草丛</button><button id="key-bird">叫一叫小鸟</button></div>
+</main>
+<!-- Frog: daveincamas, 200703101950PacificChorusFrogsSoloNR.wav, CC BY 4.0; https://freesound.org/people/daveincamas/sounds/32807/ — game excerpt processed and rearranged without pitch changes. -->
+<!-- Bird: syncopika, Bird chirping sounds, CC0 1.0; https://opengameart.org/content/bird-chirping-sounds — reused mono excerpt. -->
+<!-- Cat: d.n.audio.uk, Renly, CC0 1.0; https://freesound.org/people/d.n.audio.uk/sounds/264507/ -->
+<!-- Dog: Brandon Morris (HaelDB), Dog Barking Mono, CC0 1.0; https://opengameart.org/content/dog-barking-mono -->
+<!-- Bee: Félix Blume, Bee recorded individually | Johanna, CC0 1.0; https://freesound.org/people/felix.blume/sounds/588533/ — mono excerpt, filtered and faded. -->
+<!-- Elephant: Tuoichen, Samburu African savanna elephant recording, CC BY 4.0 https://creativecommons.org/licenses/by/4.0/ ; https://www.inaturalist.org/observations/48825579 — mono excerpt, filtered and faded. -->
+<!-- Giraffe: Anton Baotic, Florian Sicks and Angela S. Stoeger; processed by AntumDeluge, CC BY-SA 4.0 https://creativecommons.org/licenses/by-sa/4.0/ ; https://opengameart.org/content/giraffe-hum -->
+<!-- Zebra: Peet J. van Eeden; processed by AntumDeluge, CC BY 3.0 https://creativecommons.org/licenses/by/3.0/ ; https://opengameart.org/content/zebra-whinny -->
+<!-- Lion: Info-farmer, public domain; https://commons.wikimedia.org/wiki/File:Lion_raring-sound1TamilNadu178.ogg -->
+<!-- Hippo: Yle / Finnish Broadcasting Company Archives, CC BY 4.0; https://freesound.org/people/YleArkisto/sounds/253082/ — mono excerpt, filtered and faded. -->
+<!-- White rhinoceros: geoffvt, Umfolozi Game Reserve, CC0 1.0; https://freesound.org/people/geoffvt/sounds/792852/ — 63.80–66.12 s excerpt, filtered and faded. -->
+<!-- Red fox: Aubrey John Williams, The British Library Board, CC BY-SA 4.0; https://commons.wikimedia.org/wiki/File:Red_Fox_(Vulpes_vulpes)_(W1CDR0001529_BD12).ogg — 1.84–4.16 s excerpt, filtered and faded; fox.wav retains CC BY-SA 4.0. -->
+<!-- American red squirrel: philberts, CC0 1.0; https://freesound.org/people/philberts/sounds/111393/ — 28.30–30.60 s excerpt, filtered and faded. -->
+<!-- Great spotted woodpecker drumming: T.Voekler (Teacoolish), CC BY-SA 3.0; https://commons.wikimedia.org/wiki/File:Great_Spotted_Woodpecker_drum.ogg — edited mono segment, woodpecker.wav retains CC BY-SA 3.0. -->
+<!-- Asian black bear: Günter Tembrock, Tierstimmenarchiv, CC BY-SA 3.0 DE; https://suche.tierstimmenarchiv.de/search/showdetails.html?unique_identifier=TSA:Ursus_thibetanus_V_2108_26_2 — feeding call excerpt. -->
+<!-- Tiger: schots, CC0 1.0; https://freesound.org/people/schots/sounds/439280/ — filtered game excerpt. -->
+<!-- Indian peafowl: Kinoton, CC0 1.0; https://freesound.org/people/Kinoton/sounds/688203/ — edited male call. -->
+<!-- Oriental scops owl: Raghu.kuttan, public domain; https://commons.wikimedia.org/wiki/File:Otus_sunia.ogg — repeated three original pulses at natural pitch. -->
+<!-- Tufted capuchin: Günter Tembrock, Tierstimmenarchiv, CC BY-SA 3.0 DE; https://suche.tierstimmenarchiv.de/search/showdetails.html?unique_identifier=TSA:Cebus_apella_V_2119_1_1 — short natural feeding calls. -->
+<!-- Toco toucan: Fabrício Grigolin, CC BY 4.0; https://commons.wikimedia.org/wiki/File:Toco_Toucan_call_(Ramphastos_toco).ogg — 7.15–9.50 s excerpt, filtered and faded. -->
+<!-- African penguin: Favaro L, Gamba M, Alfieri C, Pessani D, McElligott A. Scientific Reports 5, 17255 (2015), Supplementary Audio S1. https://doi.org/10.1038/srep17255 ; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/ — filtered and faded contact call presented twice at original pitch. -->
+<!-- Humpback whale and bottlenose dolphin field recordings: NOAA Fisheries, Northeast Fisheries Science Center, Passive Acoustics Branch. Meno-song-NOAA-PAGroup-13 and Tutr-multisound-NOAA-PAGroup-03, respectively. https://www.fisheries.noaa.gov/national/science-data/sounds-ocean-mammals — natural-pitch excerpts, filtered, normalized and faded. -->
+<script>/* AUDIO */</script><script>/* GAME */</script></body></html>

@@ -1,54 +1,36 @@
-# Spring Garden — an animal game for toddlers around age 2
+# Spring Garden · Animal Kingdom
 
 [中文](README.md) · **English**
 
-I first made this little garden for a **child around age 2 who loves animals**: a place to tap, listen, and explore together. It is now free and open source for other parents looking for a simple animal game to enjoy with their children.
+Spring Garden v0.5.0 rebuilds the original animal game as a quiet 3D world for young children and their families. Tap an animal or drag the map and explore at your own pace. There are no scores or levels to beat.
 
-There are no scores, levels, or reading tasks. Tap an animal and watch it respond, pick apples, watch a dog fetch its ball, or let an elephant spray water. Wander through the garden by day or night, at your own pace.
+**[Play online](https://marquis-chan.github.io/spring-garden/)** · **[Download for offline play](https://github.com/Marquis-Chan/spring-garden/releases/latest/download/spring-garden.html)** · [Release history](https://github.com/Marquis-Chan/spring-garden/releases)
 
-**[🌿 Play online](https://marquis-chan.github.io/spring-garden/)** · **[⬇ Download the offline game (one HTML file, about 4.2 MB)](https://github.com/Marquis-Chan/spring-garden/releases/latest/download/spring-garden.html)** · [All releases](https://github.com/Marquis-Chan/spring-garden/releases) · [Feedback and ideas](https://github.com/Marquis-Chan/spring-garden/issues)
+## What to explore
 
-![Spring Garden gameplay: an apple tree, a bird, a hippo, and animal icons](docs/preview.png)
+- Visit nine habitats: the pond, grove, orchard, savanna, riverbank, Asian woodland, rainforest, coast and ocean.
 
-## Download and play
+- Watch tadpoles find the frog, tap the orchard rabbits, or see a toucan and a sloth reach for the same berry.
 
-1. Download `spring-garden.html` using the link above.
-2. Double-click it on a computer and open it in Chrome, Edge, or another modern browser.
-3. The first tap enables sound. Explore together with your child.
+- Tap the sun or moon to change the time of day. Animals rest, and small flocks occasionally cross the daytime sky.
 
-**No installation, no account, and no ads. It works offline after downloading.** The code, illustrations, and audio are included in one file. Opening local HTML on phones and tablets varies by system and browser; a desktop browser is the recommended starting point.
+The offline edition is a single HTML file. Open it in a modern browser with WebGL 2 support. Try Chrome or Edge with hardware acceleration enabled if 3D does not start. Sound becomes available after the first interaction; no installation or account is needed.
 
-## Inside the garden
+## Classic edition
 
-- Two illustrated scenes: a meadow and one shared woodland, with 23 kinds of animal characters. The monkey, sloth and toucan share the woodland with its other residents, and fish swim in the pool.
-- Tap animals to interact, use animal icons to invite visitors, and use the leafy gates to change habitats.
-- Pick and collect apples, play fetch, watch an elephant spray water and bees forage, and discover animals eating or resting.
-- Switch between day and night, drag the clouds, and hear 17 real animal and nature recordings. Some animals remain quiet. Short recordings use repeated real calls at their original speed; dog feedback is louder and the tiger voice is restored.
-- Sound and fullscreen controls are at the top right. On a computer, **Ctrl + Shift + P** opens parent settings for volume and session length.
+[Play the classic edition](https://marquis-chan.github.io/spring-garden/classic/) · [Download classic v0.2.1](https://github.com/Marquis-Chan/spring-garden/releases/tag/v0.2.1). The original 2D game and its source remain in this repository.
 
-This is a small project that is still being improved. Feedback from families is welcome. It is made for shared play and exploration, without claims of specific educational outcomes.
+## Build and licensing
 
-## Make it your own
-
-Fork the project, open an Issue, or send a Pull Request. Improve touch support, refine animal movements, add habitats, or make a version for your own family. Please include the source and license of any new recordings or images.
-
-For the source archive, select **Code → Download ZIP** on GitHub. After extracting it, open `春日小花园.html` to play. To rebuild after changing the source, install Node.js and run:
+The new source, audio, tests and build tools are in [animal-kingdom/](animal-kingdom/). With Node.js 24:
 
 ```sh
+cd animal-kingdom
 npm ci --ignore-scripts
-node tools/build.mjs
-node --test tests/*.test.cjs
-node tests/release-audit.cjs
+npm test
+npm run build
 ```
 
-JavaScript is in `src/`, illustrations and layout are in `index.template.html` and the CSS files, and audio and attribution are in `assets/`. See [development notes](DEVELOPMENT.md) for detailed gameplay and implementation records (Chinese).
+The build produces `animal-kingdom/动物王国.html`.
 
-Pushes to `main` rebuild, verify, and deploy the online game through GitHub Actions. Offline download packages are published through Releases.
-
-## License and credits
-
-Original code, SVG illustrations, and documentation use the [MIT License](LICENSE). You may use, change, and share them while preserving the license notice. **Third-party recordings retain their individual licenses**, including CC0, CC BY, CC BY-SA, and public-domain declarations. See [recording attribution and licenses](THIRD_PARTY_NOTICES.md) before reusing or modifying audio. License and recording credits are also included in the standalone game file.
-
-Thank you to the authors who shared their animal and nature recordings. I hope this little garden brings a little joy to more children who love animals.
-
-Keywords: toddler game, animal game for kids, parent-child play, offline HTML5 game, interactive storybook, free and open source.
+Original code and art are [MIT licensed](LICENSE). Recordings retain their individual licenses, including the non-commercial restriction on the duckling clip. See the [Animal Kingdom audio credits](animal-kingdom/THIRD_PARTY_NOTICES.md).

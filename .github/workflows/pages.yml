@@ -24,14 +24,23 @@ jobs:
         with:
           node-version: '24'
           package-manager-cache: false
-      - name: Install test dependencies
+      - name: Install classic dependencies
         run: npm ci --ignore-scripts
-      - name: Build the offline game
+      - name: Build the classic game
         run: node tools/build.mjs
-      - name: Test animal interactions
+      - name: Test classic animal interactions
         run: node --test tests/*.test.cjs
-      - name: Verify embedded audio and offline resources
+      - name: Verify classic audio and offline resources
         run: node tests/release-audit.cjs
+      - name: Install Animal Kingdom dependencies
+        working-directory: animal-kingdom
+        run: npm ci --ignore-scripts
+      - name: Test Animal Kingdom
+        working-directory: animal-kingdom
+        run: npm test
+      - name: Build the Animal Kingdom offline game
+        working-directory: animal-kingdom
+        run: npm run build
       - name: Configure GitHub Pages
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
       - name: Package the site
