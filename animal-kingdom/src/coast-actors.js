@@ -6,7 +6,7 @@ const s = (value, a=0, b=1) => {
 };
 const mix = (a,b,t) => a + (b-a)*t;
 
-export function makePenguin(T,{scale=1}={}) {
+export function makePenguin(T,{scale=1,speckled=false}={}) {
   const root=group(T,null,'Temperate coast penguin');
   root.scale.setScalar(scale);
   const trunk=group(T,root,'Penguin chest and back');
@@ -32,15 +32,24 @@ export function makePenguin(T,{scale=1}={}) {
     [.680,-.011,.139,.155],[.722,-.011,.123,.123],[.762,-.006,.092,.089],
     [.792,-.005,.045,.049]
   ];
-  const sculptedBody=closedShape(T,bodyRings.map(([y,z,rx,rz])=>[y,-z,rx,rz]),36,(x,depth,y)=>{
+  const spots=speckled?[[.053,.356,.021],[-.048,.303,.018],[.082,.266,.015]]:[[-.050,.405,.024]];
+  const dense=bodyRings.flatMap((ring,i)=>{
+    const next=bodyRings[i+1];
+    return next?[ring,...[.33,.66].map(t=>ring.map((v,j)=>mix(v,next[j],t)))]:[ring];
+  });
+  const sculptedBody=closedShape(T,dense.map(([y,z,rx,rz])=>[y,-z,rx,rz]),64,(x,depth,y)=>{
     const z=-depth;
     const front=s(z,.014,.066);
     const apron=front*s(y,.10,.19)*(1-s(y,.66,.735));
-    const collar=s(y,.592+.15*x*x,.608+.15*x*x)*(1-s(y,.654,.669));
+    // 非洲企鹅的深色胸带从胸前向两侧向下弯，黑斑也随身体一起俯到沙面。
+    const band=.557-3.4*x*x;
+    const collar=1-s(Math.abs(y-band),.017,.037);
+    let marking=collar;
+    for(const [cx,cy,r] of spots)marking=Math.max(marking,1-s(Math.hypot(x-cx,y-cy),r*.47,r*1.35));
     const salt=1+.023*Math.sin(x*24+y*15)*Math.cos(y*22+z*13);
     color.copy(back).lerp(edge,.25+.28*s(z,-.18,.12)+.13*s(y,.22,.69));
     return color.lerp(bellyWhite,.97*apron).lerp(white,.34*apron*s(y,.26,.61))
-      .lerp(grey,.86*collar*apron).multiplyScalar(salt);
+      .lerp(headDark,.88*marking*apron).multiplyScalar(salt);
   }).rotateX(-Math.PI/2);
   mesh(T,trunk,'Continuous black back and pale ventral feathers',sculptedBody,coat);
   const belly=group(T,trunk,'Leading breast contact',[0,.504,.226]);
@@ -131,7 +140,7 @@ export function makePenguin(T,{scale=1}={}) {
     const wiggle=Math.cos(step)*gait*(1-low);
     const rest=(1-low)*(1-.50*bodyDisplay);
     const idle=Number(phase==='land')*(1-sleepy)*(1-bodyDisplay);
-    const glance=Math.sin(time*1.72+(state.index??0)*1.9)*idle;
+    const glance=Math.sin(time*.82+(state.index??0)*1.9)*idle;
     const beat=Math.sin(time*13.6);
     const grounded=phase!=='swim' && phase!=='return';
     const strokeDepth=(state.surface===undefined?1:s(state.surface-groundY,.024,.137));
@@ -149,9 +158,10 @@ export function makePenguin(T,{scale=1}={}) {
     trunk.position.copy(offset).sub(rolledBelly);
     trunk.updateMatrix();
 
-    head.rotation.set(-(.79+.36*shoreLift)*low+.24*sleepy-.112*call+Math.sin(time*2.3)*.017*rest+.11*attention,
+    const curiosity=(state.inspectCrab??0)*(1-sleepy);
+    head.rotation.set(-(.79+.36*shoreLift)*low+.24*sleepy-.112*call+Math.sin(time*2.3)*.017*rest+.11*attention+.43*curiosity,
       (.42+.22*attention)*look*(1-.72*low)+.14*attention*facing+.13*glance*(1-attention),
-      -(.042+.057*attention)*look+.043*sleepy-.052*glance*(1-attention));
+      -(.042+.057*attention)*look+.043*sleepy-.052*glance*(1-attention)-.21*curiosity);
     jaw.rotation.x=.72*call*(1-sleepy)*(1-.78*low);
     rudder.rotation.x=.48+low*.25 + beat*.13*paddle;
     for(const {opening,lid} of eyes) {

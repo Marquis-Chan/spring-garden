@@ -1,15 +1,17 @@
 import * as T from 'three';
 import {coastGroundHeight,coastPoints,coastWaterY} from './coast-state.js';
+import {makeIntertidal,poolRadius} from './coast-tidepool.js';
 
 const {lanes,waterEntryZ}=coastPoints;
 export const rampPoint=i=>({x:lanes[i].ramp.x,z:13.82});
 export const shoreStone=i=>({x:lanes[i].land.x+(i===0?-1:1)*.78,z:13.08});
 
-const landY=(x,z)=>{
+export const coastLandHeight=(x,z)=>{
  const margin=Math.min(...lanes.map(lane=>Math.abs(x-lane.ramp.x)));
  const bend=T.MathUtils.smoothstep(margin,.58,1.4)*(.26*Math.sin(x*1.23)-.17*Math.cos(x*.9));
- return coastGroundHeight(z+bend);
+ return coastGroundHeight(z+bend)-.21*(1-T.MathUtils.smoothstep(poolRadius(x,z),.62,1.13));
 };
+const landY=coastLandHeight;
 const finish=(color,extra={})=>new T.MeshStandardMaterial({color,roughness:.86,...extra});
 const rockShape=new T.IcosahedronGeometry(1,2),pebbleShape=new T.SphereGeometry(1,14,9);
 const stoneColors=['#83898b','#9c9e93','#a59b89','#696f77'].map(color=>finish(color));
@@ -26,7 +28,7 @@ function terrain(root){
  const geometry=new T.PlaneGeometry(30,27,150,216);
  geometry.rotateX(-Math.PI/2);geometry.translate(37,0,21.8);
  const positions=geometry.attributes.position,colors=[];
- const sand=new T.Color('#d6b891'),wet=new T.Color('#b4a28a'),shelf=new T.Color('#699795');
+ const sand=new T.Color('#dfbb91'),wet=new T.Color('#b39d83'),shelf=new T.Color('#60968d');
  const field=new T.Color('#b7a681'),tint=new T.Color();
  for(let n=0;n<positions.count;n++){
   const x=positions.getX(n),z=positions.getZ(n),y=landY(x,z);
@@ -40,11 +42,12 @@ function terrain(root){
  }
  geometry.setAttribute('color',new T.Float32BufferAttribute(colors,3));geometry.computeVertexNormals();
  const mesh=new T.Mesh(geometry,finish('#ffffff',{vertexColors:true}));mesh.receiveShadow=true;root.add(mesh);
+ return mesh;
 }
 
 function wornSlate(root,x,index){
  const z=13.79,rings=8,around=44,positions=[],colors=[],indices=[];
- const middle=new T.Color('#a9a8a0'),edge=new T.Color('#807e76'),tint=new T.Color();
+ const middle=new T.Color('#b7ada1'),edge=new T.Color('#858782'),tint=new T.Color();
  for(let ring=0;ring<=rings;ring++){
   const radius=ring/rings;
   for(let j=0;j<=around;j++){
@@ -69,8 +72,44 @@ function wornSlate(root,x,index){
  return mesh;
 }
 
+// 每只脚离开湿沙的那一刻，用上一帧真实着地点留下三趾蹼印。
+function makeTracks(root){
+ const outline=new T.Shape();
+ outline.moveTo(-.039,.036);
+ outline.quadraticCurveTo(-.059,.014,-.067,-.064);outline.lineTo(-.024,-.049);
+ outline.lineTo(0,-.098);outline.lineTo(.019,-.054);outline.lineTo(.059,-.073);
+ outline.quadraticCurveTo(.050,.025,.019,.040);outline.closePath();
+ const shape=new T.ShapeGeometry(outline);shape.rotateX(-Math.PI/2);
+ const prints=Array.from({length:12},()=>{const print=new T.Mesh(shape,new T.MeshBasicMaterial({
+  color:'#997b60',transparent:true,opacity:0,depthWrite:false,side:T.DoubleSide
+ }));print.visible=false;root.add(print);return print;});
+ const last=Array.from({length:4},()=>({down:false,point:new T.Vector3()}));
+ const sample=new T.Vector3();let slot=0;
+ return (state,models)=>{
+  for(const [index,p] of state.penguins.entries()){
+   for(const [side,foot] of (models?.[index].feet??[]).entries()){
+    const entry=last[index*2+side];
+    if(!['waddle','approach','climb'].includes(p.phase)){entry.down=false;continue;}
+    foot.getWorldPosition(sample);
+    const ground=coastGroundHeight(sample.z),down=sample.y-ground<.018;
+    if(!down&&entry.down&&entry.point.z<waterEntryZ-.07){
+     const print=prints[slot++%prints.length];print.visible=true;print.userData.at=state.time;
+     print.position.copy(entry.point);print.position.y=coastGroundHeight(print.position.z)+.009;
+     print.rotation.set(sample.z>13?Math.atan(.18):0,p.yaw,0,'YXZ');
+    }
+    if(down)entry.point.copy(sample);entry.down=down;
+   }
+  }
+  for(const print of prints)if(print.visible){
+   const age=state.time-print.userData.at;
+   print.material.opacity=.43*(1-T.MathUtils.smoothstep(age,.5,2.4));
+   print.visible=age<2.4;
+  }
+ };
+}
+
 function tide(root){
- const uniforms={time:{value:0},light:{value:1},dim:{value:0},fronts:{value:Array.from({length:4},()=>new T.Vector4(0,0,-9,0))},
+ const uniforms={time:{value:0},light:{value:1},dim:{value:0},mapMode:{value:0},fronts:{value:Array.from({length:4},()=>new T.Vector4(0,0,-9,0))},
   taps:{value:Array.from({length:2},()=>new T.Vector3(0,0,-10))}};
  const material=new T.ShaderMaterial({
   uniforms,transparent:true,depthWrite:false,
@@ -80,7 +119,7 @@ function tide(root){
     gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);
    }`,
   fragmentShader:`varying vec2 world;
-   uniform float time,light,dim;
+   uniform float time,light,dim,mapMode;
    uniform vec4 fronts[4];
    uniform vec3 taps[2];
    void main(){
@@ -88,7 +127,9 @@ function tide(root){
     float drift=sin(world.x*.63+time*.85)*.12+sin(world.x*1.72-time*.52)*.051;
     float bars=sin((world.y+drift)*12.-1.59*time+sin(world.x*1.33)*.53);
     float surf=(1.-smoothstep(.05,.74,abs(world.y+drift-14.44)))*smoothstep(.32,.93,bars);
-    float trace=smoothstep(.89,1.,bars)*(.05+.05*sin(world.x*2.26+world.y));
+    float line=sin(world.x*5.1+world.y*3.6+time*.45)+sin(world.x*2.7-world.y*6.3-time*.63)+.52*sin(world.y*8.1+world.x*1.4);
+    float lace=(1.-smoothstep(.04,.20,abs(line)))*.10*(1.-deep);
+    float trace=smoothstep(.89,1.,bars)*(.045+.045*sin(world.x*2.26+world.y))+lace;
     float ring=0.;
     for(int j=0;j<4;j++){
      vec4 w=fronts[j];
@@ -102,10 +143,14 @@ function tide(root){
      float distances=abs(distance(world,taps[j].xy)-age*1.42);
      ring+=step(0.,age)*(1.-smoothstep(.33,.89,age))*(1.-smoothstep(.017,.071,distances))*.78;
     }
-    vec3 daytime=mix(vec3(.47,.75,.69),vec3(.11,.47,.60),deep);
+    vec3 daytime=mix(vec3(.40,.78,.68),vec3(.09,.43,.57),deep);
     vec3 nighttime=mix(vec3(.13,.26,.31),vec3(.07,.17,.27),deep);
     vec3 color=mix(nighttime,daytime,light)*(1.-dim*.27)+vec3(.76,.89,.83)*(surf*.27+trace+ring*.35);
-    gl_FragColor=vec4(color,min(.93,.28+.54*deep+surf*.23+ring*.36));
+    float bay=1.-smoothstep(.68,1.,length((world-vec2(36.9,15.4))/vec2(6.4,5.6)));
+    float clearShelf=1.-smoothstep(.67,1.30,length((world-vec2(36.65,17.56))/vec2(4.05,1.50)));
+    float detailAlpha=min(.93,(.28+.54*deep)*(1.-.57*clearShelf)+surf*.23+ring*.36);
+    gl_FragColor=vec4(mix(color,vec3(.76,.89,.84)*(1.-dim*.4),mapMode),
+     mix(detailAlpha,bay*(surf*.27+trace*.61+ring*.48),mapMode));
    }`
  });
  const mesh=new T.Mesh(new T.PlaneGeometry(30,22),material);
@@ -115,18 +160,16 @@ function tide(root){
 
 export function makeCoastDiorama(scene){
  const root=new T.Group();root.name='海岸';scene.add(root);
- terrain(root);
+ const sandbar=terrain(root);
  const ramps=lanes.map((lane,i)=>wornSlate(root,lane.ramp.x,i));
  for(const [i,[x,z,w,h,d]] of [
-  [32.91,10.83,1.75,.86,1.07],[34.04,9.75,1.40,1.06,.98],[35.03,10.19,.84,.60,.80],
-  [36.81,10.69,1.05,.44,.78],[38.87,10.04,.89,.54,.91],[40.37,10.34,1.48,.89,1.12],[41.67,11.03,1.43,.53,.90],
-  [33.44,13.4,.39,.22,.53],[36.61,13.49,.42,.25,.49],[36.96,13.82,.36,.16,.49],[40.12,13.79,.64,.32,.42],
+  [33.44,13.4,.39,.22,.53],[40.12,13.79,.64,.32,.42],
   [40.77,14.5,.57,.37,.94],[32.98,14.92,.49,.15,.32],[39.73,16.65,.46,.15,.45]
  ].entries()){
   const y=landY(x,z);
-  stone(root,x,y+h*.18,z,[w,h,d],stoneColors[i%4],i);
-  if(h>.48)stone(root,x+w*.29,y+h*.64,z-.12,[w*.73,h*.41,d*.78],stoneColors[(i+1)%4],i+.2);
+  stone(root,x,y-h*.12,z,[w,h,d],stoneColors[i%4],i);
  }
+ const intertidal=makeIntertidal(root,landY);
  const stones=lanes.map((_,i)=>{
   const {x,z}=shoreStone(i);
   const home=stone(root,x,landY(x,z)+.042,z,[.34,.155,.29],stoneColors[1],i+.6,pebbleShape);
@@ -140,16 +183,19 @@ export function makeCoastDiorama(scene){
    blade.rotation.z=Math.sin(a)*.36;blade.rotation.x=Math.cos(a)*.49;
   }
  }
- const water=tide(root),foam=finish('#cde7db',{roughness:.66});
+ const water=tide(root),foam=finish('#cde7db',{roughness:.66}),drawTracks=makeTracks(root);
  let tapIndex=0;
  const sprays=lanes.map(()=>Array.from({length:9},(_,i)=>{
   const p=stone(root,0,0,0,[.019+i*.001,.035,.020],foam,i,pebbleShape);
   p.castShadow=false;p.visible=false;return p;
  }));
  return {
-  root,hintNodes:{stones,ramps},
+  root,hintNodes:{stones,ramps,crab:intertidal.crab.root,pool:intertidal.water,kelp:intertidal.kelp.map(p=>p.root),fry:intertidal.fry.map(f=>f.root)},
+  setMapMode(on){sandbar.visible=!on;water.mapMode.value=Number(on);},
   ripple(x,z,time){water.taps.value[tapIndex++%2].set(x,z,time);},
-  tick(state,night,shade){
+  tick(state,night,shade,penguins){
+   intertidal.tick(state);
+   drawTracks(state,penguins);
    water.time.value=state.time;water.light.value=1-night;water.dim.value=shade;
    const waves=state.waves.slice(-4);
    water.fronts.value.forEach((p,i)=>{

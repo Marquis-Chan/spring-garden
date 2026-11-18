@@ -1,4 +1,4 @@
-import { clamp, ease, idleDelay, idleTravelRate, mix } from './state.js';
+import { clamp, idleClockRate, ease, idleDelay, idleTravelRate, mix } from './state.js';
 
 export const coastWaterY = .42;
 const shoreTop = .65;
@@ -11,6 +11,8 @@ export function coastGroundHeight(z) {
 
 export const coastPoints = {
   waterEntryZ: shoreStart + (shoreTop - coastWaterY) / grade,
+  tidePool: { x: 36.72, y: .53, z: 13.47 },
+  kelp: [{x:34.18,y:.36,z:17.47},{x:39.03,y:.36,z:17.92}],
   lanes: [
     { land: { x: 35.20, z: 12.65 }, ramp: { x: 35.20, z: 13.28 }, swim: { x: 35.15, z: 15.85 } },
     { land: { x: 38.35, z: 12.27 }, ramp: { x: 38.35, z: 13.23 }, swim: { x: 38.62, z: 15.75 } }
@@ -60,6 +62,81 @@ export function createCoast(emit = () => {}) {
   const shoreGaze = lanes.map(() => null);
   let waveId = 0;
   let night = false;
+  const crabDen = {x:36.43,z:13.08}, crabLedge = {x:37.48,z:13.21};
+  const crab = {...crabDen,y:coastGroundHeight(crabDen.z),phase:'den',stride:0,claw:0,gait:0};
+  let crabAt = 0, noticed = false;
+  const kelp=coastPoints.kelp.map(p=>({...p,sway:0})),kelpTap=[-Infinity,-Infinity];
+  const fry=Array.from({length:3},(_,i)=>({...kelp[0],index:i,visible:false,yaw:0,tail:0}));
+  let shoalFrom=null,shoalAge=0,dartAt=-Infinity;
+
+  function tapKelp(index){
+    if(!valid(index,kelp))return;
+    kelpTap[index]=time;
+    if(shoalFrom!==null){dartAt=time;return;}
+    shoalFrom=index;shoalAge=0;
+    emit({type:'kelp-fry',from:index});
+  }
+
+  function stepShoal(dt){
+    for(const [i,plant] of kelp.entries())plant.sway=pulse((time-kelpTap[i])/.9);
+    if(shoalFrom===null)return;
+    const start=kelp[shoalFrom],end=kelp[1-shoalFrom],dir=Math.sign(end.x-start.x);
+    shoalAge+=dt*(1+.75*pulse((time-dartAt)/.57));
+    for(const f of fry){
+      const u=clamp((shoalAge-f.index*.22)/2.8),arc=Math.sin(u*Math.PI);
+      f.visible=u>0&&u<1;
+      f.x=mix(start.x,end.x,u);
+      f.z=mix(start.z,end.z,u)+(.39*f.index-.41)*arc+(f.index-1)*.13;
+      f.y=.345+Math.sin(u*Math.PI*2+f.index)*.012;
+      f.yaw=Math.atan2(end.x-start.x,end.z-start.z+(.39*f.index-.41)*Math.PI*Math.cos(u*Math.PI));
+      f.tail=Math.sin(shoalAge*19-f.index)*.58*dir;
+    }
+    if(shoalAge>=3.25){
+      kelpTap[1-shoalFrom]=time;
+      emit({type:'fry-shelter',at:1-shoalFrom});
+      shoalFrom=null;
+    }
+  }
+  function tapFry(index){
+    const f=fry[index];
+    if(!f?.visible)return;
+    dartAt=time;emit({type:'ripple',x:f.x,y:coastWaterY,z:f.z});
+  }
+
+  function tapCrab() {
+    if (crab.phase!=='den' && crab.phase!=='ledge') return;
+    crab.phase=crab.phase==='den'?'out':'home';
+    crabAt=time;
+    noticed=false;
+    emit({type:'crab-signal',from:crab.phase==='out'?'pool':'ledge'});
+  }
+
+  // 潮池边缘高低不齐，小蟹绕着干岩台横走，先探螯再迈足。
+  function stepCrab(dt) {
+    const age=time-crabAt;
+    if(crab.phase==='ledge' && age>10 && !night) { crab.phase='home';crabAt=time;return; }
+    if(crab.phase!=='out' && crab.phase!=='home') {crab.gait=crab.claw=0;return;}
+    const goingOut=crab.phase==='out';
+    const progress=clamp((age-.50)/1.44);
+    const along=goingOut?ease(progress):1-ease(progress);
+    const last=position(crab);
+    crab.x=mix(crabDen.x,crabLedge.x,along);
+    crab.z=mix(crabDen.z,crabLedge.z,along)-Math.sin(along*Math.PI)*.20;
+    crab.y=coastGroundHeight(crab.z);
+    crab.stride+=(goingOut?1:-1)*distance(crab,last)*29;
+    crab.claw=Math.max(pulse(age/.56),.73*pulse((age-1.94)/.64));
+    crab.gait=pulse(progress);
+    const neighbor=penguins[1];
+    if(goingOut&&!noticed&&!night&&neighbor.phase==='land'&&neighbor.sleep<.05&&distance(crab,neighbor)<1.32){
+      noticed=true;
+      shoreGaze[1]={at:time,toward:crab,crab:true};
+      emit({type:'penguin-crab-look',index:1});
+    }
+    if(age>=2.58){
+      crab.phase=goingOut?'ledge':'den';crabAt=time;
+      emit({type:'crab-settle',site:crab.phase});
+    }
+  }
 
   function begin(actor, phase, duration) {
     actor.phase = phase;
@@ -256,6 +333,11 @@ export function createCoast(emit = () => {}) {
       const face = bearing(actor,gaze.toward);
       const age = time - gaze.at;
       const watching = ease(age / .16) * (1 - ease((age - 1.30) / .35));
+      if (gaze.crab) {
+        actor.inspectCrab=watching;
+        actor.look=clamp(turn(actor.yaw,face)/1.12,-1,1)*watching;
+        return shoreYaw[index]+turn(shoreYaw[index],face)*.61*watching;
+      }
       // 两次抬起靠近同伴的鳍，脸一直朝它，脚仍留在自己的岸台。
       actor.acknowledge = watching * (.18 + .82 * (.5 - .5 * Math.cos(age * Math.PI * 4 / shoreGreetingTime)));
       actor.display = Math.max(actor.display, actor.acknowledge * .55);
@@ -290,6 +372,7 @@ export function createCoast(emit = () => {}) {
     actor.progress = progress;
     actor.gait = actor.crouch = actor.prone = actor.slide = actor.paddle = actor.pitch = actor.look = actor.acknowledge = 0;
     actor.stand = 1;
+    actor.inspectCrab=0;
     const called = night ? 0 : pulse((time - penguinCallAt[index]) / .65);
     actor.display = actor.call = called;
     let yaw = phase === 'land' || phase === 'waddle' ? shoreYaw[index] : 0;
@@ -396,7 +479,8 @@ export function createCoast(emit = () => {}) {
   function step(dt, active = false) {
     dt = clamp(dt, 0, .05);
     time += dt;
-    if (active) shoreTime += dt;
+    if (active) shoreTime += dt * idleClockRate;
+    stepCrab(dt);stepShoal(dt);
     for (const actor of penguins) {
       actor.time = time;
       stepPenguin(actor, dt, active);
@@ -407,6 +491,6 @@ export function createCoast(emit = () => {}) {
 
   return {
     penguins, fish, get time() { return time; }, get waves() { return waves.map(({ contacts, ...wave }) => wave); },
-    step, setNight, tapPenguin, tapRamp, tapStone, tapWater, tapFish
+    crab, kelp, fry, tapCrab, tapKelp, tapFry, step, setNight, tapPenguin, tapRamp, tapStone, tapWater, tapFish
   };
 }

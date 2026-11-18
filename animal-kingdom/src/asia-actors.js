@@ -347,11 +347,11 @@ export function makePeacock(T) {
   const blueGreen = new T.Color('#42968e');
   const coverts = new T.Color('#68865b');
   const leaf = new T.Color('#81a16c');
-  const bronze = new T.Color('#bb9f63');
-  const emerald = new T.Color('#468579');
-  const turquoise = new T.Color('#66b9be');
-  const violet = new T.Color('#3f507d');
-  const nearBlack = new T.Color('#36435e');
+  const bronze = new T.Color('#d3ad68');
+  const emerald = new T.Color('#397e70');
+  const turquoise = new T.Color('#56b7ba');
+  const violet = new T.Color('#34538b');
+  const nearBlack = new T.Color('#25385d');
   const cinnamon = new T.Color('#a08466');
   const smoke = new T.Color('#585351');
   const color = new T.Color();
@@ -417,7 +417,7 @@ export function makePeacock(T) {
     [.919, .046, .060, .010], [.948, .048, .048, .009], [.974, .049, .028, .007],
     [.993, .050, .010, .005], [.999, .050, .003, .003],
   ], 18, (x, y, z) => {
-    const radius = Math.hypot(x / .077, (z - .815) / .112);
+    const radius = Math.hypot(x / .084, (z - .815) / .125);
     const cleanEdge = 1 - s(radius, .91, 1.025);
     const bronzeRing = s(radius, .66, .91) * cleanEdge;
     const shaftCover = (1 - s(Math.abs(x), .005, .021)) * (1 - s(z, .56, .708));
@@ -425,7 +425,8 @@ export function makePeacock(T) {
       .lerp(emerald, cleanEdge).lerp(bronze, bronzeRing * .92)
       .lerp(turquoise, (1 - s(radius, .46, .69)) * .98)
       .lerp(violet, 1 - s(radius, .30, .47)).lerp(nearBlack, 1 - s(radius, .125, .285));
-    return color.lerp(bronze, shaftCover * .54);
+    const vane=s(z,.18,.52)*(1-s(z,.61,.75));
+    return color.lerp(bronze,shaftCover*.54+.070*vane*(.5+.5*Math.cos(z*62-Math.abs(x)*84)));
   }).rotateX(-Math.PI / 2);
 
   const rays = [];
@@ -559,8 +560,8 @@ export function makePeacock(T) {
     train.rotation.set(T.MathUtils.lerp(-1.71 + air * .10, -.145, raised) + rattle*shiver*.039,
       .038 + displayed * .07 + rattle*shiver*.245, -.018 + rattle*Math.sin(shakePhase*19)*.044);
     for (const { fanAngle, ray, amount, row, i } of rays) {
-      const reveal = s(displayed, Math.abs(amount) * .13, .95);
-      const flutter = Math.sin(time * 6.4 - i * .37) * displayed * .011;
+      const reveal = s(displayed, Math.abs(amount) * .30 + row*.04, .99);
+      const flutter = Math.sin(time * 2.3 - i * .37) * displayed * .005;
       const tremor = rattle*Math.sin(shakePhase*41-i*.58+row*.73);
       ray.rotation.set((row ? .096 : -.039) * reveal + flutter + tremor*.017,
         amount * .040 * (1 - reveal), -fanAngle * (.072 + reveal * .928) + tremor*.022);

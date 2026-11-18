@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import * as T from 'three';
 import { createSavanna, savannaPoints } from '../src/savanna-state.js';
-import { makeGiraffe, makeLion } from '../src/savanna-actors.js';
+import { makeElephant, makeGiraffe, makeLion } from '../src/savanna-actors.js';
+import { makeSavannaDiorama } from '../src/savanna-diorama.js';
 
 function setup() {
   const events = [];
@@ -22,7 +23,7 @@ test('象、鹿、斑马和狮安静各走几步，不会擅自喷水、吃叶�
   const animals = [savanna.elephant, savanna.giraffe, savanna.zebra, savanna.lion];
   const origins = animals.map(position);
   const moved = [false, false, false, false];
-  for (let i = 0; i < 128; i++) {
+  for (let i = 0; i < 256; i++) {
     advance(.05, true);
     animals.forEach((animal, index) => {
       moved[index] ||= Math.hypot(animal.x - origins[index].x, animal.z - origins[index].z) > (index === 3 ? .12 : .27);
@@ -67,7 +68,7 @@ test('大象走开时点下就回应，归位对准水面再取水，实际洒�
 
 test('鹿走动时点叶，先稳住四脚并按当前位置准确咬叶', () => {
   const { savanna, events, advance } = setup();
-  advance(3.15, true);
+  advance(4.90, true);
   const giraffe = savanna.giraffe;
   assert.ok(Math.hypot(giraffe.x - savannaPoints.giraffe.x, giraffe.z - savannaPoints.giraffe.z) > .15);
   const body = position(giraffe), walkingHeading = giraffe.yaw;
@@ -76,7 +77,7 @@ test('鹿走动时点叶，先稳住四脚并按当前位置准确咬叶', () =>
   assert.deepEqual(position(giraffe), body);
   assert.notEqual(giraffe.yaw, walkingHeading);
   assert.equal(giraffe.browse, 0);
-  while (savanna.time < 4.9 && giraffe.browse === 0) advance(.04, true);
+  while (savanna.time < 6.65 && giraffe.browse === 0) advance(.04, true);
   const yaw = giraffe.yaw;
   assert.ok(giraffe.browse > 0);
   advance(.60, true);
@@ -91,9 +92,9 @@ test('鹿走动时点叶，先稳住四脚并按当前位置准确咬叶', () =>
 
 test('长颈鹿走完一趟会多停一会，停着也可以马上点叶', () => {
   const { savanna, events, advance } = setup();
-  advance(3.9, true);
+  advance(5.65, true);
   const resting = position(savanna.giraffe);
-  advance(3.55, true);
+  advance(6.70, true);
   assert.deepEqual(position(savanna.giraffe), resting);
   savanna.tapBranch(0);
   assert.ok(events.some(({ type }) => type === 'leaf-select'));
@@ -174,7 +175,7 @@ test('鹿吻到选定的枝才咬叶，近处落叶到地面后斑马才转耳',
 test('远处落叶不让斑马跟动，枝上叶片会长回并可以再吃', () => {
   const { savanna, events, advance } = setup();
   savanna.tapBranch(1);
-  advance(1.28);
+  advance(1.62);
   assert.ok(events.some(event => event.type === 'leaf-land' && event.index === 1));
   assert.equal(savanna.zebra.listen, 0);
   assert.deepEqual(position(savanna.zebra), savannaPoints.zebra);
@@ -324,4 +325,72 @@ test('点芒草先给提示，狮前爪确实到位才压弯，并保留直接�
   assert.ok(!events.some(event => event.type === 'lion-call'));
   plain.tapLion();
   assert.equal(events.at(-1).type, 'lion-call');
+});
+
+test('右枝黄叶落在石沿，狮爪够到实体叶面才拨走，夜里不补玩', () => {
+  const lion=makeLion(T);
+  const stage=makeSavannaDiorama(new T.Scene(),savannaPoints);
+  const events=[];
+  const plain=createSavanna(event=>{events.push(event);stage.react(event,plain.time);});
+  const fallen=stage.root.getObjectByName('随枝飘落的叶1');
+  let contact=false,lofted=false;
+  for(let i=0;i<280;i++){
+    if(i===1||i===90)plain.tapBranch(1);
+    const cursor=events.length;
+    plain.step(1/60,true);
+    lion.root.position.set(plain.lion.x,plain.lion.y,plain.lion.z);
+    lion.root.rotation.y=plain.lion.yaw;lion.pose(plain.lion);
+    stage.tick(plain,new T.Vector3(),0,0);
+    if(events.slice(cursor).some(e=>e.type==='lion-bats-leaf')){
+      assert.ok(fallen.visible);
+      assert.ok(lion.pawContact.getWorldPosition(new T.Vector3()).distanceTo(fallen.position)<.002);
+      contact=true;
+    }
+    if(contact && fallen.visible && fallen.position.y>.77 && fallen.position.z>7.00)lofted=true;
+  }
+  assert.ok(contact&&lofted);
+  assert.equal(fallen.visible,false);
+  assert.deepEqual(events.filter(e=>['leaf-land','lion-bats-leaf'].includes(e.type)).map(e=>e.type),['leaf-land','lion-bats-leaf']);
+  plain.tapBranch(1);
+  plain.setNight(true);
+  for(let i=0;i<210;i++)plain.step(1/60,true);
+  assert.equal(events.filter(e=>e.type==='lion-bats-leaf').length,1);
+});
+
+test('蹄声带起象耳与卷鼻，点花立即取水，只有近花能让斑马抖鬃',()=>{
+  const {savanna,events,advance}=setup();
+  const rig=makeElephant(T);
+  rig.pose(savanna.elephant);
+  const first=rig.nozzle.position.clone();
+  savanna.tapZebra();
+  advance(.1,true);
+  assert.equal(savanna.elephant.sniff,0);
+  advance(.9,true);
+  rig.pose(savanna.elephant);
+  rig.root.rotation.y=savanna.elephant.yaw;
+  const lifted=rig.nozzle.getWorldPosition(new T.Vector3());
+  assert.ok(savanna.elephant.listen>.5 && lifted.y>first.y+.70);
+  assert.ok(lifted.x>first.x+.50);
+  const toZebra=Math.atan2(savanna.zebra.x-savanna.elephant.x,savanna.zebra.z-savanna.elephant.z);
+  assert.ok(Math.abs(Math.atan2(lifted.x,lifted.z)-toZebra)<.22);
+  assert.ok(events.findIndex(e=>e.type==='hoof')<events.findIndex(e=>e.type==='elephant-hears-hooves'));
+  savanna.tapFlower(0);
+  advance(1.8,true);
+  assert.ok(events.some(e=>e.type==='water-hit'&&e.index===0));
+  assert.equal(savanna.zebra.shake,0);
+  const next=setup();
+  next.savanna.tapFlower(1);
+  let shaken=false;
+  for(let f=0;f<160;f++){next.advance(1/60,true);shaken ||= Math.abs(next.savanna.zebra.shake)>.72;}
+  assert.ok(shaken);
+});
+
+test('水花刚落就连点另一丛花，象鼻收回后再浇一次，反复点同一朵不会排队',()=>{
+  const {savanna,events,advance}=setup();
+  savanna.tapFlower(0);
+  advance(1.14,true);
+  savanna.tapFlower(1);
+  savanna.tapFlower(1);
+  advance(4,true);
+  assert.deepEqual(events.filter(e=>e.type==='water-hit').map(e=>e.index),[0,1]);
 });

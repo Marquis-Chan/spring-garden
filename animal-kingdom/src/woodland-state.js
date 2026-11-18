@@ -1,4 +1,4 @@
-import { clamp, ease, idleDelay, mix } from './state.js';
+import { clamp, idleClockRate, ease, idleDelay, mix } from './state.js';
 
 const peckerYaw = -2.10;
 const barkOutward = { x: -Math.sin(peckerYaw), z: -Math.cos(peckerYaw) };
@@ -15,8 +15,8 @@ export const woodlandPoints = {
   squirrelPerch: { x: 7.86, y: 1.22, z: -.58 },
   peckerPerches: [1.68, 2.25].map(barkPoint),
   wood: [2.01, 2.58].map(barkPoint),
-  foxStops: [{ x: 11.13, y: .38, z: 2.73 }, { x: 12.15, y: .38, z: 2.49 }],
-  litter: [{ x: 11.12, y: .38, z: 3.38 }, { x: 12.45, y: .38, z: 3.11 }]
+  foxStops: [{ x: 9.63, y: .38, z: 3.58 }, { x: 10.65, y: .38, z: 3.34 }],
+  litter: [{ x: 9.62, y: .38, z: 4.23 }, { x: 10.95, y: .38, z: 3.96 }]
 };
 
 const position = ({ x, y, z }) => ({ x, y, z });
@@ -385,7 +385,7 @@ export function createWoodland(emit = () => {}, { groundAt = () => .38 } = {}) {
     dt = clamp(dt, 0, .05);
     time += dt;
     if (active) {
-      routineTime += dt;
+    routineTime += dt * idleClockRate;
       if (!foxMove && routineTime >= foxRoutineAt) startFox(1 - fox.site, false, true);
       if (!night && !squirrelMove && routineTime >= squirrelRoutineAt && squirrel.sleep < .18) {
         goSquirrel(squirrel.site === 0 ? 1 : 0, true);

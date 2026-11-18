@@ -3,11 +3,12 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#e7ebc8"><title>春日小花园 · 动物王国</title>
-<meta name="description" content="春日小花园的 3D 动物探索游戏：拖动地图，走近池塘、果园、雨林和海底，和动物玩一会儿。">
+<meta name="description" content="春日小花园的 3D 动物探索游戏：拖动连续大地图，走近十处栖息地，探索企鹅潮池和北极熊冰岸。">
 <style>/* CSS */</style>
 </head>
 <body>
-<main id="pond" aria-label="动物王国">
+<main id="pond" data-view="overview" aria-label="动物王国">
+ <div id="habitat">
   <div id="sky" aria-hidden="true">
     <div class="sky-grain"></div>
     <div class="hills hill-far"></div><div class="hills hill-near"></div>
@@ -31,9 +32,18 @@
   <div id="cloud-art" aria-hidden="true">
    <svg viewBox="0 0 184 92"><defs><linearGradient id="cloud-foam" x2="0" y2="1" gradientUnits="objectBoundingBox"><stop stop-color="#fffbed"/><stop offset="1" stop-color="#d6e5df"/></linearGradient></defs><path id="cloud-body" d="M6 61q0-23 26-23Q36 16 63 17 75 -1 97 12q21 3 26 26 31-7 47 8 13 16-1 31-8 9-32 9H38Q5 86 6 61Z" fill="url(#cloud-foam)" /><path d="M40 38q5-13 20-13m20-8q16-7 31 13" fill="none" stroke="#fffef2" stroke-width="5" opacity=".65" stroke-linecap="round"/></svg>
   </div>
-  <canvas id="stage" aria-label="动物王国，可拖曳地图，可走近池塘、林缘、果园、草原、河岸、亚洲树林、雨林、海岸和海底"></canvas>
+  <canvas id="stage" aria-label="动物王国，可向四周拖动，探索池塘、林缘、果园、草原、河岸、亚洲树林、雨林、企鹅湾、冰岸和海底"></canvas>
+  <div id="atlas-waymarks" role="group" aria-label="大地图上的场景入口"></div>
   <div id="sleep-mark" aria-hidden="true" hidden><span>Z</span><span>z</span><span>z</span></div>
-  <nav id="places" aria-label="走近一处">
+  <div id="sky-hand">
+    <button type="button" id="sun" aria-label="切换到夜晚"></button>
+    <button type="button" id="cloud" aria-label="拖云遮住日月，点云让它继续飘"></button>
+   </div>
+   <button type="button" id="sound" class="shell" aria-label="静音" aria-pressed="false">
+     <svg viewBox="0 0 40 40" aria-hidden="true"><path fill="#476454" d="M9 15h6l9-7v24l-9-7H9z"/><path class="wave" d="M28 15q6 5 0 10m4-15q11 10 0 20" stroke="#476454" stroke-width="2.5" stroke-linecap="round" fill="none"/><path class="mute" d="M27 16l9 9m0-9-9 9" stroke="#476454" stroke-width="2.5" stroke-linecap="round"/></svg>
+   </button>
+ </div>
+  <nav id="places" aria-label="切换场景">
    <button type="button" id="enter-pond" class="waymark" aria-label="走近池塘" hidden>
     <svg viewBox="0 0 44 44" aria-hidden="true"><path fill="#568e61" d="M21 8C8 8 6 16 8 21c3 8 23 9 27-1l-12-3 9-6C29 9 25 8 21 8Z"/><path d="M10 32q6-4 12 0t12 0" fill="none" stroke="#5e9eaa" stroke-width="3" stroke-linecap="round"/></svg>
    </button>
@@ -61,17 +71,13 @@
    <button type="button" id="enter-ocean" class="waymark" aria-label="潜入海底" hidden>
     <svg viewBox="0 0 44 44" aria-hidden="true"><path d="M22 26C17 10 9 12 6 15c3 1 4 5 7 7l7 5-2 8h8l-2-8 7-5c3-2 4-6 7-7-3-3-11-5-16 11Z" fill="#418c9a"/><path d="M9 31q5-3 10 0m8 0q5-3 9 0" fill="none" stroke="#8bb9ab" stroke-width="2.6" stroke-linecap="round"/></svg>
    </button>
-  </nav>
-  <div id="sky-hand">
-    <button type="button" id="sun" aria-label="切换到夜晚"></button>
-    <button type="button" id="cloud" aria-label="拖云遮住日月，点云让它继续飘"></button>
-   </div>
-   <button type="button" id="sound" class="shell" aria-label="静音" aria-pressed="false">
-     <svg viewBox="0 0 40 40" aria-hidden="true"><path fill="#476454" d="M9 15h6l9-7v24l-9-7H9z"/><path class="wave" d="M28 15q6 5 0 10m4-15q11 10 0 20" stroke="#476454" stroke-width="2.5" stroke-linecap="round" fill="none"/><path class="mute" d="M27 16l9 9m0-9-9 9" stroke="#476454" stroke-width="2.5" stroke-linecap="round"/></svg>
+   <button type="button" id="enter-ice" class="waymark" aria-label="走近北极熊的冰洞" hidden>
+    <svg viewBox="0 0 44 44" aria-hidden="true"><path d="M4 31 9 20 16 15 22 9l9 7 9 15-9 4-18 1Z" fill="#9dcbd1"/><path d="m9 20 7-5 6-6 8 7-7-1-5 5-4-1-3 4Z" fill="#f1faf8"/><path d="M16 32c0-8 3-12 8-12s8 6 8 12" fill="#578592"/><circle cx="20" cy="26" r="2.3" fill="#e5eddf"/><circle cx="29" cy="26" r="2.3" fill="#e5eddf"/><path d="M18 32c0-8 13-8 13 0Z" fill="#fff3de"/><circle cx="25" cy="30" r="1.4" fill="#4e5957"/></svg>
    </button>
-   <button type="button" id="overview" class="shell" aria-label="回到全景" hidden>
+   <button type="button" id="overview" class="waymark" aria-label="回到全景" hidden>
      <svg viewBox="0 0 40 40" aria-hidden="true"><path fill="#7c9d62" d="M6 26c2-4 6-4 9-7 4-5 10-6 13-3 4 2 7 4 7 9 0 4-5 8-13 9-8 1-17-1-16-8Z"/><path fill="#7bb8b4" d="M19 25c0 3-5 6-8 4-4-3 5-9 8-4Z"/><path fill="#557c52" d="M28 22h-2v-5l-5 2 6-10 7 10-6-2z"/><path d="M20 29c3-4 5-3 7-7" stroke="#f0d7a0" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
    </button>
+  </nav>
    <div id="loading" role="status" aria-live="polite"><span></span></div>
    <div id="unsupported" hidden><svg viewBox="0 0 100 100" aria-hidden="true"><ellipse cx="50" cy="55" rx="32" ry="26" fill="#899d59"/><circle cx="34" cy="34" r="10" fill="#899d59"/><circle cx="66" cy="34" r="10" fill="#899d59"/><circle cx="34" cy="35" r="4" fill="#293c32"/><circle cx="66" cy="35" r="4" fill="#293c32"/></svg><p>这个浏览器未能启动 3D。请家长用启用了硬件加速的 Chrome 或 Edge 打开。</p></div>
    <div class="sr" aria-live="polite" id="access-status"></div>
@@ -99,4 +105,5 @@
 <!-- Toco toucan: Fabrício Grigolin, CC BY 4.0; https://commons.wikimedia.org/wiki/File:Toco_Toucan_call_(Ramphastos_toco).ogg — 7.15–9.50 s excerpt, filtered and faded. -->
 <!-- African penguin: Favaro L, Gamba M, Alfieri C, Pessani D, McElligott A. Scientific Reports 5, 17255 (2015), Supplementary Audio S1. https://doi.org/10.1038/srep17255 ; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/ — filtered and faded contact call presented twice at original pitch. -->
 <!-- Humpback whale and bottlenose dolphin field recordings: NOAA Fisheries, Northeast Fisheries Science Center, Passive Acoustics Branch. Meno-song-NOAA-PAGroup-13 and Tutr-multisound-NOAA-PAGroup-03, respectively. https://www.fisheries.noaa.gov/national/science-data/sounds-ocean-mammals — natural-pitch excerpts, filtered, normalized and faded. -->
+<!-- Polar bear (Ursus maritimus), Günter Tembrock, Tierstimmenarchiv, Museum für Naturkunde Berlin, 1993-01-30. TSA:Ursus_maritimus_V_1879_17_2. https://suche.tierstimmenarchiv.de/search/showdetails.html?unique_identifier=TSA:Ursus_maritimus_V_1879_17_2 . Source and adapted polar-bear.wav: CC BY-SA 3.0 https://creativecommons.org/licenses/by-sa/3.0/ . Original-pitch excerpt 7.76–10.34 s, band-limited, noise reduced, normalized and faded. -->
 <script>/* AUDIO */</script><script>/* GAME */</script></body></html>

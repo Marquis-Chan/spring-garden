@@ -44,7 +44,7 @@ test('两个跳道始终各留一块草地，静置动作分时出现，没有�
   advance(20, false);
   assert.deepEqual(events, []);
   const firstHop = [Infinity, Infinity];
-  for (let frame = 0; frame < 40 * 60; frame++) {
+  for (let frame = 0; frame < 80 * 60; frame++) {
     advance(1 / 60);
     const [a, b] = family.rabbits;
     assert.ok(gap(a, b) > 1.50 && a.z > 9 && b.z > 8.85);

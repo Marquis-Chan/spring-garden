@@ -15,10 +15,10 @@ function setup() {
 
 test('两只猴的日常位置都变，望枝换位不叫，点正在飞的猴会落稳再吃',()=>{
   const {forest,events,step,groundAt}=setup();
-  step(1.9);
+  step(3.8);
   assert.ok(Math.hypot(forest.groundMonkey.x-rainPoints.groundMonkey.x,forest.groundMonkey.z-rainPoints.groundMonkey.z)>.18);
   assert.equal(forest.groundMonkey.y,groundAt(forest.groundMonkey.x,forest.groundMonkey.z));
-  while(forest.time<4.0&&forest.monkey.air<.4)step(.05);
+  while(forest.time<8.0&&forest.monkey.air<.4)step(.05);
   assert.ok(forest.monkey.air>.4);
   assert.deepEqual(events.filter(({type})=>type==='monkey-call'||type==='banana-pick'),[]);
   forest.tapMonkey();

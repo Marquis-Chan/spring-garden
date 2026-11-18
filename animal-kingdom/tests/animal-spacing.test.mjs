@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import * as T from 'three';
 import { groundHeight } from '../src/diorama.js';
-import { makeFish, makeFrog } from '../src/animals.js';
+import { makeFish } from '../src/animals.js';
 import { makeDuckling } from '../src/pond-young-actors.js';
 import { createOrchard } from '../src/orchard-state.js';
 import { makeButterfly, makeCat } from '../src/orchard-actors.js';
@@ -110,34 +110,33 @@ test('河马游动、沉降和掀浪时，鱼身和鱼尾都留在一旁的水�
   }
 });
 
-test('河岸蛙和两鸭在自己的浅水位置，和原来的动物及刷牙路径留有净空', () => {
+test('河岸两鸭在自己的浅水位置，和原来的动物及刷牙路径留有净空', () => {
   const river = createRiver(() => {}, { groundAt:groundHeight });
   const bank = makeRiverDiorama(new T.Scene(),riverPoints,groundHeight);
   const hippo = makeHippo(T,groundHeight), turtle = makeTurtle(T,bank.stoneTopAt);
-  const rhino = makeRhino(T,groundHeight), frog = makeFrog(T);
+  const rhino = makeRhino(T,groundHeight);
   const ducks = [.86,.77].map(scale=>makeDuckling(T,{scale}));
   const fish = [.63,.52].map((scale,index)=>{
     const model=makeFish(T);
     model.root.scale.set(scale,index===0?.30:.29,scale);
     return model;
   });
-  frog.root.scale.setScalar(.62);
-  const visitors=[frog,...ducks], locals=[hippo,turtle,rhino,...fish,{root:bank.toothbrush}];
+  const visitors=ducks, locals=[hippo,turtle,rhino,...fish,{root:bank.toothbrush}];
   const shapes=new Map([...visitors,...locals].map(model=>[model,closedMeshes(model.root)]));
   const boxes=new Map([...shapes.keys()].map(model=>[model,new T.Box3()]));
   const draw=(model,actor)=>{place(model,actor);boxes.get(model).setFromObject(model.root);};
   for(let frame=0;frame<720;frame++){
     if(frame===25||frame===398)river.tapHippo();
-    if(frame===64||frame===376)river.tapDuck(1);
+    if(frame===64||frame===376)river.tapDuck(0);
+    if(frame===200||frame===449)river.tapDuck(1);
     if(frame===83||frame===495)river.tapStone(frame===83?1:0);
     if(frame===141||frame===310)river.tapToothbrush();
-    if(frame===169)river.tapFrog();
     if(frame===367)river.tapGrass(0);
     if(frame===552)river.setNight(true);
     if(frame===613)river.setNight(false);
     river.moveToothbrush(Math.sin(frame*.11),Math.cos(frame*.19));
     river.step(1/40,true);
-    draw(hippo,river.hippo);draw(turtle,river.turtle);draw(rhino,river.rhino);draw(frog,river.frog);
+    draw(hippo,river.hippo);draw(turtle,river.turtle);draw(rhino,river.rhino);
     ducks.forEach((model,index)=>draw(model,river.ducks[index]));
     fish.forEach((model,index)=>draw(model,{...river.fish[index],dive:river.fish[index].dive*.45}));
     bank.tick(river,0,0,hippo);

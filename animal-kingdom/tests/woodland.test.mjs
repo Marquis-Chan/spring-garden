@@ -182,7 +182,7 @@ test('林缘三只各走各的小路线，啄木鸟贴树换爪，只有松果�
   const animals = [woodland.fox, woodland.squirrel, woodland.pecker];
   const start = animals.map(position);
   let climbing = false;
-  for (let i = 0; i < 100; i++) {
+  for (let i = 0; i < 190; i++) {
     advance(.05, true);
     assert.equal(woodland.fox.y, groundAt(woodland.fox.x));
     if (woodland.pecker.climb > .4) {
@@ -203,7 +203,7 @@ test('林缘三只各走各的小路线，啄木鸟贴树换爪，只有松果�
   advance(1, true);
   const before = animals.map(position);
   let foxMoved = false;
-  for (let i = 0; i < 110; i++) {
+  for (let i = 0; i < 220; i++) {
     advance(.05, true);
     foxMoved ||= Math.abs(woodland.fox.x - before[0].x) > .25;
   }
@@ -215,15 +215,15 @@ test('林缘三只各走各的小路线，啄木鸟贴树换爪，只有松果�
 
 test('狐狸、松鼠和啄木鸟在自主巡游中点下去仍完成原动作', () => {
   const { woodland, events, advance } = setup();
-  while (woodland.time < 3 && woodland.fox.gait < .12) advance(.05, true);
+  while (woodland.time < 6 && woodland.fox.gait < .12) advance(.05, true);
   assert.ok(woodland.fox.gait > .12);
   woodland.tapLitter(0);
   assert.equal(events.at(-1)?.type, 'litter-touch');
-  while (woodland.time < 4 && woodland.squirrel.gait < .12) advance(.05, true);
+  while (woodland.time < 8 && woodland.squirrel.gait < .12) advance(.05, true);
   assert.ok(woodland.squirrel.gait > .12);
   woodland.tapSquirrel();
   assert.equal(events.at(-1)?.type, 'squirrel-call');
-  while (woodland.time < 5 && woodland.pecker.climb < .25) advance(.05, true);
+  while (woodland.time < 10 && woodland.pecker.climb < .25) advance(.05, true);
   assert.ok(woodland.pecker.climb > .25);
   const tapAt = woodland.time;
   woodland.tapWood(1);

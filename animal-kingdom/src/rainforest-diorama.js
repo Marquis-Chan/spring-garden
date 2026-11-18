@@ -123,9 +123,10 @@ export function makeRainforestDiorama(scene,points,groundAt){
  for(const sign of [-1,1])frond(root,fruitPoint.x+sign*.098,fruitPoint.y+.054,fruitPoint.z-.178,.19,sign*.97,sign>0?2:1);
  const berry=add(root,soft,fruit,fruitPoint.x,fruitPoint.y,fruitPoint.z,[.070,.067,.068]);
  const bananas=points.bananas.map(()=>banana(root));
- for(const [i,[x,z,r]] of [[33.14,2.55,.27],[34.10,1.72,.49],[35.73,2.51,.33],[36.34,1.91,.38],
-  [37.21,2.51,.35],[38.13,1.87,.31],[39.76,2.13,.43],[40.42,1.42,.61],[41.07,2.29,.29],
-  [33.45,.55,.44],[36.13,-.91,.72],[38.17,-1.35,.47],[40.13,-.39,.49]].entries()){
+ // 支撑爪、摆动的身体和前景捡香蕉的小猴之间留出连续的明暗对比。
+ for(const [i,[x,z,r]] of [[33.14,2.55,.27],[33.60,1.58,.42],[35.93,2.83,.26],
+  [39.76,2.13,.43],[40.42,1.42,.61],[41.07,2.29,.29],
+  [33.45,.55,.44],[35.63,-1.37,.48],[39.13,-1.58,.41],[40.13,-.39,.49]].entries()){
   const y=groundAt(x,z);add(root,rock,moss,x,y+.025,z,[r,r*.29,r*.69]);
   for(let j=0;j<4;j++)frond(root,x+.09,y+.12*j,z-.10,r*(1.13+j*.22),i*.68+j*1.92,(j+i)%4);
   if(i%3===0)for(let j=0;j<3;j++)add(root,soft,flower,x-.17-j*.085,y+.058+j*.012,z+.29+j*.06,[.083,.024,.066]);

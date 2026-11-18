@@ -103,9 +103,10 @@ export function makeAsiaDiorama(scene,points,groundAt){
   return sprout;
  });
  const twig=tuft(root,points.tuft.x,groundAt(points.tuft.x,points.tuft.z),points.tuft.z,.62,2);
- for(const [i,[x,z,w]] of [[17.56,.82,.35],[18.83,1.51,.38],[19.63,.61,.22],[20.12,-1.58,.38],[16.96,-.30,.31],
-  [18.11,-.87,.29],[22.91,1.84,.31],[24.28,1.63,.42],[24.77,-.25,.47],[23.12,-1.66,.38],[19.11,2.71,.29],
-  [21.87,2.66,.39],[24.41,2.83,.22],[17.3,2.2,.32]].entries()){
+ // 扇羽展开的背后、种石与觅食路线之间留出素净草地。
+ for(const [i,[x,z,w]] of [[17.56,.82,.35],[20.12,-1.58,.38],[16.96,-.30,.31],
+  [17.82,-.87,.29],[25.18,1.69,.33],[24.96,-.80,.38],[19.11,2.71,.29],
+  [21.32,2.71,.27],[17.3,2.2,.32]].entries()){
   const y=groundAt(x,z);
   const rock=part(root,stone,riverStones[i%3],x,y+.017,z,[w,w*.30,w*.72]);rock.rotation.y=i*.71;
   tuft(root,x+w*.66,y-.020,z-.11,w*1.08,i+6);

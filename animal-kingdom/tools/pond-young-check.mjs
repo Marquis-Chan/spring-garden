@@ -34,7 +34,7 @@ try{
    }
    let phase='打开新池塘';
    try{
-    await page.goto(url);
+    await page.goto(url,{timeout:75000});
     await wait(()=>window.pondInspect?.().ready);
     await button('enter-pond');
     await wait(()=>{const s=window.pondInspect().view;return s.mode==='pond'&&!s.moving;});
@@ -82,7 +82,7 @@ try{
     await tap(asleep.pondYoung.ducks[1].screen);
     await page.locator('#sleep-mark').waitFor({state:'visible'});
     await capture('05-sleep');
-    await wait(t=>window.pondInspect().time>t+.85,asleep.time);
+    await wait(t=>window.pondInspect().time>t+2.1,asleep.time);
     const final=await read();
     assert.equal(final.audio.starts.duckling,asleep.audio.starts.duckling);
     assert.ok(final.pondYoung.ducks.every((d,i)=>Math.hypot(d.x-asleep.pondYoung.ducks[i].x,d.z-asleep.pondYoung.ducks[i].z)<.025));

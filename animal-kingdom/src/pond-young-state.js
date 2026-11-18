@@ -1,4 +1,4 @@
-import { aroundRock, clamp, ease, idleTravelRate, mix, waterPoint } from './state.js';
+import { aroundRock, clamp, idleClockRate, ease, idleTravelRate, mix, waterPoint } from './state.js';
 
 const duckWaterY = .025;
 const duckPath = { x: .44, z: -1.58, rx: 1.13, rz: .50 };
@@ -231,7 +231,7 @@ export function createPondYoung(emit = () => {}) {
 
   // 经过荷叶外沿的敞水区，分开追寻目标及回浅水窝的两段路。
   function seekFrog(dt, frog, jumping) {
-    visitClock += dt;
+    visitClock += visit ? dt : dt * idleClockRate;
     if (!visit) {
       if (visitClock < nextVisit || jumping) return;
       visit = {phase:'seek', leg:0, site:frog.site, metAt:0};
@@ -293,7 +293,7 @@ export function createPondYoung(emit = () => {}) {
     time += dt;
     if (active) {
       if (!night && (!dawn || time - dawn.at >= 1.13)) dayTime += dt;
-      tadpolePhase += dt * (night ? .42 : .91);
+      tadpolePhase += dt * idleClockRate * (night ? .42 : .91);
       if (frog) seekFrog(dt, frog, jumping);
     }
     for (const duck of ducks) stepDuck(duck, dt, active);

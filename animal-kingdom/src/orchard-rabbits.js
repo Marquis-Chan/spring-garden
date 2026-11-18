@@ -1,4 +1,4 @@
-import { clamp, ease, mix } from './state.js';
+import { clamp, idleClockRate, ease, mix } from './state.js';
 
 export const rabbitCoats = [
   { back: '#bd885e', middle: '#e3bb94', belly: '#f6e6c9', leg: '#d2a27a', innerEar: '#dea391' },
@@ -209,7 +209,7 @@ export function createOrchardRabbits(emit = () => {}, { groundAt = () => .38 } =
     dt = clamp(dt, 0, .05);
     time += dt;
     if (active && !night) {
-      daylight += dt;
+    daylight += dt * idleClockRate;
       if (!race && hops.every(hop => !hop)) {
         const resting = rabbits.find(({ index }) => daylight >= nextHop[index]);
         if (resting) start(resting, true);

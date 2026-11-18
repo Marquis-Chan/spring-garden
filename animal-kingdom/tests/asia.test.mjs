@@ -21,13 +21,13 @@ test('孔雀合扇才日常改站，角鸮只在夜间无声换枝且仍接收�
   const advance = seconds => {
     for (let i = 0; i < Math.ceil(seconds * 60); i++) asia.step(1 / 60, true);
   };
-  advance(5);
+  advance(9);
   assert.ok(Math.hypot(asia.peacock.x - asiaPoints.peacock.x, asia.peacock.z - asiaPoints.peacock.z) > .24);
   assert.equal(asia.peacock.fan, 0);
   assert.equal(asia.owl.sleep, 1);
   assert.equal(asia.owl.site, 0);
   asia.setNight(true);
-  advance(5.61);
+  advance(10.86);
   assert.ok(asia.owl.flight > .4);
   assert.ok(!events.some(e => e.type === 'owl-call'));
   asia.tapOwl();

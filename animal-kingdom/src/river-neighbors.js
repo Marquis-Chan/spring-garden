@@ -1,53 +1,53 @@
-import { callPulses, clamp, idleTravelRate } from './state.js';
+import { clamp, ease, idleClockRate, idleTravelRate, mix } from './state.js';
 
-const lanes = [
-  {x:27.30,z:9.12,rx:.31,rz:.18,angle:.56},
-  {x:28.52,z:9.13,rx:.29,rz:.16,angle:-.65}
-];
+const residentLane = {x:27.36,z:9.32,rx:.26,rz:.14};
+export const duckCove = {x:29.80,z:8.82,lipX:29.34};
+// 访客停在岸洞前方，留出浅滩水道。
+const meeting = {x:29.05,z:9.00};
 const pulse = progress => progress > 0 && progress < 1 ? Math.sin(Math.PI * progress) : 0;
 const bearing = (from, to) => Math.atan2(to.x - from.x, to.z - from.z);
 const turning = (from, to) => Math.atan2(Math.sin(to - from), Math.cos(to - from));
 const gap = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
 const location = ({x,y,z}) => ({x,y,z});
 
-function onLane(lane, angle) {
-  return {
-    x:lane.x+Math.sin(angle)*lane.rx,
-    z:lane.z+Math.cos(angle)*lane.rz,
-    yaw:Math.atan2(Math.cos(angle)*lane.rx,-Math.sin(angle)*lane.rz)
-  };
+function onLane(angle) {
+  const {x,z,rx,rz}=residentLane;
+  return {x:x+Math.sin(angle)*rx,z:z+Math.cos(angle)*rz,
+    yaw:Math.atan2(Math.cos(angle)*rx,-Math.sin(angle)*rz)};
 }
 
-export function createRiverNeighbors(emit, {waterY, frogPerch}) {
-  const frog = {...frogPerch, yaw:.36, time:0, throat:0, blink:0};
-  const ducks = lanes.map((lane,index) => ({...onLane(lane,lane.angle), y:waterY+.021,index,
-    time:0,swim:0,paddle:0,sleep:0,headUp:0,call:0,followLook:0,wing:0}));
-  const phases = lanes.map(({angle})=>angle);
-  const replies = [null,null];
-  let time = 0, night = false, frogCalled = -Infinity, duckCall = null;
+export function createRiverNeighbors(emit, {waterY}) {
+  let angle=.56, time=0, night=false, duckCall=null;
+  const ducks = [onLane(angle),{x:duckCove.x,z:duckCove.z,yaw:-Math.PI/2}].map((start,index)=>({
+    ...start, y:waterY+.021,index,present:index===0,interactive:index===0,
+    time:0,swim:0,paddle:0,sleep:0,headUp:0,call:0,followLook:0,wing:0
+  }));
+  const [resident, guest]=ducks;
+  const replies=[null,null];
+  let progress=0, visiting=false, rest=0, wait=27;
+
+  function invite() {
+    if (!visiting) {
+      // 在洞口后转身再游出；调头时保持当前位置。
+      if (!guest.present) guest.yaw=-Math.PI/2;
+      guest.present=true;
+      visiting=true;
+    }
+    rest=6.5;
+  }
 
   function tapDuck(index) {
-    if (!Number.isInteger(index)) return;
-    const actor = ducks[index];
-    if (!actor) return;
+    const actor=ducks[index];
+    if (!Number.isInteger(index) || !actor?.interactive) return;
     if (night) {
       emit({type:'sleep',animal:'river-duck',index,...location(actor)});
       return;
     }
     if (duckCall) return;
-    duckCall = {index,at:time,replied:false};
+    invite();
+    duckCall={index,at:time,replied:false};
     emit({type:'duckling-call',index,...location(actor)});
-  }
-
-  function tapFrog() {
-    if (time-frogCalled<2.18) return;
-    frogCalled=time;
-    emit({type:'frog-call',...location(frog)});
-    if (night) return;
-    for (const duck of ducks) {
-      if (gap(duck,frog)>1.38) continue;
-      replies[duck.index]={at:time+.22,toward:frog,pending:true};
-    }
+    emit({type:'river-duck-ripple',...location(actor)});
   }
 
   function setNight(value) {
@@ -55,45 +55,73 @@ export function createRiverNeighbors(emit, {waterY, frogPerch}) {
     if (!night) return;
     duckCall=null;
     replies.fill(null);
+    if (guest.present && !guest.interactive) visiting=false;
   }
 
-  function step(dt, active) {
+  function guestCourse(dt,active,quietBank) {
+    if (!active || (night && (!guest.present || guest.interactive))) return {...guest};
+    if (!guest.present) {
+      if (quietBank) wait-=dt*idleClockRate;
+      if (quietBank && wait<=0) invite();
+    }
+    if (!guest.present) return {...guest};
+    if (progress>=1 && visiting) {
+      rest-=dt;
+      if (rest<=0) visiting=false;
+    }
+    const facing=visiting ? bearing(duckCove,meeting) : bearing(meeting,duckCove);
+    const destination=visiting?1:0;
+    const targetYaw=visiting&&progress>=1 ? bearing(guest,resident) : facing;
+    if (Math.abs(turning(guest.yaw,facing))<.46) {
+      progress=clamp(progress+Math.sign(destination-progress)*dt/(visiting?1.95:2.45));
+    }
+    if (progress===0 && !visiting) {
+      guest.present=false;
+      wait=32;
+    }
+    const along=ease(progress);
+    const x=mix(duckCove.x,meeting.x,along);
+    // 出洞时脸和半个身子露出来才可点；回程头先进洞，较早收回点按范围。
+    guest.interactive=guest.present&&x<(visiting?29.21:29.15);
+    return {x,z:mix(duckCove.z,meeting.z,along),yaw:targetYaw};
+  }
+
+  function step(dt,active,quietBank=true) {
     time+=dt;
-    const callAge=duckCall?time-duckCall.at:Infinity;
-    if (duckCall && !duckCall.replied && callAge>=.32) {
+    const visitor=guestCourse(dt,active,quietBank);
+    const age=duckCall?time-duckCall.at:Infinity;
+    // 洞里的访客要先游进视野，再抬头回应常驻鸭。
+    if (duckCall && !duckCall.replied && age>=.32 && guest.interactive) {
       const source=ducks[duckCall.index], other=ducks[1-duckCall.index];
       duckCall.replied=true;
       replies[other.index]={at:time,toward:source};
       emit({type:'river-duck-reply',index:other.index,...location(other)});
-      emit({type:'river-duck-ripple',...location(source)});
     }
-    if (callAge>1) duckCall=null;
-    for (const [index,duck] of ducks.entries()) {
-      const reply=replies[index], answer=reply?pulse((time-reply.at)/.93):0;
-      if (answer>0 && reply.pending) {
-        reply.pending=false;
-        emit({type:'river-duck-listens',index,...location(duck)});
-      }
-      const calling=duckCall?.index===index?pulse(callAge/.90):0;
-      if (active && !night) phases[index]+=dt*(.62*idleTravelRate+.46*answer+.22*calling);
-      const at=onLane(lanes[index],phases[index]);
+    if (age>3 || (age>1 && duckCall?.replied)) duckCall=null;
+    for (const duck of ducks) {
+      const {index}=duck, reply=replies[index];
+      const elapsed=reply?time-reply.at:-1;
+      const answer=reply ? pulse(elapsed/.95) : 0;
+      if (elapsed>=.95) replies[index]=null;
+      const calling=duckCall?.index===index?pulse(age/.90):0;
+      if (index===0 && active && !night) angle+=dt*(.73*idleTravelRate+.16*calling);
+      const at=index===0?onLane(angle):visitor;
       const moving=gap(duck,at);
-      duck.x=at.x;duck.z=at.z;
-      duck.yaw+=turning(duck.yaw,at.yaw)*Math.min(1,dt*9);
+      duck.x=at.x; duck.z=at.z;
+      const toward=answer?bearing(duck,reply.toward):at.yaw;
+      const yaw=at.yaw;
+      const returningToCover=index===1 && guest.present && !guest.interactive && !visiting;
+      if (!night || returningToCover) duck.yaw+=clamp(turning(duck.yaw,yaw),-dt*3.25,dt*3.25);
+      duck.followLook=answer*clamp(turning(duck.yaw,toward),-.86,.86);
       duck.swim=clamp(moving/Math.max(.001,dt*.32));
       duck.paddle=(duck.paddle+dt*(1.2+duck.swim*2.2)*duck.swim)%1;
-      duck.headUp=Math.max(.93*calling,.69*answer);
+      duck.headUp=Math.max(.93*calling,.72*answer);
       duck.call=calling;
-      duck.wing=.26*answer;
-      duck.followLook=answer?answer*clamp(turning(duck.yaw,bearing(duck,reply.toward)),-.91,.91):0;
-      duck.sleep=clamp(duck.sleep+dt*(night?2.4:-3.1));
+      duck.wing=.25*answer;
+      duck.sleep=clamp(duck.sleep+dt*(night&&!returningToCover?2.4:-3.1));
       duck.time=time+index*.84;
     }
-    const age=time-frogCalled;
-    frog.throat=callPulses.reduce((value,[a,b])=>Math.max(value,pulse((age-a)/(b-a))),0);
-    frog.blink=pulse(((time%4.8)-4.60)/.20);
-    frog.time=time;
   }
 
-  return {ducks,frog,tapDuck,tapFrog,setNight,step};
+  return {ducks,tapDuck,setNight,step};
 }

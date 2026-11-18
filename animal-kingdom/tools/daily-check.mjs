@@ -59,7 +59,7 @@ try{
       })});
       last=s.time;
      }
-     if(s.time-start>=10.8)resolve({snapshots,audio:s.audio.starts,
+     if(s.time-start>=21.6)resolve({snapshots,audio:s.audio.starts,
       rustles:mode==='grove'?s.woodland.events.filter(e=>e.type==='squirrel-rustle'):[]});
      else requestAnimationFrame(next);
     }

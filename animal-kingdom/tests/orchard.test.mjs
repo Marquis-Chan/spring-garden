@@ -114,10 +114,12 @@ test('猫狗点按可直接发声，猫只跟附近飞动的蝴蝶', () => {
   orchard.tapButterfly();
   advance(.27);
   assert.ok(orchard.butterfly.flight > 0 && Math.abs(orchard.cat.look) > .08);
+  assert.ok(orchard.cat.lookUp > .15);
   advance(1.35);
   assert.equal(orchard.butterfly.perch, 1);
   assert.deepEqual(position(orchard.butterfly), orchardPoints.butterfly[1]);
   assert.ok(Math.abs(orchard.cat.look) < .05);
+  assert.ok(orchard.cat.lookUp < .05);
 });
 
 test('蝴蝶与两只蜜蜂各有花点，飞行结束后可以再次换花或召回', () => {
@@ -277,7 +279,7 @@ test('手动换花与出蜂优先，第二只出巢后也会自己换位置', ()
   const atFlowers = orchard.bees.map(position);
   assert.deepEqual(atFlowers, orchardPoints.beeFlowers);
   const moved = [false, false];
-  for (let sample = 0; sample < 32; sample++) {
+  for (let sample = 0; sample < 64; sample++) {
     advance(.125, true);
     orchard.bees.forEach((bee, index) => { moved[index] ||= distance(bee, atFlowers[index]) > .22; });
   }
@@ -293,7 +295,7 @@ test('手动换花与出蜂优先，第二只出巢后也会自己换位置', ()
 test('自动飞蝶沿左侧和前景花带往返，点蝶时猫仍能跟上视线', () => {
   const { orchard, advance } = setup();
   const landings = new Set();
-  for (let sample = 0; sample < 310; sample++) {
+  for (let sample = 0; sample < 620; sample++) {
     advance(.05, true);
     const { x, z, perch } = orchard.butterfly;
     assert.ok(x <= 2.35 || z >= 7.75, '蝴蝶不穿过猫和柯基中间的站区');
@@ -302,7 +304,7 @@ test('自动飞蝶沿左侧和前景花带往返，点蝶时猫仍能跟上视�
   assert.deepEqual([...landings], [0, 1, 2]);
 
   const afterDrift = setup();
-  afterDrift.advance(6.5, true);
+  afterDrift.advance(13, true);
   assert.equal(afterDrift.orchard.butterfly.perch, 1);
   afterDrift.orchard.tapButterfly();
   let look = 0;

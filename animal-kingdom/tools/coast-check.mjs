@@ -62,6 +62,33 @@ try{
    for(const p of [...initial.penguins.map(p=>p.screen),...initial.ramps,...initial.stones,...initial.fish.map(p=>p.screen)]){
     assert.ok(p.x>24&&p.x<width-24&&p.y>25&&p.y<height-25,'每个目标要能直接操作');
    }
+   phase='潮池里的小蟹探出、企鹅看它、再点螃蟹回去';
+   await tap(initial.tidePool);
+   await wait(()=>window.pondInspect().coast.crab.phase==='out');
+   await wait(()=>window.pondInspect().coast.penguins[1].inspectCrab>.5);
+   await shot('02a-penguin-inspects-crab');
+   await wait(()=>window.pondInspect().coast.crab.phase==='ledge');
+   const atLedge=(await read()).coast;
+   assert.ok(atLedge.crab.x-initial.crab.x>.9);
+   assert.equal(atLedge.penguins[0].inspectCrab,0);
+   await tap(atLedge.crab.screen);
+   await wait(()=>window.pondInspect().coast.crab.phase==='den');
+   phase='两丛海藻分别引出三尾银鱼，点银鱼后再游进另一侧叶底';
+   for(const index of [0,1]){
+    const sea=(await read()).coast;
+    await tap(sea.kelp[index].screen);
+    await wait(()=>window.pondInspect().coast.fry.every(f=>f.visible));
+    const swimming=(await read()).coast;
+    assert.equal(swimming.events.filter(e=>e.type==='kelp-fry').at(-1).from,index);
+    if(index===0){
+     await shot('02b-school-between-kelp');
+     const fish=(await read()).coast.fry[1];
+     const rings=(await read()).coast.events.filter(e=>e.type==='ripple').length;
+     await tap(fish.screen);
+     await wait(n=>window.pondInspect().coast.events.filter(e=>e.type==='ripple').length>n,rings);
+    }
+    await wait(i=>{const c=window.pondInspect().coast;return c.fry.every(f=>!f.visible)&&c.events.filter(e=>e.type==='fry-shelter').at(-1)?.at===1-i;},index);
+   }
    phase='两只企鹅摇步与发声';
    for(const i of [0,1]){
     const before=(await read()).audio.starts.penguin;
@@ -152,6 +179,9 @@ try{
    await tap((await read()).coast.penguins[0].screen);
    await page.locator('#sleep-mark').waitFor({state:'visible'});
    await shot('09-night-sleep');
+   await tap((await read()).coast.tidePool);
+   await wait(()=>window.pondInspect().coast.crab.phase==='ledge');
+   assert.ok((await read()).coast.penguins.every(p=>p.sleep>.9 && p.inspectCrab===0));
    const soundBefore=(await read()).audio.starts.penguin;
    await tap((await read()).coast.penguins[1].screen);
    await wait(()=>window.pondInspect().coast.events.some(e=>e.type==='sleep'&&e.index===1));

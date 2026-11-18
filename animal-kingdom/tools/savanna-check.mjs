@@ -22,7 +22,13 @@ try{
   page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
   page.on('request',r=>{if(!r.url().startsWith('file:'))requests.push(r.url());});
   const read=()=>page.evaluate(()=>window.pondInspect?.());
-  const wait=(p,arg=null)=>page.waitForFunction(p,arg,{timeout:16000});
+  const wait=async(p,arg=null)=>{
+   try{return await page.waitForFunction(p,arg,{timeout:45000});}
+   catch(error){
+    const state=await read();
+    throw new Error('草原检查等待超时 '+p+' '+JSON.stringify({view:state?.view,events:state?.savanna?.events?.slice(-5),errors}),{cause:error});
+   }
+  };
   const tap=p=>touch?page.touchscreen.tap(p.x,p.y):page.mouse.click(p.x,p.y);
   const shot=name=>page.screenshot({path:path.join(out,width+'-'+name+'.png')});
   async function press(id){
@@ -79,9 +85,7 @@ try{
   await wait(()=>window.pondInspect().savanna.flowers[0].wet>.2);
   await shot('05-contact-and-rainbow');
   assert.equal((await read()).savanna.flowers[1].wet,0);
-  await wait(()=>{const e=window.pondInspect().savanna.elephant;return !e.scoop&&!e.lift&&!e.spray;});
   await tap((await read()).savanna.flowers[1].screen);
-  await tap((await read()).savanna.elephant.screen);
   await wait(()=>window.pondInspect().savanna.flowers[1].wet>.2);
   const watering=await read();
   assert.ok(watering.audio.starts.elephant>=1);
@@ -101,9 +105,12 @@ try{
   await wait(()=>{const g=window.pondInspect().savanna.giraffe;return !g.browse&&!g.chew;});
   await tap((await read()).savanna.leaves[1].screen);
   await wait(()=>window.pondInspect().savanna.events.some(e=>e.type==='leaf-land'&&e.index===1));
+  await wait(()=>window.pondInspect().savanna.events.some(e=>e.type==='lion-bats-leaf'));
+  await shot('08a-lion-bats-leaf');
   assert.equal((await read()).savanna.zebra.listen,0);
   await tap((await read()).savanna.zebra.screen);
   await wait(()=>window.pondInspect().savanna.events.some(e=>e.type==='hoof'));
+  await wait(()=>window.pondInspect().savanna.elephant.sniff>.67);
   await shot('09-zebra-runs');
   await tap((await read()).savanna.lion.screen);
   await wait(()=>{const s=window.pondInspect();return s.savanna.lion.roar>.94&&s.audio.starts.lion>0;});

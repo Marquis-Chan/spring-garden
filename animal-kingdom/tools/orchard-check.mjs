@@ -108,7 +108,7 @@ try{
   }
   assert.equal((await read()).orchard.butterfly.perch,0);
   await tap((await read()).orchard.butterfly.screen);
-  await wait(()=>{const s=window.pondInspect().orchard;return s.butterfly.flight>.3&&Math.abs(s.cat.look)>.15;});
+  await wait(()=>{const s=window.pondInspect().orchard;return s.butterfly.flight>.3&&Math.max(s.cat.lookUp,Math.abs(s.cat.look))>.15;});
   await capture('08-cat-follows-butterfly');
   await tap((await read()).orchard.hive);
   await wait(()=>window.pondInspect().orchard.bees.every(b=>b.visible&&b.flight>.2));

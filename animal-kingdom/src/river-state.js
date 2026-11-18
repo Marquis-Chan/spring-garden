@@ -1,5 +1,6 @@
-import { clamp, ease, idleDelay, idleTravelRate, mix } from './state.js';
+import { clamp, idleClockRate, ease, idleDelay, idleTravelRate, mix } from './state.js';
 import { createRiverNeighbors } from './river-neighbors.js';
+import { createRiverBird } from './river-bird.js';
 
 export const riverPoints = {
   waterY: .51,
@@ -7,13 +8,13 @@ export const riverPoints = {
   hippo: { x: 27.48, y: .45, z: 7.33 },
   waveOrigin: { x: 27.48, y: .51, z: 7.94 },
   toothbrush: { x: 25.45, y: .61, z: 7.24 },
-  frogPerch: { x: 26.69, y: .640, z: 9.68 },
+  birdPerch: { x: 25.30, y: 1.20, z: 6.50 },
   turtleSites: [{ x: 26.16, y: .45, z: 8.36 }, { x: 24.35, y: .58, z: 8.92 }],
   // 两条水道避开河马划水时的身体，近鱼仍游过犀牛会拂动的水草。
   fish: [{ x: 28.95, y: .395, z: 7.30 }, { x: 29.20, y: .445, z: 8.28 }],
   rhino: { x: 29.75, y: .62, z: 5.77 },
-  rhinoStops: [{ x: 29.70, y: .62, z: 5.72 }, { x: 30.70, y: .66, z: 6.13 }],
-  grass: [{ x: 28.89, y: .75, z: 6.25 }, { x: 31.58, y: .75, z: 6.51 }],
+  rhinoStops: [{ x: 29.70, y: .62, z: 5.72 }, { x: 30.19, y: .66, z: 6.13 }],
+  grass: [{ x: 28.89, y: .75, z: 6.25 }, { x: 31.07, y: .75, z: 6.51 }],
   leaves: [{ x: 26.72, y: .52, z: 8.10 }, { x: 29.03, y: .52, z: 8.45 }]
 };
 
@@ -36,17 +37,23 @@ const valid = (index, list) => Number.isInteger(index) && index >= 0 && index < 
 export function createRiver(emit = () => {}, { groundAt = defaultGroundAt } = {}) {
   const points = riverPoints;
   const neighbors = createRiverNeighbors(emit,points);
+  const perchedAt={hippo:-Infinity,rhino:-Infinity};
+  const visitor=createRiverBird(event=>{
+    if(event.type==='river-bird-land' && event.site in perchedAt)perchedAt[event.site]=time;
+    emit(event);
+  });
   const hippo = { ...points.hippo, yaw: 0, time: 0, lift: 0, gape: 0, sink: 0, gait: 0, stride: 0, brushing: 0 };
   const toothbrush = { phase: 'rest', u: 0, v: 0, amount: 0, open: 0, stroke: 0, strokes: 0 };
   const turtle = {
     ...points.turtleSites[0], yaw: .38, time: 0, site: 0, reach: 1, tuck: 0, swim: 0, paddle: 0, gait: 0,
     stride: 0, bask: 0, look: 0, listen: 0, sleep: 0
   };
-  const rhino = { ...points.rhino, yaw: .22, time: 0, site: 0, stride: 0, gait: 0, sniff: 0, call: 0 };
+  const rhino = { ...points.rhino, yaw: -1.06, time: 0, site: 0, stride: 0, gait: 0,
+    sniff: 0, call: 0, attention: 0, listenEar: 0, chew: 0, blade: 0 };
   rhino.y = groundAt(rhino.x, rhino.z);
-  const fish = points.fish.map(point => ({ ...point, yaw: .42, time: 0, tail: 0, dive: 0, alert: 0 }));
+  const fish = points.fish.map(point => ({ ...point, yaw: .42, time: 0, tail: 0, dive: 0, alert: 0, surface: 0 }));
   const leaves = points.leaves.map((point, index) => ({ ...point, index, bob: 0 }));
-  const grass = points.grass.map((point, index) => ({ ...point, index, bend: 0, selected: index === 0 }));
+  const grass = points.grass.map((point, index) => ({ ...point, index, bend: 0, nibbled: 0, selected: index === 0 }));
   const leafAt = leaves.map(() => -Infinity);
   const grassTapAt = grass.map(() => -Infinity);
   const grassSniffAt = grass.map(() => -Infinity);
@@ -54,6 +61,7 @@ export function createRiver(emit = () => {}, { groundAt = defaultGroundAt } = {}
   const fishWaveAt = fish.map(() => -Infinity);
   const fishGrassAt = fish.map(() => -Infinity);
   const fishPhase = [.48, 2.82];
+  let surfaced = null;
   const waves = [];
   let waveId = 0;
   let time = 0;
@@ -194,6 +202,7 @@ export function createRiver(emit = () => {}, { groundAt = defaultGroundAt } = {}
   }
 
   function stepHippo(dt, active) {
+    hippo.earFlick=pulse((time-perchedAt.hippo)/.78);
     hippo.lift = hippo.gape = hippo.sink = hippo.brushing = 0;
     if (stepToothbrush(dt)) return;
     const free = active && !hippoMotion && toothbrush.phase === 'rest';
@@ -306,18 +315,18 @@ export function createRiver(emit = () => {}, { groundAt = defaultGroundAt } = {}
   }
 
   function tapRhino() {
-    if (rhinoMotion) return;
+    if (time - rhinoCallAt < 1.5) return;
     rhinoCallAt = time;
+    rhinoRoutine.next = bankTime + 3.5;
     emit({ type: 'rhino-call' });
-    startRhino(1 - rhino.site);
   }
 
   function startRhino(index) {
     const to = points.rhinoStops[index];
     const from = position(rhino);
     const gap = distance(from, to);
-    const duration = gap < .04 ? 0 : clamp(gap * .76, .30, .72);
-    rhinoMotion = { from, to, index, at: time, duration, landed: false, sniffAt: null };
+    const duration = gap < .04 ? 0 : Math.max(.30,gap / 1.23);
+    rhinoMotion = { from, to, index, smallStep: gap < .13, walkAt: null, duration, landed: false, sniffAt: null, bitten: false };
     for (const patch of grass) patch.selected = patch.index === index;
   }
 
@@ -334,48 +343,62 @@ export function createRiver(emit = () => {}, { groundAt = defaultGroundAt } = {}
   }
 
   function stepRhino(dt, active) {
-    rhino.call = pulse((time - rhinoCallAt) / .97);
-    rhino.gait = rhino.sniff = 0;
+    const lookAge = time - rhinoCallAt;
+    rhino.listenEar = Math.max(ease(lookAge / .14) * (1 - ease((lookAge - .84) / .46)),pulse((time-perchedAt.rhino)/.88));
+    rhino.call = pulse(lookAge / .93);
+    const looking = ease((lookAge - .13) / .35) * (1 - ease((lookAge - 1.27) / .54));
+    rhino.attention = mix(rhino.attention, rhinoMotion ? 0 : looking, Math.min(1,dt*12));
+    rhino.gait = rhino.sniff = rhino.chew = rhino.blade = 0;
     if (rhinoMotion) {
       const action = rhinoMotion;
-      const age = time - action.at;
-      const progress = action.duration ? clamp((age - .09) / action.duration) : 1;
+      const tuft = points.grass[action.index];
+      const pathYaw = action.smallStep ? bearing(rhino, tuft) : bearing(action.from, action.to);
+      if (action.walkAt === null) {
+        const delta = turn(rhino.yaw,pathYaw);
+        rhino.yaw += clamp(delta,-dt*3.4,dt*3.4);
+        rhino.stride += Math.min(Math.abs(delta),dt*3.4)*1.5;
+        rhino.gait = Math.min(.26,Math.abs(delta)*.6);
+        if (Math.abs(delta) < .10) action.walkAt = time;
+      }
+      const progress = action.walkAt === null ? 0 : action.duration ? clamp((time-action.walkAt)/action.duration) : 1;
       const travel = ease(progress);
       const previous = position(rhino);
       rhino.x = mix(action.from.x, action.to.x, travel);
       rhino.z = mix(action.from.z, action.to.z, travel);
       rhino.y = groundAt(rhino.x, rhino.z);
       rhino.stride += distance(previous, rhino) * 14;
-      rhino.gait = pulse(progress);
-      const tuft = points.grass[action.index];
-      const yaw = progress < 1 ? bearing(action.from, action.to) : bearing(rhino, tuft);
-      rhino.yaw += turn(rhino.yaw, yaw) * Math.min(1, dt * 15);
+      if(action.walkAt !== null)rhino.gait = pulse(progress);
       if (progress === 1) {
         if (!action.landed) {
           action.landed = true;
           rhino.site = action.index;
           emit({ type: 'rhino-stop', index: action.index, ...position(rhino) });
         }
-        const arrived = age - (action.duration ? action.duration + .09 : 0);
-        if (action.sniffAt === null && arrived >= .15 && Math.abs(turn(rhino.yaw, yaw)) < .11 && distance(rhino, tuft) < 1.02) {
+        const delta = turn(rhino.yaw, bearing(rhino,tuft));
+        rhino.yaw += clamp(delta,-dt*3.3,dt*3.3);
+        if (action.sniffAt === null && Math.abs(delta) < .035) {
           action.sniffAt = time;
         }
         if (action.sniffAt !== null) {
           const sniffAge = time - action.sniffAt;
-          rhino.sniff = pulse(sniffAge / .59);
-          // 鼻端降到草穗附近后，草才随探鼻摆动。
-          if (sniffAge >= .24 && grassSniffAt[action.index] < action.sniffAt) {
+          rhino.sniff = ease(sniffAge/.46)*(1-ease((sniffAge-.78)/.53));
+          rhino.blade = ease((sniffAge-.56)/.12)*(1-ease((sniffAge-2.12)/.46));
+          rhino.chew = rhino.blade * (.5-.5*Math.cos(Math.max(0,sniffAge-.86)*8.8));
+          // 嘴唇到达叶尖以后，岸草才让出被咬走的部分，带动近水的鱼。
+          if (sniffAge >= .46 && !action.bitten) {
+            action.bitten = true;
             grassSniffAt[action.index] = time;
             emit({ type: 'rhino-sniff', index: action.index, ...tuft });
             // 水草朝池里倒下，鱼回应的是靠水的叶尖，不是岸上的草根。
             const leafTip = { x: mix(tuft.x, points.pool.x, .15), z: mix(tuft.z, points.pool.z, .15) };
             if (active && action.index === 0 && distance(fish[0], leafTip) < 1.12) {
               fishGrassAt[0] = time;
+              surfaceFish(0);
               emit({ type: 'grass-fish-look', index: 0, grass: action.index, ...position(fish[0]), originX: leafTip.x, originZ: leafTip.z });
             }
           }
         }
-        if (arrived >= .90) {
+        if (action.sniffAt !== null && time-action.sniffAt >= 2.63) {
           rhinoMotion = null;
           rhinoRoutine.index = 0;
           rhinoRoutine.next = bankTime + 2.7;
@@ -386,21 +409,47 @@ export function createRiver(emit = () => {}, { groundAt = defaultGroundAt } = {}
           }
         }
       }
-    } else {
+    } else if (lookAge > 1.82) {
       const home = rhino.site === 0 ? points.rhino : points.rhinoStops[1];
-      const nearby = { x: home.x + (rhino.site === 0 ? .42 : -.40), z: home.z - .19 };
+      const nearby = { x: home.x + (rhino.site === 0 ? -.40 : -.36), z: home.z + .15 };
       rhino.gait = alongPath(rhino, rhinoRoutine, [nearby, home], dt, active, .56, .65, 2.7);
+      if (active && bankTime < rhinoRoutine.next && rhino.stride > 0) {
+        const restYaw = rhino.site === 0 ? -1.06 : 1.08;
+        rhino.yaw += clamp(turn(rhino.yaw,restYaw),-dt*.92,dt*.92);
+      }
       rhino.y = groundAt(rhino.x, rhino.z);
+    } else if (lookAge > .17) {
+      const toCamera = turn(rhino.yaw,0);
+      if (Math.abs(toCamera) > 1.1) {
+        const step = Math.sign(toCamera)*Math.min(Math.abs(toCamera)-1.1,dt*1.75);
+        rhino.yaw += step;
+        rhino.stride += Math.abs(step)*2.6;
+        rhino.gait = Math.min(.30,Math.abs(step)*14);
+      }
     }
     for (const patch of grass) {
-      const touched = .41 * pulse((time - grassTapAt[patch.index]) / .54);
-      const smelled = .84 * pulse((time - grassSniffAt[patch.index]) / .62);
+      const bittenFor = time - grassSniffAt[patch.index];
+      const touched = .17 * pulse((time - grassTapAt[patch.index]) / .46);
+      const smelled = .49 * pulse(bittenFor / .78);
       patch.bend = Math.max(touched, smelled);
+      patch.nibbled = ease(bittenFor/.15)*(1-ease((bittenFor-1.67)/1.31));
     }
   }
 
+  // 同一时刻只浮现一条鱼，水波和近岸的草都是可以重复发现它的入口。
+  function surfaceFish(index) {
+    if (!surfaced) surfaced = {index,at:time,until:time+3.65};
+    else if (surfaced.index === index && time < surfaced.until) surfaced.until = Math.max(surfaced.until,time+2.20);
+  }
+
+  function tapWater(x,z) {
+    if (!Number.isFinite(x) || !Number.isFinite(z)) return;
+    const nearest = distance(fish[0],{x,z}) < distance(fish[1],{x,z}) ? 0 : 1;
+    surfaceFish(nearest);
+  }
+
   function tapFish(index) {
-    if (!valid(index, fish)) return;
+    if (!valid(index, fish) || fish[index].surface < .46) return;
     fishTapAt[index] = time;
     emit({ type: 'fish-tap', index, ...position(fish[index]) });
   }
@@ -412,6 +461,7 @@ export function createRiver(emit = () => {}, { groundAt = defaultGroundAt } = {}
       const lane = fishLanes[index];
       const dive = pulse((time - fishTapAt[index]) / .72);
       const rustle = pulse((time - fishGrassAt[index]) / .78);
+      actor.surface = surfaced?.index === index ? ease((time-surfaced.at)/.54)*(1-ease((time-surfaced.until)/.83)) : 0;
       actor.dive = dive;
       actor.alert = Math.max(dive, rustle * .93, pulse((time - fishWaveAt[index]) / .78) * .82);
       const phase = fishPhase[index] += dt * ((.89 + index * .16) * idleTravelRate + actor.alert * 2.5);
@@ -424,13 +474,17 @@ export function createRiver(emit = () => {}, { groundAt = defaultGroundAt } = {}
       actor.yaw = Math.atan2(-Math.sin(phase) * lane.x, Math.cos(phase) * lane.z);
       actor.tail = Math.sin(time * 10.9 + index) * (.35 + actor.alert * .35);
     }
+    if (surfaced && time-surfaced.until > .83) surfaced = null;
   }
 
   function waveContact(wave, contact) {
     const { type, actor } = contact;
     let index = contact.index;
     if (type === 'wave-leaf') leafAt[index] = time;
-    if (type === 'wave-fish') fishWaveAt[index] = time;
+    if (type === 'wave-fish') {
+      fishWaveAt[index] = time;
+      surfaceFish(index);
+    }
     if (type === 'wave-turtle') {
       if (night || turtle.tuck > .46 || turtle.y > points.waterY) return;
       turtleListenAt = time;
@@ -471,7 +525,7 @@ export function createRiver(emit = () => {}, { groundAt = defaultGroundAt } = {}
   function step(dt, active = false) {
     dt = clamp(dt, 0, .05);
     time += dt;
-    if (active) bankTime += dt;
+    if (active) bankTime += dt * idleClockRate;
     hippo.time = turtle.time = rhino.time = time;
     for (const actor of fish) actor.time = time;
     stepHippo(dt, active);
@@ -479,15 +533,18 @@ export function createRiver(emit = () => {}, { groundAt = defaultGroundAt } = {}
     stepFish(dt);
     stepRhino(dt, active);
     stepWaves();
-    neighbors.step(dt,active);
+    const quietBank = !rhinoMotion && !hippoMotion && toothbrush.phase==='rest' && !waves.length &&
+      time-rhinoCallAt>2 && !surfaced;
+    neighbors.step(dt,active,quietBank);
   }
 
   return {
     hippo, turtle, rhino, fish, leaves, grass, toothbrush,
-    ducks:neighbors.ducks, frog:neighbors.frog, tapDuck:neighbors.tapDuck, tapFrog:neighbors.tapFrog,
+    ducks:neighbors.ducks, bird:visitor.bird, tapDuck:neighbors.tapDuck, tapBird:visitor.tap,
+    poseBird(dt,active,perches) { visitor.step(dt,active,night,!hippoMotion&&toothbrush.phase==='rest',perches); },
     get time() { return time; },
     get waves() { return waves.map(({ contacts, ...wave }) => wave); },
-    step, setNight, tapHippo, tapTurtle, tapStone, tapRhino, tapGrass, tapFish,
+    step, setNight, tapHippo, tapTurtle, tapStone, tapRhino, tapGrass, tapFish, tapWater,
     tapToothbrush, moveToothbrush, returnToothbrush
   };
 }

@@ -8,6 +8,7 @@ const groundColors=['#708c55','#819d5b','#91a767','#b0b478','#a2ac68'].map(c=>ne
 const sand=new T.Color('#a8ac77'), shallows=new T.Color('#68a08d'), deep=new T.Color('#3b8d84');
 const dryGrass=new T.Color('#b8ac65');
 const floodGrass=new T.Color('#969f68');
+const bankMeadow=new T.Color('#86a383'),bankSand=new T.Color('#c3b488');
 const woodlandGrass=new T.Color('#91a76c');
 const rainforestGrass=new T.Color('#7a9c69');
 const greens=['#5e884f','#729b55','#92ae52','#b2b969','#688448'];
@@ -74,6 +75,12 @@ function bank(scene){
    const pool=riverPoints.pool,riverRadius=Math.hypot((x-pool.x)/pool.rx,(z-pool.z)/pool.rz);
    color.lerp(floodGrass,T.MathUtils.smoothstep(x,22,24)*(.54+.14*Math.cos(x*.83+z*.64)+.11*Math.sin(z*1.8-x*.52)));
    if(riverRadius<1.42)color.lerp(sand,1-T.MathUtils.smoothstep(riverRadius,.93,1.42));
+   // 只在这一片河湾铺开湿润草甸和浅色泥岸，让暖灰色犀牛与背景分开。
+   if(riverRadius<3.2){
+    const meadow=(1-T.MathUtils.smoothstep(riverRadius,1.75,3.2))*T.MathUtils.smoothstep(riverRadius,.88,1.20);
+    color.lerp(bankMeadow,meadow*(.77+.09*Math.cos(x*.75+z*.45)));
+    color.lerp(bankSand,.67*(1-T.MathUtils.smoothstep(Math.abs(riverRadius-1.00),.04,.24)));
+   }
    if(riverRadius<1.03)color.lerp(shallows,1-T.MathUtils.smoothstep(riverRadius,.68,1.03));
    colors.push(color.r,color.g,color.b);
    if(i<rings&&j<resolution){
@@ -139,7 +146,7 @@ function flowers(parent,x,y,z,s,variant){
 }
 function greenery(scene){
  const groups=[];
- for(const [index,a] of [3.42,3.76,4.08,4.50,4.84,5.34,5.65,6.05,.12,.46,.83,1.16,1.83,2.19,2.57,2.89].entries()){
+ for(const [index,a] of [3.42,3.86,4.50,5.34,5.85,.12,.83,1.83,2.57,2.89].entries()){
   const [x,y,z]=shoreline(a,1.10+random()*.10);
   const group=new T.Group();group.position.set(x,y,z);scene.add(group);groups.push(group);
   const back=Math.sin(a)<-.45;
@@ -157,14 +164,16 @@ function greenery(scene){
   }
   if(index%3!==1){for(let k=0;k<3;k++)flowers(group,(k-1)*.18,0,.21+k*.085,.55+random()*.45,(index+k)%4);}
  }
- for(let i=0;i<36;i++){
+ for(let i=0;i<24;i++){
   const a=random()*TAU,r=1.02+random()**2*.31;
   const [x,y,z]=shoreline(a,r),s=.045+random()**2*.28;
-  stone(scene,x,y+.018,z,s*1.2,s*.54,s*.82,i%5,random()*TAU);
+  stone(scene,x,y-s*.13,z,s*1.2,s*.54,s*.82,i%5,random()*TAU);
  }
  for(let i=0;i<15;i++){
   const a=random()*TAU;
-  const [x,y,z]=shoreline(a,1.25+random()*.46);
+  // 远岸的地形收在水边，把零星细草留在真实的土坡上。
+  const radius=1.25+random()*.46;
+  const [x,y,z]=shoreline(a,Math.sin(a)<-.45?1.18+(radius-1.25)*.18:radius);
   for(let j=0;j<4;j++)blade(scene,x+j*.068,y-.02,z,.10+random()*.2,.1,random()*TAU,.018,leafMaterials[j%5]);
  }
  return groups;

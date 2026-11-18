@@ -2,16 +2,27 @@
 *{box-sizing:border-box}html,body{margin:0;width:100%;overflow:hidden;background:#deead0;height:100%;overscroll-behavior:none}
 button{font:inherit;cursor:pointer;touch-action:none;-webkit-tap-highlight-color:transparent}
 #pond{position:relative;width:100%;height:100dvh;overflow:hidden;touch-action:none;isolation:isolate;user-select:none}
+#pond{display:flex;flex-direction:column}
+#habitat{position:relative;flex:1;min-height:0;overflow:hidden;isolation:isolate}
 #sky,#stage,#sky-hand{position:absolute;inset:0;width:100%;height:100%}
 #sky{background:linear-gradient(166deg,var(--sky-a) -15%,var(--sky-b) 89%);pointer-events:none}
 .sky-grain{position:absolute;inset:0;opacity:.2;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.68' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' opacity='.2' filter='url(%23n)'/%3E%3C/svg%3E");mix-blend-mode:multiply}
 .hills{position:absolute;bottom:12%;left:-31%;width:147%;height:72%;border-radius:57% 55% 0 0;background:var(--hill-far);opacity:.60;transform:rotate(-8deg);box-shadow:inset 0 12px 44px #f8f8dd35}
 .hill-near{bottom:7%;left:12%;height:71%;background:var(--hill-near);transform:rotate(6deg);opacity:.84}
 #stage{display:block;touch-action:none;outline:none}
+#pond[data-view="overview"] #stage{
+ --atlas-sky:clamp(56px,11.5dvh,99px);
+ top:var(--atlas-sky);height:calc(100% - var(--atlas-sky));
+ mask-image:linear-gradient(to bottom,transparent,#0002 1.6%,#0009 4.8%,#000e 8%,#000 11%);
+}
+@media(max-aspect-ratio:1/1){#pond[data-view="overview"] #stage{--atlas-sky:clamp(88px,12dvh,99px)}}
 #stage[data-cursor="default"]{cursor:grab}
 #stage[data-cursor="pan"]{cursor:grabbing}
 #pond[data-view="ocean"] #sky{background:radial-gradient(ellipse at 37% -18%,#c8e8c978,transparent 68%),linear-gradient(179deg,#70c6cb,#2b8c9d 45%,#17586f 100%)}
 #pond[data-view="ocean"] .hills,#pond[data-view="ocean"] #cloud-art,#pond[data-view="ocean"] #stars,#pond[data-view="ocean"] #sky-hand,#pond[data-view="ocean"] #sun-art{display:none}
+#pond[data-view="coast"] .hills{left:0;width:100%;bottom:0;border-radius:0;box-shadow:none;transform:none}
+#pond[data-view="coast"] .hill-far{top:26%;height:auto;opacity:.72;background:color-mix(in srgb,var(--hill-far) 45%,#729eaa);clip-path:polygon(0 0,8% 3%,16% 12%,24% 14%,31% 17%,40% 18%,54% 20%,69% 18%,78% 15%,85% 12%,94% 4%,100% 6%,100% 100%,0 100%)}
+#pond[data-view="coast"] .hill-near{top:38%;height:auto;opacity:1;background:linear-gradient(180deg,color-mix(in srgb,#85bcbd,#253c55 calc(var(--night)*100%)),color-mix(in srgb,#b2d4c4,#304b5a calc(var(--night)*100%)) 16%,var(--hill-near) 50%)}
 #sleep-mark{position:absolute;left:0;top:0;width:56px;height:35px;pointer-events:none;color:#fef1ca;font-weight:800;font-family:ui-rounded,system-ui,sans-serif;filter:drop-shadow(0 2px 5px #192938bb);-webkit-text-stroke:1.7px #284355;paint-order:stroke fill}
 #sleep-mark span{position:absolute;line-height:1}
 #sleep-mark span:nth-child(1){left:0;bottom:0;font-size:21px}
@@ -23,13 +34,38 @@ button{font:inherit;cursor:pointer;touch-action:none;-webkit-tap-highlight-color
 #stage[data-cursor="leaf"]{cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath d='M5 4c10 0 22 3 23 12 1 7-5 13-12 11C7 25 3 15 5 4Z' fill='%2378b94f' stroke='%23fff4d9' stroke-width='4' stroke-linejoin='round'/%3E%3Cpath d='M5 4c10 0 22 3 23 12 1 7-5 13-12 11C7 25 3 15 5 4Z' fill='%2378b94f' stroke='%23324731' stroke-width='1.6' stroke-linejoin='round'/%3E%3Cpath d='M7 7c5 3 10 8 15 14M14 13l-1 6m4-4 5-1' fill='none' stroke='%23fff4d9' stroke-width='1.7' stroke-linecap='round'/%3E%3C/svg%3E") 5 4,pointer}
 #stage[data-cursor="water"]{cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath d='M15 3c3 6 10 12 10 18a10 10 0 1 1-20 0C5 15 12 9 15 3Z' fill='%236bcac9' stroke='%23fff8e9' stroke-width='4' stroke-linejoin='round'/%3E%3Cpath d='M15 3c3 6 10 12 10 18a10 10 0 1 1-20 0C5 15 12 9 15 3Z' fill='%236bcac9' stroke='%23285359' stroke-width='1.6' stroke-linejoin='round'/%3E%3Cpath d='M11 17c-2 2-2 5 0 6' fill='none' stroke='%23fff7e7' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E") 15 3,crosshair}
 #sky-hand{pointer-events:none}
-#places{position:absolute;inset:0;pointer-events:none}
-.waymark{position:absolute;left:0;top:0;width:clamp(46px,5.8vmin,62px);aspect-ratio:1;transform:translate(-50%,-50%);border-radius:46%;border:2px solid #fff2d6;background:#f2dfab;box-shadow:0 3px 0 #887b56,0 5px 12px #43572d38;padding:4px;pointer-events:auto}
+#atlas-waymarks{position:absolute;inset:0;pointer-events:none}
+.atlas-waymark{
+ position:absolute;display:grid;place-items:center;width:44px;height:44px;
+ margin:-22px 0 0 -22px;padding:0 0 5px;border:0;border-radius:50%;
+ background:none;pointer-events:auto;
+}
+.atlas-waymark span{
+ position:relative;display:grid;place-items:center;width:34px;height:34px;
+ border:2px solid #fff8dc;border-radius:50%;background:#f5e8b9;
+ box-shadow:0 2px 5px #283b3660;pointer-events:none;
+}
+.atlas-waymark span::after{
+ content:"";position:absolute;top:calc(100% - 1px);left:50%;
+ width:0;height:0;transform:translateX(-50%);
+ border:5px solid transparent;border-top:7px solid #fff8dc;
+}
+.atlas-waymark svg{display:block;width:25px;height:25px}
+.atlas-waymark:is(:hover,:focus-visible) span{background:#fff5d8;box-shadow:0 0 0 3px #ffefb96b,0 3px 8px #283b367d}
+#places{--badge:clamp(44px,5.4vmin,52px);position:relative;flex:none;display:flex;align-items:center;justify-content:center;gap:9px;min-height:calc(var(--badge) + 18px);padding:7px max(12px,env(safe-area-inset-right)) max(9px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));background:color-mix(in srgb,#eeecd6, #344a53 calc(var(--night)*76%));box-shadow:inset 0 1px 0 #69715747}
+.waymark{position:relative;width:var(--badge);height:var(--badge);flex:none;border-radius:46%;border:2px solid #fff2d6;background:#f2dfab;box-shadow:0 2px 0 #998d6a,0 2px 5px #43572d23;padding:4px}
 .waymark svg{width:100%;height:100%;display:block}
 .waymark:hover{background:#f9efc9}
-.waymark:active{transform:translate(-50%,-48%)}
+.waymark.nearby{border-color:#739f7e;background:#e3ecd3}
+.waymark[aria-current="location"]{border-color:#658770;background:#e0efd6;box-shadow:inset 0 0 0 1px #a0bb8e,0 2px 0 #587563,0 2px 5px #43572d23}
+.waymark:active{transform:translateY(2px)}
 button[hidden]{display:none}
-#overview{left:max(20px,env(safe-area-inset-left));top:auto;bottom:max(19px,env(safe-area-inset-bottom))}
+#overview{order:-1;border-radius:50%}
+#overview:not([aria-current]){background:#f8f3dd}
+@media(max-width:626px){#places{gap:5px}}
+@media(max-width:569px){
+ #places{display:grid;grid-template-columns:repeat(6,var(--badge));grid-auto-rows:var(--badge);gap:5px clamp(3px,1.4vw,9px);min-height:calc(var(--badge)*2 + 21px)}
+}
 #sun,#cloud{border:0;background:none;padding:0;pointer-events:auto}
 #sun,#sun-art,#cloud,#cloud-art{position:absolute}
 #sun,#sun-art{width:min(clamp(65px,9vw,104px),max(44px,12dvh));aspect-ratio:1;left:35%;top:max(clamp(3px,1.1dvh,12px),env(safe-area-inset-top));transform:translateX(-50%);border-radius:50%}

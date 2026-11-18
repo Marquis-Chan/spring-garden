@@ -78,7 +78,7 @@ export function makeWoodlandDiorama(scene,points,groundAt){
  }
  scene.add(cones);
  cones.scale.setScalar(.78);
- for(const [i,[x,z]] of [[10.65,3.10],[11.70,3.43],[12.85,2.72],[10.41,3.24],[11.93,2.73]].entries())brush(root,x,groundAt(x,z)-.08,z,i+3);
+ for(const [i,[x,z]] of [[9.02,4.05],[11.42,3.91],[10.31,4.57]].entries())brush(root,x,groundAt(x,z)-.08,z,i+3);
  const litter=points.litter.map((p,i)=>Array.from({length:12},(_,j)=>{
   const a=j*2.39,spread=.058*Math.sqrt(j)+.014*j;
   const lx=p.x+Math.cos(a)*spread,lz=p.z+Math.sin(a)*spread;

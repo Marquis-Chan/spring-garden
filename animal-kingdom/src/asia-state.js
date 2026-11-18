@@ -1,4 +1,4 @@
-import { clamp, ease, idleDelay, mix } from './state.js';
+import { clamp, idleClockRate, ease, idleDelay, mix } from './state.js';
 
 export const asiaPoints = {
   floor: .38,
@@ -729,7 +729,7 @@ export function createAsia(emit = () => {}, { groundAt = () => asiaPoints.floor,
   function step(dt, active = false) {
     dt = clamp(dt, 0, .05);
     time += dt;
-    if (active) routineTime += dt;
+    if (active) routineTime += dt * idleClockRate;
     bear.time = tiger.time = peacock.time = owl.time = time;
     stepFruit();
     if(!stepSharedFruit(dt)){

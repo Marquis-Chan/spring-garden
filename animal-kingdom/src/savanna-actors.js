@@ -233,12 +233,10 @@ export function makeElephant(T) {
   const body = group(T, root, 'Elephant barrel', [0, 1.140, -0.22]);
   const head = group(T, root, 'Elephant head', [0, 1.475, 0.516]);
   const nozzle = group(T, root, 'Elephant trunk nozzle');
-  const large = new T.SphereGeometry(1, 26, 18);
   const small = new T.SphereGeometry(1, 14, 10);
   const hide = clay(T, '#93929c', 0.73);
   const side = clay(T, '#9b99a0', 0.74);
   const nail = clay(T, '#b7afb1', 0.72);
-  const inner = clay(T, '#ba9399', 0.75);
   const lip = clay(T, '#73707a', 0.70);
   const noseDark = clay(T, '#54525e', 0.73);
   const ivory = clay(T, '#f4e7cc');
@@ -251,12 +249,19 @@ export function makeElephant(T) {
   const soft = new T.Color('#9798a4');
   const color = new T.Color();
   const s = T.MathUtils.smoothstep;
-  const skinShape = paintSphere(T, (x, y, z) =>
-    color.copy(bottom).lerp(top, s(y, -0.65, 0.77)).lerp(soft, s(Math.abs(x), 0.28, 0.92) * 0.48));
-  mesh(T, body, 'Wide rounded elephant back', skinShape, mixed, [0, 0, 0], [0.585, 0.597, 0.860]);
-  mesh(T, body, 'Rounded shoulder', skinShape, mixed, [0, 0.06, 0.432], [0.531, 0.494, 0.476]);
-  mesh(T, head, 'Broad elephant forehead', skinShape, mixed, [0, 0.037, 0.016], [0.453, 0.433, 0.454]);
-  mesh(T, head, 'Smooth cheeks', large, side, [0, -0.177, 0.065], [0.373, 0.246, 0.322]);
+  const skinPaint = (x,y,z)=>color.copy(bottom).lerp(top,s(y,-.67,.69)).lerp(soft,s(Math.abs(x),.20,.49)*.55);
+  mesh(T,body,'Elephant shoulders and barrel',closedShape(T,[
+    [-.90,.018,.019,.025],[-.86,.022,.203,.205],[-.72,.026,.391,.398],
+    [-.51,.014,.509,.510],[-.26,.005,.572,.574],[-.02,-.004,.591,.590],
+    [.17,.019,.575,.588],[.35,.049,.539,.556],[.51,.075,.495,.495],
+    [.66,.088,.427,.423],[.79,.081,.311,.340],[.88,.073,.157,.192],[.91,.071,.028,.037]
+  ],40,skinPaint),mixed);
+  mesh(T,head,'Broad forehead and cheeks',closedShape(T,[
+    [-.414,.037,.016,.022],[-.386,.036,.179,.177],[-.308,.045,.318,.295],
+    [-.185,.037,.414,.387],[-.039,.024,.455,.429],[.087,.017,.442,.422],
+    [.201,.009,.402,.373],[.283,-.015,.335,.319],[.342,-.040,.262,.251],
+    [.392,-.076,.179,.184],[.432,-.102,.098,.108],[.45,-.114,.022,.029]
+  ],40,skinPaint),mixed);
   const jaw = group(T, head, 'Elephant jaw', [0, -0.215, 0.103]);
   mesh(T, jaw, 'Elephant lower lip', small, lip, [0, -0.048, 0.109], [0.198, 0.092, 0.154]);
 
@@ -277,13 +282,15 @@ export function makeElephant(T) {
     [0.059, -0.007, 0.438, 0.075, 0.175], [0.221, -0.004, 0.386, 0.071, 0.137],
     [0.356, -0.006, 0.256, 0.054, 0.099], [0.426, -0.012, 0.107, 0.038, 0.041],
     [0.455, -0.018, 0.015, 0.011, 0.019],
-  ], 24).rotateX(-Math.PI / 2);
-  const concha = closedShape(T, [
-    [-0.394, -0.048, 0.052, 0.010, 0.086], [-0.326, -0.065, 0.148, 0.024, 0.130],
-    [-0.212, -0.073, 0.231, 0.029, 0.179], [-0.063, -0.075, 0.280, 0.032, 0.205],
-    [0.106, -0.065, 0.280, 0.032, 0.198], [0.231, -0.062, 0.206, 0.028, 0.143],
-    [0.319, -0.052, 0.120, 0.016, 0.085], [0.356, -0.050, 0.019, 0.006, 0.027],
-  ], 22).rotateX(-Math.PI / 2);
+  ],32,(x,y,z)=>color.copy(top).lerp(bottom,.22+.56*s(-y,-.01,.081)).lerp(soft,.29)).rotateX(-Math.PI / 2);
+  const earSurface=earOuter.attributes.position;
+  for(let i=0;i<earSurface.count;i++){
+    const x=earSurface.getX(i),y=earSurface.getY(i),z=earSurface.getZ(i);
+    const outer=s(x,.14,.56);
+    earSurface.setXYZ(i,x*(1-.16*s(-y,.05,.46)),y*(1+.14*s(-y,.05,.43)),
+      z-.14*outer+.037*outer*Math.sin(10*y+3*x));
+  }
+  earOuter.computeVertexNormals();
   const tusk = closedShape(T, [
     [-0.029, 0, 0.044, 0.055], [0.023, 0, 0.060, 0.058],
     [0.100, 0.018, 0.051, 0.048, 0.012], [0.171, 0.047, 0.037, 0.034, 0.022],
@@ -293,8 +300,7 @@ export function makeElephant(T) {
   for (const sign of [-1, 1]) {
     const label = sign < 0 ? 'Left' : 'Right';
     const ear = group(T, head, label + ' elephant ear', [sign * 0.351, -0.014, -0.079]);
-    mesh(T, ear, 'Shaped thick ear', earOuter, hide).scale.x = sign;
-    mesh(T, ear, 'Rose inner ear', concha, inner).scale.x = sign;
+    mesh(T, ear, 'Curved elephant ear', earOuter, mixed).scale.x = sign;
     ears.push({ sign, ear });
 
     eyes.push(eye(T, head, label + ' elephant eye', small, [sign * 0.313, 0.093, 0.278],
@@ -324,11 +330,11 @@ export function makeElephant(T) {
     [0.048, -0.314, -0.159], [0.066, -0.516, -0.170]], 0.026, hide);
   mesh(T, tail, 'Flat tail brush', small, noseDark, [0.065, -0.509, -0.170], [0.043, 0.092, 0.038]);
 
-  const rest = [[0, 1.502, 0.814], [0, 1.206, 1.055], [0, 0.770, 1.249],
+  const rest = [[0, 1.559, 0.667], [0, 1.206, 1.055], [0, 0.770, 1.249],
     [0, 0.357, 1.352], [0, 0.360, 1.526]];
-  const low = [[0, 1.502, 0.814], [0, 1.182, 1.059], [0, 0.731, 1.185],
+  const low = [[0, 1.559, 0.667], [0, 1.182, 1.059], [0, 0.731, 1.185],
     [0, 0.272, 1.236], [0, 0.055, 1.220]];
-  const held = [[0, 1.533, 0.816], [0, 1.399, 1.104], [0, 1.527, 1.375],
+  const held = [[0, 1.588, 0.670], [0, 1.399, 1.104], [0, 1.527, 1.375],
     [0, 1.837, 1.588], [0, 1.880, 1.827]];
   const trunk = bendable(T, root, 'Continuous flexible trunk', mixed, rest, t => {
     const r = 0.213 - 0.146 * t ** 0.77 + Math.sin(t * 56) * 0.005 * s(t, 0.18, 0.82);
@@ -340,9 +346,11 @@ export function makeElephant(T) {
   const normal = new T.Vector3(0, 0, 1);
   const tangent = new T.Vector3();
 
-  function pose({ time = 0, stride = 0, gait = 0, scoop = 0, lift = 0, spray = 0, look = 0, call = 0 } = {}) {
+  function pose({ time = 0, stride = 0, gait = 0, scoop = 0, lift = 0, spray = 0, look = 0, call = 0,
+    listen = 0, sniff = 0, sniffSide = 0 } = {}) {
     const rising = Math.max(lift, spray);
     const sip = scoop * (1 - rising);
+    const smelling=sniff*(1-scoop)*(1-rising);
     const sway = Math.sin(time * 2.8);
     const walk = gait * (1 - Math.max(scoop, rising));
     const bob = Math.sin(stride * 2) * walk * 0.023;
@@ -354,8 +362,8 @@ export function makeElephant(T) {
     jaw.rotation.x = call * 0.31;
     tail.rotation.y = Math.sin(time * 1.65) * 0.21;
     for (const { sign, ear } of ears) {
-      ear.rotation.set(-0.06, sign * (0.16 + sway * 0.052 + call * 0.10 + rising * 0.09),
-        sign * (-0.12 + look * 0.042));
+      ear.rotation.set(-0.06-listen*.16, sign * (0.16 + sway * 0.052 + call * 0.10 + rising * 0.09 + listen*.45),
+        sign * (-0.12 + look * 0.042 + listen*.27));
     }
     for (const setEye of eyes) setEye(blink(time + 0.8, 5.4));
     for (const { sign, front, foot, post, z } of legs) {
@@ -377,9 +385,10 @@ export function makeElephant(T) {
       const t = i / (trunk.points.length - 1);
       const [x, y, z] = rest[i];
       const swayX = (look * 0.21 + sway * 0.026 + weight * 0.048) * t * (1 - sip) * (1 - spray * 0.75);
-      p.set(x + swayX,
-        T.MathUtils.lerp(y, low[i][1], sip) * (1 - rising) + held[i][1] * rising + call * 0.025 * (1 - sip) + bob * 0.64,
-        T.MathUtils.lerp(T.MathUtils.lerp(z, low[i][2], sip), held[i][2], rising));
+      // 先听见蹄声再卷鼻朝向声源，四足仍落在原地。
+      p.set(x + swayX + smelling*sniffSide*t*t*.83,
+        T.MathUtils.lerp(y, low[i][1], sip) * (1 - rising) + held[i][1] * rising + call * 0.025 * (1 - sip) + bob * 0.64 + smelling*t*t*.97,
+        T.MathUtils.lerp(T.MathUtils.lerp(z, low[i][2], sip), held[i][2], rising) + smelling*Math.sin(t*Math.PI*1.4)*.22);
     }
     trunk.update();
     nozzle.position.copy(trunk.points.at(-1));
@@ -419,11 +428,11 @@ export function makeGiraffe(T) {
   const fract = x => x - Math.floor(x);
 
   function pattern(u, v) {
-    const row = Math.floor(v + 0.09 * Math.sin(u * 5.4));
-    const a = fract(u + row * 0.49 + 0.072 * Math.sin(v * 8.3)) - 0.5;
-    const b = fract(v + 0.10 * Math.sin(u * 6.2)) - 0.5;
-    const side = Math.max(Math.abs(a + 0.07 * Math.sin(b * 7)), Math.abs(b - a * 0.099));
-    return 1 - s(side + 0.34 * Math.abs(a * b), 0.326, 0.405);
+    const warpedV=v+.065*Math.sin(u*4.8);
+    const a=fract(u+Math.floor(warpedV)*.48+.045*Math.sin(v*5.3))-.5;
+    const b=fract(warpedV)-.5;
+    const edge=(Math.abs(a)**3.2+Math.abs(b)**3.2)**(1/3.2);
+    return 1-s(edge,.31,.44);
   }
 
   function coat(x, y, z, theta) {
@@ -524,7 +533,7 @@ export function makeGiraffe(T) {
     offset.copy(mouth.position).applyEuler(head.rotation);
     head.position.copy(target).sub(offset);
     contact.copy(headMount).applyEuler(head.rotation).add(head.position);
-    neck.points[0].set(0, 1.487 + breathe + rise, 0.311);
+    neck.points[0].set(0, 1.535 + breathe + rise, 0.126);
     neck.points[1].set(contact.x * 0.22, T.MathUtils.lerp(1.923 + rise, contact.y - 0.589, reach), 0.488 + reach * 0.154);
     neck.points[2].set(contact.x * 0.67, contact.y - 0.291, contact.z + reach * 0.044);
     neck.points[3].copy(contact);
@@ -629,7 +638,8 @@ export function makeZebra(T) {
     [0.172, -0.018, 0.006, 0.005, 0.020],
   ], 16).rotateX(-Math.PI / 2);
   const legShape = legPart(T, (x, y, z) =>
-    stripes(z * 22.3 + Math.sin(Math.atan2(x, y) * 2) * 0.29, 0.19));
+    stripes(z * 14.6 + Math.atan2(x,y)*.52 + .40*Math.sin(z*3.9), 0.19)
+      .lerp(lightHide,.22+.20*s(z,.72,1.02)));
   const eyes = [];
   const ears = [];
   const legs = [];
@@ -653,7 +663,7 @@ export function makeZebra(T) {
     }
   }
 
-  function pose({ time = 0, stride = 0, gait = 0, listen = 0, notice = 0, sleep = 0, call = 0 } = {}) {
+  function pose({ time = 0, stride = 0, gait = 0, listen = 0, notice = 0, sleep = 0, call = 0, shake = 0 } = {}) {
     const rest = s(sleep, 0, 1);
     const moving = gait * (1 - rest);
     const voice = call * (1 - rest);
@@ -661,13 +671,13 @@ export function makeZebra(T) {
     const glance = notice * (1 - rest);
     const sway = Math.sin(stride) * moving;
     body.position.y = 0.785 + Math.sin(time * 3.15) * 0.006 + Math.abs(sway) * 0.016 - rest * 0.032;
-    body.rotation.z = sway * 0.023;
+    body.rotation.z = sway * 0.023 + shake*.045;
     neck.rotation.x = 0.39 + rest * 0.13 + glance * 0.10;
     head.position.set(0, 0.307 - rest * 0.071 - glance * 0.091, 0.556 + rest * 0.034 + glance * 0.045);
     head.rotation.set(rest * 0.28 - voice * 0.095 + glance * 0.16 + Math.sin(stride * 2) * moving * 0.052,
-      aware * 0.40 + rest * 0.125, aware * 0.12);
+      aware * 0.40 + rest * 0.125 + shake*.31, aware * 0.12 + shake*.27);
     jaw.rotation.x = voice * 0.39;
-    tail.rotation.y = Math.sin(time * 2.28) * (0.13 + moving * 0.18) * (1 - rest);
+    tail.rotation.y = Math.sin(time * 2.28) * (0.13 + moving * 0.18) * (1 - rest) + .46*shake;
     for (const { sign, ear } of ears) {
       ear.rotation.set(-0.025 - rest * 0.19 - glance * 0.13, sign * 0.13 + aware * 0.31,
         sign * (-0.13 + 0.07 * Math.sin(time * 2.2 + sign) * (1 - rest)));
@@ -700,13 +710,10 @@ export function makeLion(T) {
   const tail = group(T, body, 'Lion tail', [0, 0.068, -0.664]);
   const sphere = new T.SphereGeometry(1, 24, 16);
   const small = new T.SphereGeometry(1, 14, 10);
-  const locks = new T.SphereGeometry(1, 18, 12);
   const polished = clay(T, '#fff', 0.70, true);
   const golden = clay(T, '#c99b62', 0.70);
   const sand = clay(T, '#e6bf85', 0.71);
   const cream = clay(T, '#edcf9d', 0.72);
-  const orange = clay(T, '#b06c45', 0.75);
-  const fringe = clay(T, '#995a40', 0.76);
   const maneShadow = clay(T, '#86513d', 0.76);
   const blush = clay(T, '#be8b79', 0.76);
   const nose = clay(T, '#74574f', 0.53);
@@ -725,26 +732,31 @@ export function makeLion(T) {
 
   const fur = paintSphere(T, (x, y, z) =>
     color.copy(lightFur).lerp(back, s(y, -0.45, 0.85) * 0.78));
-  mesh(T, body, 'Long lion back and haunch', fur, polished, [0, 0, 0], [0.336, 0.326, 0.690]);
-  mesh(T, body, 'Lion chest', fur, polished, [0, 0.064, 0.355], [0.350, 0.340, 0.409]);
-  const maneCore = paintSphere(T, (x, y, z) =>
-    color.copy(maneDeep).lerp(maneTop, s(y + z * 0.36, -0.66, 0.82)));
-  const maneGroup = group(T, head, 'Lion mane', [0, -0.011, -0.050]);
-  mesh(T, maneGroup, 'Deep rounded lion mane', maneCore, polished, [0, 0, 0], [0.391, 0.421, 0.310]);
-  const lowerMane = [];
-
-  for (let i = 0; i < 12; i++) {
-    const a = i * Math.PI * 2 / 12;
-    const y = Math.cos(a);
-    const x = Math.sin(a);
-    const r = 0.327 + 0.017 * Math.sin(i * 3.67);
-    const fold = mesh(T, maneGroup, 'Thick flowing mane lock', locks,
-      y > 0.20 ? orange : y > -0.56 ? fringe : maneShadow,
-      [x * r, y * r * 1.10, 0.038 + Math.sin(i * 2.7) * 0.034],
-      [0.111 + 0.027 * Math.sin(i * 1.67) ** 2, 0.142 + (1 - y) * 0.023, 0.230]);
-    fold.rotation.z = -a;
-    if (y < -0.45) lowerMane.push({ fold, x: fold.position.x, z: fold.position.z });
+  mesh(T, body, 'Continuous lion back and chest',closedShape(T,[
+    [-.72,.003,.018,.030],[-.686,.015,.145,.165],[-.60,.027,.253,.25],
+    [-.47,.043,.315,.291],[-.31,.032,.328,.303],[-.11,.022,.306,.308],
+    [.09,.034,.306,.324],[.24,.055,.334,.35],[.37,.074,.339,.355],
+    [.49,.081,.304,.325],[.60,.095,.227,.244],[.68,.11,.093,.131],[.70,.109,.024,.035]
+  ],36,(x,y)=>color.copy(lightFur).lerp(back,s(y,-.25,.31)*.82)),polished);
+  // 整片鬃毛沿脸侧垂向胸前。起伏和颜色共同描述毛束，嘴巴前方留出空间。
+  const ridge=(x,y,z)=>{
+    const a=Math.atan2(x,y);
+    return Math.cos(10*a+.95*Math.sin(3*a)+z*1.5);
+  };
+  const maneCore = paintSphere(T, (x, y, z) => color.copy(maneDeep)
+    .lerp(maneTop,.21+.58*s(y + z*.22,-.86,.88)+.15*ridge(x,y,z)),80,42);
+  const manePoints=maneCore.attributes.position;
+  for(let i=0;i<manePoints.count;i++){
+    const x=manePoints.getX(i),y=manePoints.getY(i),z=manePoints.getZ(i);
+    const curl=ridge(x,y,z),side=1-z*z;
+    const fullness=1+.047*side*curl;
+    const bib=s(-y,.12,.91);
+    manePoints.setXYZ(i,x*.442*fullness*(1-.17*bib),
+      y*(.37+.118*bib)*fullness-.014*side,z*.30-.036*bib+.019*curl*side);
   }
+  maneCore.computeVertexNormals();
+  const maneGroup = group(T, head, 'Lion mane', [0, -0.011, -0.050]);
+  mesh(T,maneGroup,'Lion shoulder ruff',maneCore,polished);
 
   mesh(T, head, 'Broad golden lion face', fur, polished, [0, 0.014, 0.125], [0.263, 0.226, 0.234]);
   mesh(T, head, 'Lion bridge of nose', sphere, sand, [0, -0.025, 0.268], [0.170, 0.114, 0.105]);
@@ -812,10 +824,7 @@ export function makeLion(T) {
     // 口腔随下颌打开，下方鬃毛微退，远看也能辨认嘴形。
     throat.position.set(0, -0.134 - voice * 0.089, 0.274 + voice * 0.031);
     throat.scale.set(0.115 + voice * 0.014, 0.022 + voice * 0.091, 0.041);
-    for (const { fold, x, z } of lowerMane) {
-      fold.position.x = x * (1 + voice * 0.119);
-      fold.position.z = z - voice * 0.091;
-    }
+    maneGroup.position.z=-.050-.030*voice;
     throat.visible = tongueTip.visible = voice > 0.055;
     for (const fang of fangs) fang.visible = voice > 0.091;
     tail.rotation.set(reaching * -0.093, Math.sin(time * 2.21) * (0.175 + reaching * 0.095) - weight * 0.16,

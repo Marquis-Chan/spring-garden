@@ -157,7 +157,7 @@ test('引鱼从石头前方游向后方时，鱼会绕行并抵达', () => {
 test('只在池塘停留足够久才安静换落脚点，日常跳不产生叫声或问候资格', () => {
   const { pond, events, advance } = setup();
   advance(14);
-  advance(6.85, true);
+  advance(13.85, true);
   assert.equal(pond.frog.site, 0);
   assert.equal(pond.busy, false);
   advance(.48, true);
@@ -176,7 +176,7 @@ test('只在池塘停留足够久才安静换落脚点，日常跳不产生叫�
 
 test('正在引鱼或听到呱呱声时蛙先待在原位，松手后可接着自然换位', () => {
   const { pond, events, advance } = setup();
-  advance(6.6, true);
+  advance(13.6, true);
   pond.guide(nextToSite(0), true);
   advance(4.8, true);
   assert.equal(pond.frog.site, 0);
@@ -188,14 +188,14 @@ test('正在引鱼或听到呱呱声时蛙先待在原位，松手后可接着�
   assert.equal(pond.frog.site, 0);
   assert.equal(pond.busy, false);
   assert.equal(events.filter(({ type }) => type === 'call').length, 1);
-  advance(8.6, true);
+  advance(15.6, true);
   assert.equal(pond.frog.site, 1);
   assert.equal(events.filter(({ type }) => type === 'call').length, 1);
 });
 
 test('自主腾空后能立刻点蛙叫；可接管原落点，也可接续跳回', () => {
   const same = setup();
-  same.advance(7.33, true);
+  same.advance(14.33, true);
   assert.ok(same.pond.frog.air > .2);
   same.pond.tapFrog();
   same.pond.playSite(1);
@@ -205,7 +205,7 @@ test('自主腾空后能立刻点蛙叫；可接管原落点，也可接续跳�
   assert.deepEqual(same.events.filter(({ type }) => type === 'land').map(({ site }) => site), [1]);
 
   const back = setup();
-  back.advance(7.33, true);
+  back.advance(14.33, true);
   back.pond.playSite(0);
   assert.equal(back.events[0].type, 'leaf-touch');
   back.advance(1.75, true);

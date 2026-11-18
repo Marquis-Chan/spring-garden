@@ -4,6 +4,7 @@ import * as T from 'three';
 import { groundHeight } from '../src/diorama.js';
 import { createRiver, riverPoints } from '../src/river-state.js';
 import { makeHippo } from '../src/river-actors.js';
+import { makeRhino } from '../src/river-rhino.js';
 import { makeRiverDiorama } from '../src/river-diorama.js';
 
 function setup(options) {
@@ -20,23 +21,87 @@ function setup(options) {
 const position = ({ x, y, z }) => ({ x, y, z });
 const gap = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
 
-test('河岸的两只小鸭各自在浅水活动，点任一只跟游，点蛙只引附近小鸭看过去', () => {
+test('河岸小鸟跟随实际背部落点，刷牙时离开河马，入夜回枝休息', () => {
+  const {river,events}=setup({groundAt:groundHeight});
+  const rhino=makeRhino(T,groundHeight),hippo=makeHippo(T,groundHeight);
+  const bank=makeRiverDiorama(new T.Scene(),riverPoints,groundHeight);
+  const anchors={rhino:new T.Vector3(),hippo:new T.Vector3(),branch:{...riverPoints.birdPerch,yaw:.2}};
+  const bird=river.bird;
+  const ray=new T.Raycaster(),probe=new T.Vector3(),down=new T.Vector3(0,-1,0);
+  function frame(){
+    river.step(1/60,true);
+    for(const [name,model] of [['rhino',rhino],['hippo',hippo]]){
+      const host=river[name];
+      model.root.position.set(host.x,host.y,host.z);
+      model.root.rotation.y=host.yaw;
+      model.pose(host);
+      model.root.updateMatrixWorld(true);
+      model.birdPerch.getWorldPosition(anchors[name]);
+      anchors[name].yaw=host.yaw+(name==='rhino'?2.05:-1.10);
+    }
+    river.poseBird(1/60,true,anchors);
+  }
+  function feetMeet(surface){
+    surface.updateWorldMatrix(true,false);
+    // 两脚最前方的爪尖在模型中的 y 为 -.03，部件缩放 .73。
+    for(const side of [-1,1]){
+      probe.set(side*.067,0,.069).applyAxisAngle(new T.Vector3(0,1,0),bird.yaw);
+      probe.add(new T.Vector3(bird.x,bird.y+.4,bird.z));
+      ray.set(probe,down);
+      const top=ray.intersectObject(surface,false)[0];
+      assert.ok(top && Math.abs(bird.y-.022-top.point.y)<.029,bird.site+' 的爪尖接触栖面');
+    }
+  }
+  frame();
+  assert.equal(bird.site,'rhino');
+  feetMeet(rhino.root.getObjectByProperty('isSkinnedMesh',true));
+  river.tapBird();
+  const strokes=[];
+  for(let i=0;i<105;i++){frame(); if(bird.flight>.92)strokes.push(bird.flap);}
+  assert.ok(Math.min(...strokes)<-.92 && Math.max(...strokes)>.92);
+  assert.equal(bird.site,'hippo');
+  for(let i=0;i<35;i++){
+    frame();
+    assert.ok(Math.abs(bird.y-anchors.hippo.y)<1e-6);
+  }
+  feetMeet(hippo.root.getObjectByName('Wide soft hippo barrel'));
+  river.tapToothbrush();
+  frame();
+  assert.equal(bird.to,'branch');
+  for(let i=0;i<110;i++)frame();
+  assert.equal(bird.site,'branch');
+  feetMeet(bank.root.getObjectByName('岸边栖鸟枯枝'));
+  river.tapBird();
+  for(let i=0;i<115;i++)frame();
+  assert.equal(bird.site,'rhino');
+  river.setNight(true);
+  for(let i=0;i<185;i++)frame();
+  assert.ok(bird.sleep>.97 && bird.site==='branch');
+  river.tapBird();
+  assert.equal(events.at(-1).animal,'river-bird');
+  assert.equal(events.filter(e=>e.type==='bird-call').length,2);
+});
+
+test('点常驻鸭请出第二只，客鸭回到遮蔽后不接收点击', () => {
   const {river,events,advance} = setup({groundAt:groundHeight});
   const [lead,outer] = river.ducks;
   const start = position(lead);
-  advance(2.1,true);
+  advance(4.2,true);
   assert.ok(gap(start,lead)>.13);
   assert.ok(gap(lead,outer)>.65);
+  assert.equal(outer.present,false);
   river.tapDuck(1);
-  advance(.63,true);
+  assert.equal(events.length,0);
+  river.tapDuck(0);
+  advance(2.5,true);
+  assert.ok(outer.present && outer.interactive);
+  river.tapDuck(1);
+  advance(.66,true);
   assert.ok(outer.headUp>.40 && lead.headUp>.25 && lead.call===0);
   assert.ok(events.some(e=>e.type==='river-duck-reply'&&e.index===0));
-  advance(1.75,true);
-  river.tapFrog();
-  advance(.30,true);
-  assert.ok(river.frog.throat>.08);
-  assert.ok(events.some(e=>e.type==='river-duck-listens'&&e.index===0));
-  assert.ok(!events.some(e=>e.type==='river-duck-listens'&&e.index===1));
+  advance(12,true);
+  assert.equal(outer.present,false);
+  assert.equal(outer.interactive,false);
   river.setNight(true);
   advance(.70,true);
   const sleeping = position(lead);
@@ -75,7 +140,19 @@ test('河马沉回水线后才发一圈波，先到近叶再到远叶', () => {
     assert.ok(Math.abs(event.time - wave.time - gap(event, wave) / wave.speed) < .025);
   }
   assert.equal(events.filter(event => event.type === 'wave').length, 1);
-  assert.deepEqual(events.filter(event => event.type === 'wave-fish').map(event => event.index), [0, 1]);
+  const reached=events.filter(event=>event.type==='wave-fish');
+  assert.deepEqual(reached.map(event=>event.index).sort(),[0,1]);
+  for(const event of reached)assert.ok(Math.abs(event.time-wave.time-gap(event,wave)/wave.speed)<.025);
+});
+
+test('刷牙时不自动引来小鸭，安静停留后仍能等到它游出', () => {
+  const {river,advance}=setup();
+  river.tapToothbrush();
+  advance(32,true);
+  assert.equal(river.ducks[1].present,false);
+  river.returnToothbrush();
+  advance(57,true);
+  assert.equal(river.ducks[1].interactive,true);
 });
 
 test('同一处波能到近龟，到不了远岸踏石，回到浅水可以再玩', () => {
@@ -187,7 +264,7 @@ test('犀牛沿独立岸路采样地面高度，走到所选草边才低头探�
   assert.ok(river.rhino.gait > 0);
   assert.equal(river.rhino.sniff, 0);
 
-  for (let frame = 0; frame < 60; frame++) {
+  for (let frame = 0; frame < 180 && !events.some(event=>event.type==='rhino-sniff'); frame++) {
     advance(1 / 60);
     assert.ok(Math.abs(river.rhino.y - groundAt(river.rhino.x, river.rhino.z)) < 1e-6);
     assert.ok(gap(river.rhino, river.turtle) > 3);
@@ -199,19 +276,37 @@ test('犀牛沿独立岸路采样地面高度，走到所选草边才低头探�
   assert.equal(river.rhino.site, 1);
   assert.ok(gap(river.rhino, riverPoints.grass[1]) > .90);
   assert.ok(gap(river.rhino, riverPoints.grass[1]) < 1.02);
-  assert.ok(river.grass[1].bend > 0 && river.rhino.sniff > 0);
+  advance(.12);
+  assert.ok(river.grass[1].bend > 0 && river.rhino.sniff > .95);
   assert.equal(river.grass[0].bend, 0);
 
-  advance(.9);
+  advance(2.3);
+  const before=position(river.rhino);
   river.tapRhino();
-  advance(1.1);
-  assert.equal(river.rhino.site, 0);
+  advance(.11);
+  assert.ok(river.rhino.listenEar>.6 && river.rhino.attention<.02);
+  advance(.65);
+  assert.ok(river.rhino.attention>.9);
+  assert.deepEqual(position(river.rhino),before);
+  assert.equal(river.rhino.site, 1);
   assert.equal(events.filter(event => event.type === 'rhino-call').length, 1);
 });
 
-test('点鱼能潜游，两条鱼分别留在各自浅水范围', () => {
+test('鱼在水下候场，点水浮现一条，点它能潜游，消失后才能出现下一条', () => {
   const { river, advance } = setup();
   const { pool, waterY } = riverPoints;
+  assert.equal(river.fish.every(f=>f.surface===0),true);
+  for (let i=0;i<2;i++){
+    const {x,z}=riverPoints.fish[i];
+    river.tapWater(x,z);
+    advance(.75);
+    assert.equal(river.fish[i].surface,1);
+    assert.equal(river.fish[1-i].surface,0);
+    advance(4.6);
+    assert.equal(river.fish[i].surface,0);
+  }
+  river.tapWater(river.fish[0].x,river.fish[0].z);
+  advance(.6);
   river.tapFish(0);
   advance(.22);
   assert.ok(river.fish[0].dive > .6);
@@ -257,12 +352,13 @@ test('河马、龟和犀牛各自在合适水深或岸上安静巡游，不替�
 
 test('河马安静换位后仍从鼻前的实际水面推出波，不回跳到旧水心', () => {
   const { river, events, advance } = setup();
-  advance(2.95, true);
+  while(river.time<8 && gap(river.hippo,riverPoints.hippo)<=.24)advance(1/60,true);
   const body = position(river.hippo);
   assert.ok(gap(body, riverPoints.hippo) > .24);
   river.tapHippo();
   assert.equal(events.at(-1).type, 'hippo-call');
-  while (river.time < 5.4 && !events.some(({ type }) => type === 'wave')) advance(.05, true);
+  const tapped=river.time;
+  while (river.time-tapped < 2.5 && !events.some(({ type }) => type === 'wave')) advance(.05, true);
   const wave = events.find(({ type }) => type === 'wave');
   assert.ok(wave);
   assert.deepEqual(position(river.hippo), body);
@@ -284,7 +380,7 @@ test('犀牛鼻碰近水草后才引起近鱼的一次急游，远水草和远�
   assert.ok(river.fish[0].alert > .2);
   assert.equal(river.fish[1].alert, 0);
   river.tapGrass(1);
-  advance(2.1, true);
+  advance(5.5, true);
   assert.ok(events.some(({ type, index }) => type === 'rhino-sniff' && index === 1));
   assert.equal(events.filter(({ type }) => type === 'grass-fish-look').length, 1);
 });
@@ -292,12 +388,59 @@ test('犀牛鼻碰近水草后才引起近鱼的一次急游，远水草和远�
 test('两条鱼靠岸转向和下潜时也留在可容纳鳍身的真实水层内', () => {
   const { river, advance } = setup({ groundAt: groundHeight });
   for (let frame = 0; frame < 660; frame++) {
-    if ([45, 320].includes(frame)) river.tapFish(0);
-    if ([140, 420].includes(frame)) river.tapFish(1);
+    if (frame===0||frame===300)river.tapWater(river.fish[frame===0?0:1].x,river.fish[frame===0?0:1].z);
+    if (frame===45) river.tapFish(0);
+    if (frame===345) river.tapFish(1);
     advance(1 / 60, true);
     for (const fish of river.fish) {
       assert.ok(fish.y >= groundHeight(fish.x, fish.z) + .065 - 1e-8);
       assert.ok(fish.y <= riverPoints.waterY - .067 + 1e-8);
+    }
+  }
+});
+
+test('两棵草在咬下的瞬间与实体嘴缘接触，随后叶尖变短、衔草咀嚼再长回', () => {
+  const {river,events}=setup({groundAt:groundHeight});
+  const rhino=makeRhino(T,groundHeight);
+  const bank=makeRiverDiorama(new T.Scene(),riverPoints,groundHeight);
+  const lip=new T.Vector3(),tip=new T.Vector3();
+  for(const index of [1,0]){
+    river.tapGrass(index);
+    let distanceAtBite=Infinity,chewed=false;
+    for(let frame=0;frame<360;frame++){
+      const before=events.length;
+      river.step(1/60,true);
+      const pose=river.rhino;
+      rhino.root.position.set(pose.x,pose.y,pose.z);
+      rhino.root.rotation.y=pose.yaw;
+      rhino.pose(pose);
+      bank.tick(river,0,0,null);
+      if(events.slice(before).some(e=>e.type==='rhino-sniff'&&e.index===index)){
+        distanceAtBite=rhino.muzzle.getWorldPosition(lip).distanceTo(bank.grassTips[index].getWorldPosition(tip));
+      }
+      if(river.grass[index].nibbled>.8 && pose.sniff<.2 && pose.chew>.8 && pose.blade>.85)chewed=true;
+    }
+    assert.ok(distanceAtBite<.045,'咬合瞬间的实际距离 '+distanceAtBite);
+    assert.ok(chewed);
+    assert.equal(river.grass[index].nibbled,0);
+  }
+});
+
+test('回望与咀嚼时，头颈带动连续的皮肤，站稳的脚掌仍落在原处', () => {
+  const model=makeRhino(T);
+  const skin=model.root.getObjectByProperty('isSkinnedMesh',true);
+  const rest=new T.Vector3(),posed=new T.Vector3();
+  const toes=[];
+  for(let i=0;i<skin.geometry.attributes.position.count;i+=5){
+    rest.fromBufferAttribute(skin.geometry.attributes.position,i);
+    if(rest.y<.13)toes.push({i,point:rest.clone()});
+  }
+  assert.ok(toes.length>20);
+  for(const action of [{yaw:5.22,attention:1},{sniff:1,chew:.8,blade:1}]){
+    model.pose({time:1.2,...action});
+    model.root.updateWorldMatrix(true,true);
+    for(const {i,point} of toes){
+      assert.ok(skin.getVertexPosition(i,posed).distanceTo(point)<.001);
     }
   }
 });

@@ -9,9 +9,15 @@ export function makeFox(T,groundAt){
  const red=new T.Color('#b66339'),white=new T.Color('#ecd6b8'),brindle=new T.Color('#d78c51');
  const dorsal=paintSphere(T,(x,y,z)=>white.clone().lerp(brindle,T.MathUtils.smoothstep(y,-.72,-.16))
   .lerp(red,T.MathUtils.smoothstep(y,.27,.81)*.68).multiplyScalar(.99+.02*Math.sin(x*9+z*8)));
- mesh(T,body,'柔软背线',dorsal,fiber,[0,.449,-.103],[.227,.231,.502]);
- mesh(T,body,'胸口',soft,cream,[0,.374,.219],[.174,.215,.232]);
- mesh(T,body,'臀部',dorsal,fiber,[0,.428,-.372],[.232,.212,.220]);
+ // 一条背线从臀部顺到肩胛，浅色胸毛直接长在躯干上。
+ const coat=closedShape(T,[
+  [-.59,.427,.021,.043],[-.55,.427,.140,.154],[-.46,.435,.215,.199],
+  [-.33,.442,.234,.217],[-.16,.459,.221,.202],[-.01,.468,.212,.207],
+  [.13,.468,.215,.224],[.23,.465,.199,.229],[.32,.472,.156,.209],
+  [.37,.489,.108,.157],[.40,.510,.053,.089],[.413,.515,.011,.023]
+ ],32,(x,y,z)=>red.clone().lerp(brindle,.28+.32*T.MathUtils.smoothstep(y,.33,.63))
+  .lerp(white,T.MathUtils.smoothstep(z,.06,.27)*(1-T.MathUtils.smoothstep(y,.44,.60))*.94));
+ mesh(T,body,'从后胯到肩胸的赤狐皮毛',coat,fiber);
  mesh(T,head,'额头',dorsal,fiber,[0,.006,.089],[.207,.182,.215]);
  const muzzle=closedShape(T,[[-.015,-.054,.180,.11],[.12,-.059,.173,.105],[.23,-.102,.093,.074],[.31,-.129,.048,.040]],24,
   (x,y,z)=>white.clone().lerp(brindle,T.MathUtils.smoothstep(y,-.106,-.023)));
@@ -48,7 +54,7 @@ export function makeFox(T,groundAt){
   head.rotation.z=.09*alert;
   head.rotation.y=.08*Math.sin(time*6)*alert;
   jaw.rotation.x=.23*call;
-  tail.rotation.set(.08*Math.sin(time*2.4)+.17*dig,.18*Math.sin(time*3.2)-gait*strideWave*.22,-.12);
+  tail.rotation.set(.06*Math.sin(time*1.2)+.17*dig,.12*Math.sin(time*1.6)-gait*strideWave*.22,-.12);
   for(const {ear,side} of ears){
    ear.rotation.z=side*(-.21-.12*alert);
    ear.rotation.y=side*(.34+.29*alert)+.07*Math.sin(time*3+side);

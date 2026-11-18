@@ -1,6 +1,7 @@
 import * as T from 'three';
 import {branch,crownGeometry,pathStrip} from './grove-diorama.js';
 import {ease} from './state.js';
+import {duckCove} from './river-neighbors.js';
 
 const mat=(color,extra={})=>new T.MeshStandardMaterial({color,roughness:.89,...extra});
 const stone=new T.IcosahedronGeometry(1,3),blade=new T.SphereGeometry(1,14,9);
@@ -31,6 +32,101 @@ function reed(parent,x,y,z,i,height=.53){
   green.rotation.set(Math.sin(bearing)*.54,bearing,Math.cos(bearing)*.54);
  }
  return stem;
+}
+
+// 浅水冲出的一小段悬岸。洞口以内留足鸭头和脚蹼的空间，岸脊向陆地渐低。
+function erodedBank(root){
+ const rows=15, sides=26, vertices=[],faces=[],colors=[];
+ const earth=new T.Color('#999e88'), shaded=new T.Color('#838977'), turf=new T.Color('#a6aa78');
+ const damp=new T.Color('#7c9086');
+ const tone=new T.Color();
+ for(let shell=0;shell<2;shell++)for(let row=0;row<=rows;row++)for(let j=0;j<=sides;j++){
+  const u=row/rows,a=j/sides*Math.PI,up=Math.sin(a),side=Math.cos(a);
+  const shoulder=.86+.14*Math.sin(Math.PI*u);
+  const end=1-ease((u-.42)/.58);
+  const lump=.026*Math.sin(2.6*a+5*u)+.014*Math.cos(5.1*a-4.3*u);
+  // 洞口是被水冲开的斜破口，前沿上圆下宽，右侧渐渐并入草岸。
+  const rim=(-.25*Math.sin(2*a+.40)+.10*Math.sin(3.8*a-.55))*(1-u)**2;
+  const x=duckCove.lipX+1.36*u+rim;
+  const centerZ=duckCove.z+.15*u+.08*u*u;
+  const width=(shell?.43:.55+.12*(1-up)+lump)*shoulder*(.08+.92*Math.sqrt(end));
+  const height=(shell?.71:.82+lump)*shoulder*end;
+  const z=centerZ+side*width;
+  const base=.383+.13*ease((u-.51)/.49);
+  const y=base+height*up;
+  vertices.push(x,y,z);
+  tone.copy(shell?shaded:earth);
+  if(!shell){
+   tone.lerp(turf,ease((up-.18)/.72)*(.77+.19*Math.sin(7.1*u+1.8*a)));
+   const floodLine=y+.023*Math.sin(u*5.7+a);
+   tone.lerp(damp,(1-ease((floodLine-.49)/.23))*.64);
+   tone.lerp(shaded,.10*(1-up)+.07*Math.max(0,Math.cos(floodLine*28-2*u))*(1-u));
+  }
+  tone.multiplyScalar(.99+.028*Math.sin(9*u+2.3*a)+.016*Math.cos(4*u-5*a));
+  colors.push(tone.r,tone.g,tone.b);
+ }
+ const stride=sides+1, layer=(rows+1)*stride;
+ const quad=(a,b,c,d)=>faces.push(a,b,c,a,c,d);
+ for(let i=0;i<rows;i++)for(let j=0;j<sides;j++){
+  const a=i*stride+j,b=a+stride;
+  quad(a,b,b+1,a+1);
+  quad(a+layer,a+layer+1,b+layer+1,b+layer);
+ }
+ for(const i of [0,rows])for(let j=0;j<sides;j++){
+  const a=i*stride+j;
+  quad(a,a+layer,a+layer+1,a+1);
+ }
+ const geo=new T.BufferGeometry();
+ geo.setIndex(faces);
+ geo.setAttribute('position',new T.Float32BufferAttribute(vertices,3));
+ geo.setAttribute('color',new T.Float32BufferAttribute(colors,3));
+ geo.computeVertexNormals();
+ const bank=object(root,geo,mat('#ffffff',{vertexColors:true,side:T.DoubleSide}),0,0,0);
+ bank.name='水湾悬岸';
+ // 扁石埋在坡面上，露出一角；草根也取自这片坡面的实际顶点。
+ const ridgePoint=(row,j)=>new T.Vector3().fromArray(vertices,(row*stride+j)*3);
+ const rockAt=ridgePoint(11,10);
+ const embedded=object(root,stone,mat('#9a9f8e'),rockAt.x,rockAt.y-.031,rockAt.z,[.16,.070,.104]);
+ embedded.rotation.set(.12,.19,-.20);
+ const shoots=ridgePoint(12,8);
+ for(const [i,angle] of [-.53,.41].entries()){
+  const green=object(root,blade,grasses[i],shoots.x+i*.045,shoots.y+.066,shoots.z,[.026,.110,.029]);
+  green.rotation.z=angle;
+ }
+}
+function grazingGrass(root,point,bed,index){
+ const tuft=new T.Group();root.add(tuft);tuft.position.set(point.x,bed,point.z);
+ const height=.81-bed;
+ const leafMats=['#577d4f','#739353','#91a85e'];
+ const makeBlade=(base,tip,width,color)=>{
+  const mid=base.clone().lerp(tip,.43), vertices=[],indices=[],colors=[];
+  mid.y+=.10;
+  const across=new T.Vector3(tip.z-base.z,0,base.x-tip.x).normalize();
+  const shade=new T.Color(color),light=new T.Color('#b9c681'),tone=new T.Color();
+  for(const [i,t] of [0,.16,.33,.50,.67,.84,1].entries()){
+   const p=base.clone().lerp(mid,t).lerp(mid.clone().lerp(tip,t),t);
+   const w=width*(.03+Math.sin(Math.PI*t)**.82);
+   vertices.push(p.x-w*across.x,p.y-w*.15,p.z-w*across.z,p.x,p.y+w*.28,p.z,
+    p.x+w*across.x,p.y-w*.20,p.z+w*across.z);
+   for(const stripe of [0,.16,0]){
+    tone.copy(shade).lerp(light,t*.42+stripe);colors.push(tone.r,tone.g,tone.b);
+   }
+   const a=i*3;
+   if(i<6)indices.push(a,a+1,a+4,a,a+4,a+3,a+1,a+2,a+5,a+1,a+5,a+4);
+  }
+  const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(vertices,3));
+  geo.setAttribute('color',new T.Float32BufferAttribute(colors,3));geo.setIndex(indices);geo.computeVertexNormals();
+  return object(tuft,geo,mat('#ffffff',{side:T.DoubleSide,vertexColors:true}),0,0,0);
+ };
+ for(let i=0;i<6;i++){
+  const a=(i+index*.24)*2.39996, bx=(i===2?.37:.26)*Math.cos(a),bz=.25*Math.sin(a);
+  makeBlade(new T.Vector3(bx*.21,0,bz*.21),new T.Vector3(bx,(.62+i*.042)*height,bz),
+   .069+(i%3)*.007,leafMats[i%3]);
+ }
+ const bite=makeBlade(new T.Vector3(-.13,0,-.11),new T.Vector3(0,height,0),.086,'#a5bc68');
+ bite.name='可摘的嫩草叶';
+ const tip=new T.Object3D();tip.position.y=height;bite.add(tip);
+ return {tuft,bite,tip};
 }
 function willow(root,x,y,z,scale){
  branch(root,[[x,y,z],[x+.17*scale,y+scale,z-.11],[x+.06,y+1.45*scale,z]],.18*scale,.045);
@@ -139,7 +235,7 @@ function hippoToothbrush(root,point){
 export function makeRiverDiorama(scene,points,groundAt){
  const root=new T.Group();root.name='河岸';scene.add(root);
  const {waterY}=points;
- const hills=[[24.18,5.63,.87],[28.55,4.62,1.08],[32.81,4.88,.76]];
+ const hills=[[24.18,5.63,.87],[27.65,4.62,1.08],[32.81,4.88,.76]];
  for(const [x,z,size] of hills)willow(root,x,groundAt(x,z),z,size);
  pathStrip(root,[[21.43,8.23],[23.37,8.39],[23.58,9.63],[24.33,10.22],[25.51,10.70]],.33,'#c5ac7d',.016);
  const stones=points.turtleSites.map((p,i)=>{
@@ -157,16 +253,15 @@ export function makeRiverDiorama(scene,points,groundAt){
   stoneRay.ray.origin.set(x,baskingRock.position.y+1,z);
   return stoneRay.intersectObject(baskingRock,false)[0]?.point.y??-Infinity;
  }
- for(const [i,[x,z,r]] of [[23.75,9.52,.19],[25.13,9.59,.21],[25.32,9.64,.14],[26.18,9.91,.36],
-  [27.63,10.20,.21],[29.66,9.4,.28],[30.06,8.97,.31],[30.41,7.73,.18],[28.44,5.85,.23],
-  [25.82,6.04,.25],[24.07,7.1,.24],[31.79,7.72,.34],[25.21,10.31,.30],[28.83,10.77,.29],
-  [27.52,11.19,.23],[30.30,10.84,.15],[31.06,9.82,.23],[26.42,5.35,.26],[28.95,4.15,.22]].entries()){
+ // 岸草留在两侧，中间空出完整水面。
+ for(const [i,[x,z,r]] of [[23.75,9.52,.23],[24.03,9.64,.14],[24.83,6.11,.25],
+  [25.13,6.04,.14],[30.72,9.47,.23],[30.98,9.59,.16],[31.89,7.77,.20]].entries()){
   const y=groundAt(x,z);
   const rock=object(root,stone,sandstones[i%4],x,y+.034,z,[r,r*.48,r*.74]);
   rock.rotation.y=i*.54;
-  reed(root,x+r,y,z+.20,i,.35+(i%4)*.08);
+  if(i%3===0)reed(root,x+r,y,z+.20,i,.29+(i%4)*.035);
  }
- for(const [i,[x,z]] of [[25.8,10.38],[26.16,10.52],[26.42,10.44],[29.45,9.72],[29.67,9.65],[29.81,9.83],[24.55,6.82],[24.36,6.98]].entries()){
+ for(const [i,[x,z]] of [[24.67,9.80],[24.94,9.88],[30.77,9.72]].entries()){
   const y=groundAt(x,z),height=.21+(i%3)*.059;
   object(root,blade,grasses[2],x,y+height*.42,z,[.021,height*.54,.021]);
   for(let j=0;j<4;j++){
@@ -175,11 +270,8 @@ export function makeRiverDiorama(scene,points,groundAt){
   }
   object(root,blade,chalk,x,y+height+.012,z,[.049,.026,.049],false);
  }
- const tufts=points.grass.map((p,i)=>{
-  const y=groundAt(p.x,p.z),cluster=reed(root,p.x,y,p.z,i+8,.62);
-  for(const sign of [-1,1])object(cluster,blade,chalk,sign*.085,.58,0,[.033,.11,.031]);
-  return cluster;
- });
+ erodedBank(root);
+ const tufts=points.grass.map((p,i)=>grazingGrass(root,p,groundAt(p.x,p.z),i));
  const pads=points.leaves.map((p,i)=>{
   const center=new T.Group();root.add(center);center.position.set(p.x,waterY+.026,p.z);
   const disk=object(center,new T.CircleGeometry(.235,28,.17,Math.PI*2-.44),padColors[i],0,0,0,[1,.81,1],false);
@@ -188,15 +280,20 @@ export function makeRiverDiorama(scene,points,groundAt){
   return center;
  });
  const water=surface(root,points);
- const frogRock=points.frogPerch;
- object(root,baskingStone,sandstones[1],frogRock.x,frogRock.y-.107,frogRock.z,[.40,.105,.35]);
+ const perch=points.birdPerch;
+ const lip=perch.y-.113;
+ const twig=branch(root,[[24.74,groundAt(24.74,6.28)-.065,6.28],
+  [24.91,.92,6.40],[25.09,lip-.026,6.50],[perch.x,lip,perch.z+.016],[25.60,lip+.004,6.53]],.142,.093);
+ twig.name='岸边栖鸟枯枝';
+ branch(root,[[24.92,.91,6.40],[24.80,1.01,6.39],[24.72,1.07,6.42]],.047,.014);
  const dental=hippoToothbrush(root,points.toothbrush);
  const foam=Array.from({length:8},(_,i)=>{
   const droplet=object(root,blade,mat(i%2?'#93c8bd':'#c8e3d4'),0,0,0,[.026,.039,.026],false);
   droplet.visible=false;return droplet;
  });
  return {
-  root,hintNodes:{stones,grass:tufts,toothbrush:dental.brush},stoneTopAt,
+  root,hintNodes:{stones,grass:tufts.map(grass=>grass.tuft),toothbrush:dental.brush},stoneTopAt,
+  grassTips:tufts.map(grass=>grass.tip),
   toothbrush:dental.brush,toothbrushHead:dental.head,
   splash(x,z,time){water.tap.value.set(x,time,z);},
   tick(model,night,shade,hippo){
@@ -216,7 +313,10 @@ export function makeRiverDiorama(scene,points,groundAt){
     pad.position.y=waterY+.026+.04*bob;
     pad.rotation.x=.24*bob;pad.rotation.z=-.18*bob;
    }
-   tufts.forEach((plant,i)=>{plant.rotation.z=-.46*model.grass[i].bend;});
+   tufts.forEach(({tuft,bite},i)=>{
+    tuft.rotation.z=-.10*model.grass[i].bend;
+    bite.scale.y=1-.58*(model.grass[i].nibbled??0);
+   });
   }
  };
 }

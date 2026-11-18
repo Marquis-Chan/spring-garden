@@ -25,12 +25,12 @@ test('林缘日常短跳和换枝分时进行，靠近草丛才听见松果', ()
   const advance = seconds => {
     for (let i = 0; i < Math.ceil(seconds * 60); i++) grove.step(1 / 60, true);
   };
-  advance(4.1);
+  advance(8.2);
   assert.ok(Math.hypot(grove.rabbit.x - grovePoints.grasses[0].x,
     grove.rabbit.z - grovePoints.grasses[0].z) > .28);
   assert.equal(grove.rabbit.cover, 0);
   assert.equal(grove.bird.perch, 0);
-  advance(4);
+  advance(7);
   assert.equal(grove.bird.perch, 1);
   assert.ok(events.some(event => event.type === 'flight' && event.reason === 'routine'));
   assert.ok(!events.some(event => event.type === 'flight' && event.reason === 'rabbit'));

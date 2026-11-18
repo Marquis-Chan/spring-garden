@@ -14,11 +14,60 @@ function setup() {
 
 const distance = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
 
+test('两侧海藻轮流邀出三尾银鱼，途中连点不传送，鱼沿独立浅水路线藏回叶底',()=>{
+  const {coast,events,advance}=setup();
+  for(const side of [0,1]){
+    coast.tapKelp(side);advance(.75,true);
+    assert.ok(coast.fry.every(f=>f.visible));
+    const before=coast.fry.map(f=>({...f}));
+    coast.tapKelp(1-side);coast.tapFry(1);advance(1/60,true);
+    coast.fry.forEach((f,i)=>assert.ok(distance(f,before[i])<.055));
+    for(let frame=0;frame<210;frame++){
+      advance(1/60,true);
+      const active=coast.fry.filter(f=>f.visible);
+      active.forEach((f,i)=>{
+        assert.ok(f.y>.32&&f.y<coastWaterY-.04&&f.z>16.98);
+        for(const next of active.slice(i+1))assert.ok(distance(f,next)>.38);
+      });
+    }
+    assert.ok(coast.fry.every(f=>!f.visible));
+    assert.equal(events.filter(e=>e.type==='fry-shelter').at(-1).at,1-side);
+  }
+  assert.equal(events.filter(e=>e.type==='kelp-fry').length,2);
+});
+
+test('点潮池先举螯再横行，只有实际靠近的清醒岸上企鹅停步端详；夜里仍可重复',()=>{
+  const {coast,events,advance}=setup(),den={...coast.crab};
+  coast.tapCrab();coast.tapCrab();
+  advance(.26,true);
+  assert.ok(coast.crab.claw>.9);
+  assert.equal(coast.crab.x,den.x);
+  let seen=false;
+  for(let i=0;i<150;i++){
+    advance(1/60,true);
+    if(coast.penguins[1].inspectCrab>.5)seen=true;
+    assert.equal(coast.penguins[0].inspectCrab,0);
+    for(const bird of coast.penguins)assert.ok(distance(bird,coast.crab)>.74);
+  }
+  assert.equal(coast.crab.phase,'ledge');
+  assert.ok(seen);
+  assert.equal(events.filter(e=>e.type==='crab-signal').length,1);
+  assert.equal(events.filter(e=>e.type==='penguin-crab-look').length,1);
+  coast.setNight(true);
+  coast.tapCrab();advance(2.66,true);
+  assert.equal(coast.crab.phase,'den');
+  assert.equal(distance(den,coast.crab),0);
+  coast.tapCrab();advance(2.66,true);
+  assert.equal(coast.crab.phase,'ledge');
+  assert.ok(coast.penguins.every(p=>p.sleep===1 && p.inspectCrab===0));
+  assert.equal(events.filter(e=>e.type==='penguin-crab-look').length,1);
+});
+
 test('两只清醒企鹅在自己岸台摇步，点击时不跳回固定站位', () => {
   const { coast, events, advance } = setup();
   const [a,b]=coast.penguins;
   const moved=[false,false];
-  for(let sample=0;sample<96;sample++){
+  for(let sample=0;sample<175;sample++){
     advance(.05,true);
     coast.penguins.forEach((actor,index)=>{
       moved[index] ||= distance(actor,coastPoints.lanes[index].land)>.23;

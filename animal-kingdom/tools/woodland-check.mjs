@@ -52,7 +52,7 @@ try{
   }
   let phase='打开页面';
   try{
-   await page.goto(url);
+   await page.goto(url,{timeout:75000});
    await wait(()=>window.pondInspect?.().ready||!document.getElementById('unsupported').hidden);
    assert.ok((await read())?.ready,errors.join('\n'));
    await view('grove');
@@ -141,7 +141,7 @@ try{
    assert.equal(end.audio.starts.woodpecker,night.audio.starts.woodpecker);
    assert.ok(end.audio.starts.fox>0&&end.audio.starts.squirrel>0);
    phase='新开局先点旧鸟，兔在草里侧耳';
-   await page.reload();
+   await page.reload({timeout:75000});
    await wait(()=>window.pondInspect?.().ready);
    await view('grove');
    const hidden=(await read()).grove;

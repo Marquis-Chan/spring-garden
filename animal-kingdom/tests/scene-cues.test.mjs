@@ -3,7 +3,7 @@ import test from 'node:test';
 import { sceneCues, sceneCue } from '../src/scene-cues.js';
 
 test('各近景轮流提示两个不同的联动入口，中间留出安静时间', () => {
-  assert.equal(Object.keys(sceneCues).length, 9);
+  assert.equal(Object.keys(sceneCues).length, 10);
   for (const [mode, targets] of Object.entries(sceneCues)) {
     const first = sceneCue(mode, 3.8, targets);
     const second = sceneCue(mode, 10.8, targets);

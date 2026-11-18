@@ -1,4 +1,4 @@
-import {clamp,ease,waterPoint} from './state.js';
+import {clamp,ease,idleClockRate,waterPoint} from './state.js';
 
 export function makePondNeighbors(T,makeFish){
  const coves=[{x:-2.15,z:1.70,y:-.13},{x:2.23,z:.12,y:-.14}];
@@ -19,7 +19,7 @@ export function makePondNeighbors(T,makeFish){
    touched=time;
    return true;
   },place(time){
-   const phase=time*(.84+i*.13)+i,age=time-touched;
+   const phase=time*idleClockRate*(.84+i*.13)+i,age=time-touched;
    const dart=ease(age/.25)*(1-ease((age-.28)/.78));
    const next=waterPoint({x:home.x+(.27+i*.06)*Math.cos(phase)+escapeX*dart,
     z:home.z+.21*Math.sin(phase)+escapeZ*dart},.80);

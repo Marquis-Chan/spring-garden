@@ -1,4 +1,6 @@
-const arrivalDelay = 7.6;
+import {idleClockRate} from './state.js';
+
+const arrivalDelay = 7.6/idleClockRate;
 const flightTime = 10.4;
 const passes = [
   { direction: 1, altitude: .18, count: 3, rest: 24 },
@@ -19,7 +21,7 @@ export function createSkyFlight() {
       }
       clock += seconds;
       while (clock >= flightTime) {
-        clock -= flightTime + passes[route].rest;
+        clock -= flightTime + passes[route].rest/idleClockRate;
         route = (route + 1) % passes.length;
       }
       if (clock < 0) return null;

@@ -67,16 +67,19 @@ function flower(root,p,i){
  return {g,core,petals,soil,stem};
 }
 function feedingTree(root,positions){
- const x=19.70,z=3.58;
- acacia(root,x,3.89,z,1);
  return positions.map((p,i)=>{
+  const x=i===0?17.24:20.62,z=i===0?3.32:3.42;
+  acacia(root,x,i===0?3.34:3.89,z,i===0?.74:1);
   const side=i===0?-.36:.38;
-  const tip=[p.x+side,3.94,p.z+.36];
-  // 让粗树枝从吻部上方经过，只有枝梗垂到可以吃到的叶面。
-  branch(root,[[x,3.24,z],[x+(p.x-x)*.30,3.95,z+(p.z-z)*.28],
-   [p.x+side*.9,4.02,p.z-.32],tip],.108,.020);
+  const tip=[p.x+side,i===0?3.49:3.17,p.z-.20];
+  const bend=i===0?[17.97,3.43,p.z-.96]:[p.x+.64,3.20,p.z-.76];
+  // 左右两棵树从脸外侧递来枝叶，鹿耳后面留出完整的天空。
+  branch(root,[[x-.04,i===0?2.49:2.75,z],[x+.36,i===0?2.86:3.12,z+.24],bend,tip],.094,.019);
+  const bud=[tip[0]+side*.98,tip[1]+.19,tip[2]-.18];
+  branch(root,[[(tip[0]+bend[0])*.5,(tip[1]+bend[1])*.5,(tip[2]+bend[2])*.5],bud],.024,.007);
+  for(const [n,k] of [[-1,.65],[0,1.02],[1,1.52]])leaf(root,bud[0]+n*.076,bud[1]+n*.022,bud[2]+Math.abs(n)*.035,k*side*2,.13,leaves[(n+2+i)%4]);
   const stalkSide=side*(i===0?.79:.37);
-  const twig=branch(root,[tip,[p.x+side*(i===0?1.28:.75),p.y+.25,p.z+.32],
+  const twig=branch(root,[tip,[p.x+side*(i===0?1.17:.85),p.y+.17,p.z+.06],
    [p.x+stalkSide,p.y+.088,p.z+.195]],.016,.005);
   const cluster=group(root,p.x,p.y,p.z);
   const blades=Array.from({length:3},(_,n)=>leaf(cluster,(n-1)*.096,-.029+n*.025,.032*n,1.07+n*.58,.126,leaves[(n+i)%4]));
@@ -115,7 +118,6 @@ export function makeSavannaDiorama(scene,points){
  const root=group(scene);
  pathStrip(root,[[11.75,3.66],[13.20,4.33],[14.64,5.21],[17.21,5.85],[18.68,6.11]],.55,'#c4a36e',.022);
  pathStrip(root,[[15.42,5.20],[15.08,6.13],[15.48,7.38],[17.26,7.79],[18.89,7.27]],.18,'#c2a96e',.018);
- acacia(root,15.37,2.92,3.57,.76);
  const treeLeaves=feedingTree(root,points.leaves);
  acacia(root,23.0,3.58,4.29,1.03);
  const pool=points.water;
@@ -127,8 +129,7 @@ export function makeSavannaDiorama(scene,points){
  const beds=points.flowers.map((p,i)=>flower(root,p,i));
  const rock=baskingRock(root,points.rock);
  const lionGrass=grassesOnRock(root,points.lionGrass);
- const chips=[[14.43,5.13],[15.05,6.28],[17.89,5.62],[19.24,7.86],[21.89,7.28],[22.79,5.81],[19.26,4.00],
-  [15.62,8.34],[16.82,9.16],[20.64,8.82],[22.48,8.45],[23.26,9.28]];
+ const chips=[[14.39,5.14],[22.84,5.84],[15.14,8.65],[19.77,9.28],[22.85,8.82]];
  for(const [i,[x,z]] of chips.entries()){
   add(root,'浅色石子',small,rocks[i%3],x,.419,z,[.15+.033*(i%3),.064,.14]);
   for(let n=0;n<4;n++){
@@ -149,16 +150,18 @@ export function makeSavannaDiorama(scene,points){
   const material=clay(color,.62,{transparent:true,opacity:.25,depthWrite:false,emissive:color,emissiveIntensity:.39});
   add(rainbow,'水雾虹',new T.TorusGeometry(.42-i*.041,.020,8,36,Math.PI),material,0,0,0,null,false);
  });
- const falling=leaf(root,0,0,0,.7,.15,leaves[1]);
+ const falling=points.leaves.map((p,i)=>leaf(root,0,0,0,0,i===1?.21:.15,i===1?clay('#c8a04e'):leaves[1]));
+ falling.forEach((blade,index)=>{blade.name='随枝飘落的叶'+index;blade.rotation.order='YXZ';});
  const tracks=Array.from({length:12},()=>{
   const mark=add(root,'蹄迹',new T.CircleGeometry(.075,14),clay('#695735',.85,{transparent:true,depthWrite:false}),0,0,0,[.74,1.05,1],false);
   mark.rotation.x=-Math.PI/2;mark.visible=false;return {mark,at:-99};
  });
- [...sprayDrops,...splashes,...rippleList,rainbow,falling].forEach(object=>{object.visible=false;});
+ [...sprayDrops,...splashes,...rippleList,rainbow,...falling].forEach(object=>{object.visible=false;});
  const selectedAt=[-99,-99];
  const leafSelectedAt=[-99,-99];
  let trackIndex=0;
- let spray=null,contact=null,leafMotion=null,scoopAt=-99;
+ const leafMotions=points.leaves.map(()=>null);
+ let spray=null,contact=null,scoopAt=-99;
  return {
   root,
   hintNodes:{bough:treeLeaves.map(({cluster,twig})=>[cluster,twig]),flower:beds.map(({core})=>core),rock,lionGrass},
@@ -166,7 +169,8 @@ export function makeSavannaDiorama(scene,points){
    if(e.type==='scoop')scoopAt=time;
    if(e.type==='spray')spray={at:time,to:new T.Vector3(e.x,e.y,e.z),origins:[]};
    if(e.type==='water-hit')contact={at:time,x:e.x,y:e.y,z:e.z};
-   if(e.type==='leaf-fall')leafMotion={at:time,...e};
+   if(e.type==='leaf-fall')leafMotions[e.index]={at:time,...e,batAt:null};
+   if(e.type==='lion-bats-leaf'&&leafMotions[1])leafMotions[1].batAt=time;
    if(e.type==='flower-select')selectedAt[e.index]=time;
    if(e.type==='leaf-select')leafSelectedAt[e.index]=time;
    if(e.type==='hoof'){
@@ -213,13 +217,23 @@ export function makeSavannaDiorama(scene,points){
     rainbow.position.z-=.10;
     rainbow.children.forEach(band=>{band.material.opacity=.68*Math.min(1,(time-spray.at-.28)*6)*Math.max(0,1-(time-spray.at-.80)*2);});
    }
-   const leafAge=leafMotion?(time-leafMotion.at)/leafMotion.duration:2;
-   falling.visible=leafAge>=0&&leafAge<1.26;
-   if(falling.visible){
-    const t=Math.min(1,leafAge),m=leafMotion;
-    falling.position.set(T.MathUtils.lerp(m.x,m.toX,t)+Math.sin(t*Math.PI*3)*.17,
-     T.MathUtils.lerp(m.y,m.toY,t*t),T.MathUtils.lerp(m.z,m.toZ,t));
-    falling.rotation.set(t*4.1,t*2.9,t*2.7);
+   for(const [index,leaf] of falling.entries()){
+    const m=leafMotions[index];
+    if(!m)continue;
+    const age=time-m.at, bat=m.batAt===null?0:(time-m.batAt)/.74;
+    const fade=m.batAt!==null?T.MathUtils.smoothstep(bat,.85,1.36):
+      T.MathUtils.smoothstep(age,index===1?3.6:.63,index===1?4.15:.95);
+    leaf.visible=fade<1;
+    if(!leaf.visible)continue;
+    const t=Math.min(1,age/m.duration),sway=Math.sin(Math.PI*t);
+    const leap=Math.min(1,bat),size=(index===1?.21:.15)*(1-fade);
+    const toY=index===1?.406:m.toY;
+    // 黄叶先飘到石沿，再从狮爪向石外划弧，回落后逐渐隐入草中。
+    leaf.position.set(T.MathUtils.lerp(m.x,m.toX,t)+sway*Math.sin(t*7)*.16-leap*.65,
+     T.MathUtils.lerp(m.y,m.toY,t*t)+leap*(toY-m.toY)+Math.sin(Math.PI*leap)*.31,
+     T.MathUtils.lerp(m.z,m.toZ,t)+sway*(index===1?.34:0)+leap*.66);
+    leaf.rotation.set((index===1?-.22:.10)*(1-leap)+sway*Math.cos(t*8)*.92+Math.sin(leap*Math.PI)*1.47,.46+t*3.6+2.9*leap,sway*.79);
+    leaf.scale.set(size*(index===1?.66:.56),size*.10,size);
    }
    for(const {mark,at} of tracks){
     const age=time-at;

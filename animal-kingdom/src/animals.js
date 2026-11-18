@@ -115,7 +115,7 @@ export function makeFrog(THREE) {
   function headPaint(x, y, z) {
     color.copy(shade).lerp(back, smooth(y, 0.01, 0.16));
     const jaw = 1 - smooth(y, -0.104, -0.045);
-    const eyeStripe = smooth(Math.abs(x), 0.22, 0.34) *
+    const eyeStripe = smooth(Math.abs(x), 0.19, 0.32) *
       smooth(y, -0.057, -0.022) * (1 - smooth(y, 0.017, 0.102)) *
       (1 - smooth(z, 0.21, 0.35));
     return color.lerp(belly, jaw).lerp(stripe, eyeStripe * 0.74);
@@ -188,7 +188,7 @@ export function makeFrog(THREE) {
       [0.089, 0.077, 0.048]);
     const gaze = group(THREE, opening, side + ' pupil tracking', [0, 0.009, 0.066]);
     solid(THREE, gaze, side + ' pupil', sphere, pupil,
-      [0, 0, 0], [0.061, 0.045, 0.023]);
+      [0, 0, 0], [0.067, 0.032, 0.023]);
     solid(THREE, gaze, side + ' eye catchlight', detailSphere, eyeLight,
       [-0.022, 0.015, 0.02], [0.014, 0.012, 0.007]);
 
@@ -239,8 +239,9 @@ export function makeFrog(THREE) {
     body.scale.set(1 + 0.10 * crouch + 0.06 * land, 1 - 0.11 * crouch - 0.07 * land, 1 + 0.18 * air);
     body.rotation.x = 0.16 * crouch - 0.22 * air + 0.15 * land;
     head.rotation.set(-0.07 * air + 0.06 * land + 0.24 * nod, look * 0.15, look * -0.035);
-    throat.position.set(0, -0.152 - 0.038 * puff, 0.205 + 0.036 * puff);
-    throat.scale.set(0.213 + 0.068 * puff, 0.105 + 0.085 * puff, 0.152 + 0.076 * puff);
+    // 声囊从下颌向外鼓出，安静时贴回喉部，远看也能读出每声呱叫。
+    throat.position.set(0, -0.137 - 0.064 * puff, 0.205 + 0.055 * puff);
+    throat.scale.set(0.212 + 0.084 * puff, 0.089 + 0.109 * puff, 0.149 + 0.098 * puff);
 
     for (const side of sides) {
       const { sign, opening, gaze, shoulder, elbow, wrist, hip, knee, ankle } = side;

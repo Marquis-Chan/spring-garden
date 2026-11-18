@@ -1,4 +1,4 @@
-import { clamp, ease, idleDelay, mix } from './state.js';
+import { clamp, idleClockRate, ease, idleDelay, mix } from './state.js';
 
 export const rainPoints = {
   monkeyBranches: [{ x: 34.76, y: 1.42, z: .14 }, { x: 35.61, y: 1.64, z: -.53 }],
@@ -14,7 +14,7 @@ export const rainPoints = {
   berry: { x: 38.31, y: 2.36, z: -.21 }
 };
 
-const slothIdleTime = 12;
+const slothIdleTime = 12 / idleClockRate;
 const slothNapTime = 3;
 const monkeyWatchRange = 1.95;
 const toucanWatchRange = 2.46;
@@ -828,7 +828,7 @@ export function createRainforest(emit = () => {}, { groundAt = () => .38 } = {})
   function step(dt, active = false) {
     dt = clamp(dt, 0, .05);
     time += dt;
-    if (active) routineTime += dt;
+    if (active) routineTime += dt * idleClockRate;
     monkey.time = groundMonkey.time = sloth.time = toucan.time = time;
     stepMonkey(dt, active);
     stepDroppedBanana();

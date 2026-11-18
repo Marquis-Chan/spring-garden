@@ -1,4 +1,4 @@
-import {blink,clay,group,mesh,paintSphere,tube} from './savanna-actors.js';
+import {blink,clay,closedShape,group,mesh,paintSphere,tube} from './savanna-actors.js';
 import {groundMonkeyFoot,rainPoints} from './rainforest-state.js';
 
 const smooth = (value, low = 0, high = 1) => {
@@ -308,11 +308,22 @@ export function makeSloth(T) {
     ochre = new T.Color('#b19b74'), color = new T.Color();
   const wool = paintSphere(T,(x,y,z) => color.copy(cocoa).lerp(ochre,.24+.59*smooth(z,-.69,.94))
     .lerp(moss,.48*smooth(y,-.2,.92)).multiplyScalar(.98+.039*Math.sin(x*16+z*11)),28,18);
-  mesh(T,torso,'Moss-tinted long sloth back',wool,coat,[-.041,.004,-.090],[.320,.230,.206]).rotation.z=.075;
-  mesh(T,torso,'Rounded sloth chest',wool,coat,[.089,.003,.042],[.220,.196,.174]).rotation.z=-.16;
+  const pelt=closedShape(T,[
+    [-.363,-.004,.018,.026,.084],[-.333,-.004,.085,.124,.092],[-.267,.003,.143,.190,.085],
+    [-.164,.006,.188,.217,.073],[-.045,.009,.210,.232,.044],[.058,.013,.207,.218,.007],
+    [.138,.011,.181,.194,-.040],[.213,.012,.142,.153,-.067],[.271,.004,.085,.110,-.076],
+    [.294,-.012,.019,.025,-.085]
+  ],32,(side,y,x)=>color.copy(cocoa).lerp(ochre,.36+.47*smooth(-side,-.2,.20))
+    .lerp(moss,.38*smooth(y,-.06,.23)).multiplyScalar(.985+.023*Math.cos(x*34+y*16))).rotateY(Math.PI/2);
+  mesh(T,torso,'连续的树懒肩背与胸腹',pelt,coat);
   mesh(T,torso,'Brown sloth throat',sphere,coffee,[.165,-.043,.139],[.124,.133,.091]);
   mesh(T,head,'Soft fur rim around sloth face',wool,coat,[.022,-.052,.006],[.168,.158,.136]);
-  mesh(T,head,'Pale sloth cheek mask',sphere,mask,[.029,-.066,.092],[.145,.128,.069]).rotation.z=-.095;
+  const cheekFur=new T.Color('#edd5a8'),eyeStripe=new T.Color('#795d4b');
+  const facial=paintSphere(T,(x,y,z)=>{
+    const side=Math.abs(x),sweep=Math.hypot((side-.64)/.47,(y-(.18-.38*(side-.46)))/.31);
+    return color.copy(cheekFur).lerp(eyeStripe,(1-smooth(sweep,.60,1.09))*smooth(z,-.10,.43));
+  },44,28);
+  mesh(T,head,'浅色脸盘与贴着毛面的两道眼纹',facial,coat,[.029,-.066,.092],[.151,.131,.072]);
   mesh(T,head,'Sloth round muzzle',small,ivory,[.031,-.109,.138],[.090,.067,.056]);
   mesh(T,head,'Dark sloth nose',small,coffee,[.028,-.070,.184],[.052,.031,.026]);
   const face = group(T,head,'Sloth face touch point',[.028,-.070,.208]);
@@ -323,9 +334,6 @@ export function makeSloth(T) {
   const setters = [];
   for(const side of [-1,1]){
     const label=side<0?'Left':'Right';
-    const stripe=mesh(T,head,label+' sloth dark eye sweep',sphere,coffee,
-      [.030+side*.077,-.049,.139],[.053,.041,.023]);
-    stripe.rotation.set(.02,side*.18,side*-.24);
     setters.push(eyelid(T,head,label+' sloth eye',small,
       [.030+side*.067,-.042,.155],side*.22,dark,white));
   }

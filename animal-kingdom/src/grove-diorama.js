@@ -147,8 +147,10 @@ function grassPocket(root,p,index){
  const bundles=[];
  for(const [i,[x,z]] of [[-.50,.11],[.34,.10],[-.14,.43],[.20,.53],[.09,-.44]].entries()){
   const tuft=new T.Group();tuft.position.set(x,0,z);group.add(tuft);bundles.push(tuft);
-  for(let k=0;k<6;k++){
-   blade(tuft,(random()-.5)*.31,(random()-.5)*.27,(index?.66:.53)+random()*.37,
+  for(let k=0;k<5;k++){
+   // 前排压低，兔子仍能躲进草窝，竖耳、看鸟时也看得到脸。
+   const rise=z>.30?.32:(index?.66:.53);
+   blade(tuft,(random()-.5)*.31,(random()-.5)*.27,rise+random()*.32,
     .047+random()*.069,.12+random()*.32,Math.PI*2*random(),grassColors[(i+k)%4]);
   }
  }

@@ -47,7 +47,19 @@ function fruit(parent,i){
   [.158,.043],[.139,.107],[.101,.143],[.061,.147],[.032,.126],[0,.119]];
  const geometry=new T.LatheGeometry(profile.map(p=>new T.Vector2(...p)),36);
  const colors=['#cf5947','#d67448','#bd4a42'];
- const material=clay(colors[i%colors.length],.63);
+ // 肩部略分瓣，靠光的一侧泛红，树上和篮里是同一枚苹果。
+ const p=geometry.attributes.position,col=[],red=new T.Color(colors[i%colors.length]);
+ const honey=new T.Color('#eaa567'),rim=new T.Color();
+ for(let j=0;j<p.count;j++){
+  const x=p.getX(j),y=p.getY(j),z=p.getZ(j),a=Math.atan2(x,z);
+  const lobes=1+.032*Math.cos(5*a+i)*T.MathUtils.smoothstep(Math.abs(y),.05,.15);
+  p.setXYZ(j,x*lobes,y,z*lobes);
+  rim.copy(red).lerp(honey,.44*T.MathUtils.smoothstep(x*.56+y+z*.2,-.04,.17));
+  col.push(rim.r,rim.g,rim.b);
+ }
+ geometry.setAttribute('color',new T.Float32BufferAttribute(col,3));
+ geometry.computeVertexNormals();
+ const material=clay('#ffffff',.67);material.vertexColors=true;
  mesh(root,geometry,material);
  tube(root,[[0,.115,0],[.017,.168,0],[.028,.199,.004]],.012,stem,7);
  leaf(root,.064,.157,.030,.090,-1.13,greens[1]);
@@ -117,8 +129,8 @@ function makeBasket(root,p){
  return basket;
 }
 function gardenDetails(root){
- for(const [i,[x,z,s]] of [[1.89,6.66,.8],[2.85,7.79,.63],[3.69,7.56,.67],[5.33,7.95,.84],
-  [6.69,5.95,.62],[7.23,6.85,.65],[5.1,4.09,.55],[2.71,5.18,.64],[6.7,7.76,.74]].entries()){
+ for(const [i,[x,z,s]] of [[1.89,6.66,.8],[2.71,5.18,.64],[7.23,6.85,.65],
+  [6.69,5.95,.62],[5.1,4.09,.55]].entries()){
   const y=groundHeight(x,z);
   mesh(root,round,grass,x,y-.042,z,[s*.37,.063,s*.22],false);
   for(let j=0;j<4;j++){
@@ -145,6 +157,7 @@ export function makeOrchardDiorama(scene,points){
  const carrot=makeRabbitCarrot(root);
  let hiveAt=-99;
  return {
+  root,
   hintNodes:{apple:apples.map(({root})=>root),hive,basket,flowers:flowerHeads,carrot:carrot.root},
   react(event,time){if(event.type==='bee-flight')hiveAt=time;},
   tick(model,hover,family){

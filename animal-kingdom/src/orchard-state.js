@@ -1,4 +1,4 @@
-import { clamp, ease, idleDelay, mix } from './state.js';
+import { clamp, idleClockRate, ease, idleDelay, mix } from './state.js';
 
 export const orchardPoints = {
   floor: .38,
@@ -6,7 +6,7 @@ export const orchardPoints = {
   basket: { x: 5.53, y: .38, z: 6.68 },
   dog: { x: 4.54, y: .38, z: 7.22 },
   cat: { x: 2.57, y: .38, z: 6.56 },
-  butterfly: [{ x: 1.69, y: .76, z: 7.09 }, { x: 2.20, y: .86, z: 7.95 }, { x: 3.57, y: .75, z: 8.35 }],
+  butterfly: [{ x: 1.34, y: .76, z: 7.23 }, { x: 2.20, y: .86, z: 7.95 }, { x: 3.57, y: .75, z: 8.35 }],
   hive: { x: 5.82, y: 1.38, z: 5.22 },
   hiveIdle: { x: 6.11, y: 1.40, z: 5.43 },
   beeFlowers: [{ x: 6.32, y: .72, z: 6.29 }, { x: 6.75, y: .78, z: 6.67 }]
@@ -38,7 +38,7 @@ export function createOrchard(emit = () => {}) {
   const apples = points.apples.map((point, id) => ({ ...point, id, phase: 'branch', rotation: 0 }));
   const appleMoves = apples.map(() => null);
   const dog = { ...points.dog, yaw: -.15, time: 0, stride: 0, gait: 0, sniff: 0, bark: 0, sleep: 0 };
-  const cat = { ...points.cat, yaw: -.09, time: 0, stride: 0, gait: 0, stretch: 0, look: 0, lookDown: 0, paw: 0, sleep: 0 };
+  const cat = { ...points.cat, yaw: -.09, time: 0, stride: 0, gait: 0, stretch: 0, look: 0, lookDown: 0, lookUp: 0, paw: 0, sleep: 0 };
   const butterfly = insectAt(points.butterfly[0], 0, true);
   const bees = [{ ...insectAt(points.hiveIdle, null, true), hiveIdle: true }, insectAt(points.hive, null, false)];
   const beeMoves = bees.map(() => null);
@@ -251,7 +251,7 @@ export function createOrchard(emit = () => {}) {
       }
     }
     if (catGlance?.apple.phase === 'roll' && distance(cat, catGlance.apple) < 1.75) catGlance.point = position(catGlance.apple);
-    const sight = butterflyMove?.manual ? 1.60 : .90;
+    const sight = butterflyMove?.manual ? 2.15 : .90;
     const flyingNearby = !night && butterfly.flight > 0 && distance(cat, butterfly) < sight;
     const target = catGlance?.point ?? (flyingNearby ? butterfly : null);
     const moved = stroll(cat, catRoutine, catStroll, .36, 1.9, dt, daily && !target && age > 1.34);
@@ -262,6 +262,8 @@ export function createOrchard(emit = () => {}) {
     const look = target ? clamp(angleDelta(cat.yaw, bearing(cat, target)) / 1.22, -1, 1) : 0;
     cat.look = mix(cat.look, look, Math.min(1, dt * 10));
     cat.lookDown = mix(cat.lookDown, Number(Boolean(catGlance)), Math.min(1, dt * 9));
+    const elevation = flyingNearby && !catGlance ? clamp((butterfly.y - cat.y - .48) / .62) : 0;
+    cat.lookUp = mix(cat.lookUp, elevation, Math.min(1, dt * 9));
     cat.stride += moved * (2 * Math.PI / .40);
     cat.gait = mix(cat.gait, dt ? clamp(moved / (dt * .36)) : 0, Math.min(1, dt * 11));
     if (Math.abs(cat.look) < .001) cat.look = 0;
@@ -283,12 +285,12 @@ export function createOrchard(emit = () => {}) {
   function moveButterfly(manual = false) {
     const index = ((butterflyMove?.perch ?? butterfly.perch) + 1) % points.butterfly.length;
     const to = points.butterfly[index];
-    const move = flight(butterfly, to, index, .80, manual ? .47 : .34);
+    const move = flight(butterfly, to, index, .80, manual ? .66 : .34);
     butterflyMove = { ...move, manual };
     // 回到左边花冠时先从外侧绕开猫尾；过两朵前景花时仍能被猫看见。
     if (index === 0) butterflyMove.via = { x: 1.39, z: 8.32 };
     if (manual && move.from.z > 7.65 && to.z > 7.65) {
-      butterflyMove.via = { x: mix(move.from.x, to.x, .42), z: Math.min(move.from.z, to.z) - 1.10 };
+      butterflyMove.via = { x: mix(move.from.x, to.x, .42), z: Math.min(move.from.z, to.z) - .51 };
     }
     butterfly.flight = .24;
     butterfly.perch = null;
@@ -380,7 +382,7 @@ export function createOrchard(emit = () => {}) {
     dt = clamp(dt, 0, .05);
     time += dt;
     const daily = active && !night;
-    if (daily) dayTime += dt;
+    if (daily) dayTime += dt * idleClockRate;
     dog.time = cat.time = time;
     for (const apple of apples) stepApple(apple);
     if (daily && !butterflyMove && dayTime >= nextButterfly) moveButterfly();

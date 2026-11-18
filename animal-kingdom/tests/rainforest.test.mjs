@@ -25,13 +25,14 @@ test('醒着的树懒换握后再接点击，巨嘴鸟静默换枝后也接收�
   const advance = seconds => {
     for (let i = 0; i < Math.ceil(seconds * 60); i++) rain.step(1 / 60, true);
   };
-  advance(3.3);
+  advance(6.25);
   assert.ok(rain.sloth.crawl > 0 && rain.sloth.crawl < 1);
   rain.tapLeaf();
   assert.equal(rain.leaf.phase, 'branch');
   advance(1.72);
   assert.ok(rain.sloth.x < rainPoints.sloth.x - .18);
   assert.equal(rain.sloth.crawl, -1);
+  for (let i = 0; i < 190 && rain.toucan.flight <= .3; i++) advance(1 / 60);
   assert.ok(rain.toucan.flight > .3);
   assert.ok(!events.some(e => e.type === 'toucan-call'));
   rain.tapToucan();
@@ -252,7 +253,7 @@ test('入夜猴子先落稳，清掉未摘果的预约，夜点只出休息反�
   assert.equal(events.some(event => event.type === 'banana-pick'), false);
 });
 
-test('树懒初见清醒，叶摸满才摘，送嘴后才嚼，闲置十二秒后短歇', () => {
+test('树懒初见清醒，叶摸满才摘，送嘴后才嚼，闲置二十四秒后短歇', () => {
   const { rain, events, advance } = setup();
   advance(18);
   assert.equal(rain.sloth.sleep, 0);
@@ -270,11 +271,11 @@ test('树懒初见清醒，叶摸满才摘，送嘴后才嚼，闲置十二秒�
   advance(.59);
   assert.equal(rain.leaf.phase, 'mouth');
   assert.ok(rain.sloth.chew > 0);
-  advance(10.4);
+  advance(22.4);
   assert.equal(rain.sloth.sleep, 0);
   advance(.83);
   const nap = events.find(event => event.type === 'sloth-nap');
-  assert.ok(nap.time - touched >= 12 && nap.time - touched < 12.05);
+  assert.ok(nap.time - touched >= 24 && nap.time - touched < 24.05);
   assert.ok(rain.sloth.sleep > .3);
   rain.tapLeaf();
   assert.ok(events.some(event => event.type === 'sleep' && event.animal === 'sloth'));
@@ -466,7 +467,7 @@ test('短睡中的树懒留在枝下，只有清醒的巨嘴鸟吃果，夜晚�
   const { rain, events, advance } = setup();
   const start = () => rain.step(1 / 60, true);
   start();
-  advance(12.4);
+  advance(24.4);
   assert.ok(rain.sloth.sleep > .65);
   rain.tapBerry();
   advance(.50);

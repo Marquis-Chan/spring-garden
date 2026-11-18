@@ -67,7 +67,7 @@ test('巡游后两只仍按照落果→虎触果→熊拾→熊吃的顺序共�
 
 test('虎和孔雀沿各自路线分开后，点抖屏仍会引虎抬头', () => {
   const {forest,events,advance} = setup();
-  advance(8.8);
+  advance(17.6);
   forest.tapPeacock();
   advance(.65);
   assert.ok(gap(forest.tiger,forest.peacock)>2.72);

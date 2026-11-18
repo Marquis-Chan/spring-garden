@@ -108,7 +108,6 @@ export function makeHippo(T, groundAt = () => 0.19) {
   const detail = new T.SphereGeometry(1, 15, 10);
   const painted = clay(T, '#fff', 0.73, true);
   const stone = clay(T, '#9a8f97', 0.76);
-  const cheek = clay(T, '#b29b9c', 0.74);
   const throatShade = clay(T, '#5c414c', 0.72);
   const lip = clay(T, '#a78d91', 0.70);
   const insideEar = clay(T, '#c0979c', 0.76);
@@ -150,25 +149,30 @@ export function makeHippo(T, groundAt = () => 0.19) {
   ], 44, hide);
   // 保留露出水面的背部轮廓，为短腿和浅河床让出水下空间。
   mesh(T, body, 'Wide soft hippo barrel', shallowBelly(barrel), painted);
+  const birdPerch=group(T,body,'河马背上的鸟爪落点',[0,.532,-.208]);
   mesh(T, body, 'Submerged shoulders', shallowBelly(sphere.clone()), stone,
     [0, -0.020, 0.293], [0.510, 0.340, 0.382]);
 
+  // 眼眶和鼻翼直接从头面隆起，正面浮出水时仍是一张连贯的脸。
   const skull = sculpt(T, [
     [-0.284, -0.004, 0.024, 0.023], [-0.254, 0.004, 0.198, 0.167],
     [-0.172, 0.024, 0.378, 0.236], [-0.061, 0.028, 0.472, 0.268],
-    [0.072, 0.009, 0.483, 0.240], [0.201, -0.014, 0.445, 0.210],
-    [0.343, -0.023, 0.383, 0.193], [0.422, -0.033, 0.245, 0.133],
-    [0.454, -0.039, 0.022, 0.032],
-  ], 36, hide);
+    [0.008, 0.020, 0.483, 0.256], [0.072, 0.009, 0.483, 0.240],
+    [.126,-.003,.472,.230],[.168,-.010,.459,.220],[0.201, -0.014, 0.445, 0.210],
+    [.270,-.012,.422,.178],[.320,-.010,.425,.166],[.365,-.006,.430,.160],
+    [.412,-.003,.434,.151],[.463,0,.438,.144],[.504,.002,.434,.140],
+    [.544,.001,.412,.131],[.580,-.002,.382,.113],[.607,-.008,.322,.096],
+    [.626,-.012,.245,.079],[.641,-.013,.143,.054],[.649,-.014,.025,.021]
+  ], 64, hide);
+  const surface = skull.attributes.position;
+  for(let i=0;i<surface.count;i++){
+    const x=Math.abs(surface.getX(i)), y=surface.getY(i), z=surface.getZ(i);
+    const ridge=(cx,cz,rx,rz)=>Math.exp(-(((x-cx)/rx)**2+((z-cz)/rz)**2));
+    const top=s(y,-.005,.14);
+    surface.setY(i,y+top*(.105*ridge(.245,.095,.16,.16)+.059*ridge(.21,.50,.13,.09)));
+  }
+  skull.computeVertexNormals();
   mesh(T, head, 'Wide hippo skull', skull, painted);
-  const broadSnout = sculpt(T, [
-    [-0.077, -0.029, 0.041, 0.032], [-0.054, -0.018, 0.242, 0.134],
-    [0.032, -0.011, 0.369, 0.178], [0.128, 0.002, 0.415, 0.162],
-    [0.201, 0.005, 0.407, 0.140], [0.254, -0.002, 0.349, 0.112],
-    [0.290, -0.009, 0.254, 0.085], [0.314, -0.014, 0.129, 0.064],
-    [0.326, -0.019, 0.028, 0.022],
-  ], 40).translate(0, -0.003, 0.308);
-  mesh(T, head, 'Broad rounded upper muzzle', broadSnout, cheek);
   mesh(T, jaw, 'Hippopotamus soft lower jaw', sphere, lip, [0, -0.051, 0.201], [0.381, 0.116, 0.302]);
   const throat = mesh(T, head, 'Hippo inner mouth', sphere, throatShade);
   const tongueTip = mesh(T, jaw, 'Hippo tongue', sphere, tongue,
@@ -194,18 +198,11 @@ export function makeHippo(T, groundAt = () => 0.19) {
     outer.rotation.z = inside.rotation.z = sign * -0.26;
     ears.push({ sign, ear });
 
-    mesh(T, head, side + ' raised eye pad', sphere, stone,
-      [sign * 0.246, 0.194, 0.169], [0.155, 0.130, 0.151]);
-    lids.push(eyes(T, head, side + ' hippo eye', [sign * 0.248, 0.224, 0.264],
-      sign * 0.54, amber, pupil, glint, 0.91));
-    mesh(T, head, side + ' muzzle nostril swell', detail, cheek,
-      [sign * 0.195, 0.107, 0.486], [0.132, 0.077, 0.115]);
+    lids.push(eyes(T, head, side + ' hippo eye', [sign * 0.250, 0.245, 0.206],
+      sign * 0.42, amber, pupil, glint, 1.06));
     const nostril = mesh(T, head, side + ' hippo nostril', detail, noseShade,
-      [sign * 0.204, 0.156, 0.534], [0.068, 0.024, 0.046]);
-    nostril.rotation.set(-0.48, sign * 0.26, 0);
-
-    mesh(T, head, side + ' muzzle crease', detail, lip,
-      [sign * 0.303, -0.088, 0.500], [0.106, 0.026, 0.062]);
+      [sign * 0.204, 0.162, 0.535], [0.056, 0.015, 0.035]);
+    nostril.rotation.set(.47, sign * 0.26, sign * -.20);
     const tooth = mesh(T, jaw, side + ' rounded ivory tooth', detail, ivory,
       [sign * 0.202, 0.033, 0.326], [0.049, 0.067, 0.055]);
     tooth.rotation.z = sign * -0.13;
@@ -267,7 +264,7 @@ export function makeHippo(T, groundAt = () => 0.19) {
   }
 
   function pose({ x: worldX, y: worldY = 0.45, z: worldZ = 0, yaw = 0, time = 0,
-    stride = 0, gait = 0, lift = 0, gape = 0, sink = 0, brushing = 0 } = {}) {
+    stride = 0, gait = 0, lift = 0, gape = 0, sink = 0, brushing = 0, earFlick = 0 } = {}) {
     const dip = s(sink, 0, 1);
     const rise = s(lift, 0, 1);
     const open = s(gape, 0, 1);
@@ -290,8 +287,8 @@ export function makeHippo(T, groundAt = () => 0.19) {
     for (const tooth of teeth) tooth.visible = open > 0.115;
     for (const setEye of lids) setEye(blinkAt(time + 1.21, 5.2));
     for (const { sign, ear } of ears) {
-      ear.rotation.set(0.019 - rise * 0.101, sign * (0.23 + open * 0.13),
-        sign * (0.046 + Math.sin(time * 3.5 + sign) * 0.072));
+      ear.rotation.set(0.019 - rise * 0.101-earFlick*.24, sign * (0.23 + open * 0.13+earFlick*.29),
+        sign * (0.046 + Math.sin(time * 3.5 + sign) * 0.072+earFlick*.30));
     }
     tail.position.y = -0.025 + dip * 0.06;
     tail.rotation.set(dip * 0.42, Math.sin(time * 2.1) * 0.27 + weight * 0.09, 0);
@@ -318,7 +315,7 @@ export function makeHippo(T, groundAt = () => 0.19) {
   }
 
   pose();
-  return { root, pose, contact, brushRail, brushFrame, teeth };
+  return { root, pose, contact, brushRail, brushFrame, teeth, birdPerch };
 }
 
 function shellDome(T) {

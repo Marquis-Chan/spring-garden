@@ -6,7 +6,9 @@ export const ease=t=>{t=clamp(t);return t*t*(3-2*t)};
 export const mix=(a,b,q)=>a+(b-a)*q;
 // 留出观察时间，点按触发的动作仍沿实际时间播放。
 export const idleDelay=seconds=>seconds*1.32;
-export const idleTravelRate=.84;
+// 等待下一次自发活动和匀速巡游各自减半。跳跃、触碰和叫声继续使用真实时间。
+export const idleClockRate=.5;
+export const idleTravelRate=.84*idleClockRate;
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
 const deltaAngle=(a,b)=>Math.atan2(Math.sin(b-a),Math.cos(b-a));
 const rock=sites[0], rockX=1.15, rockZ=.88;
@@ -109,7 +111,7 @@ export function createPond(emit=()=>{}) {
  function step(dt,active=false) {
   dt=clamp(dt,0,.05);t+=dt;
   if(active){
-   pondTime+=dt;
+   pondTime+=dt*idleClockRate;
    // 拖水引鱼、问候和叫声都先完成；日常跳不会抢走孩子正在观察的动作。
    if(pondTime>=nextRoutine&&!hop&&!target&&!dragging&&t-callAt>=2.18&&t>=bobUntil){
     nextRoutine=pondTime+idleDelay(9.2);

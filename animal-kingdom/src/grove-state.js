@@ -1,4 +1,4 @@
-import { clamp, ease, idleDelay, mix } from './state.js';
+import { clamp, idleClockRate, ease, idleDelay, mix } from './state.js';
 
 export const grovePoints = {
   grasses: [{ x: 8.6, y: .38, z: 1.25 }, { x: 12.2, y: .38, z: 1.5 }],
@@ -286,7 +286,7 @@ export function createGrove(emit = () => {}) {
     time += dt;
     rabbit.time = bird.time = time;
     if (active) {
-      routineTime += dt;
+    routineTime += dt * idleClockRate;
       if (!rabbitMove && routineTime >= nextRabbit && time - contactAt > 1.1 && time - duckAt > .5) {
         startHop(rabbit.cover, null, true);
         rabbitSide *= -1;

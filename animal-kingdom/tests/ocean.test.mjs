@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import {Mesh,Raycaster,Scene,Vector3} from 'three';
+import {makeOceanDiorama} from '../src/ocean-diorama.js';
 import {createOcean,oceanPoints} from '../src/ocean-state.js';
 
 const step=(sea,time,active)=>{for(let at=0;at<time;at+=.01)sea.step(.01,active);};
@@ -123,4 +125,42 @@ test('点海草后海马确实扫过草尖，只有当小丑鱼游得近才一�
   if(react>=0){assert.ok(react>touch);didReact=true;} else didStay=true;
  }
  assert.ok(didReact&&didStay);
+});
+
+test('鲸尾水流起于摆动后的尾根；海马用画出来的吻端轻碰画出来的叶尖',()=>{
+ const scene=new Scene(),world=makeOceanDiorama(scene),tail=new Vector3(),nose=new Vector3(),tip=new Vector3();
+ const flukes=scene.getObjectByName('鲸尾根'),muzzle=scene.getObjectByName('海马吻端'),blade=scene.getObjectByName('海草叶尖');
+ for(const phase of [.3,3,7,12]){
+  const events=[],sea=createOcean(e=>events.push(e));step(sea,phase,true);
+  sea.tap('whale');sea.tapProp('kelp');
+  let wake=false,contact=false;
+  for(let i=0;i<150;i++){
+   sea.step(.01,true);world.tick(sea,0);
+   if(!wake&&sea.current){
+    const c=sea.current;
+    assert.ok(flukes.getWorldPosition(tail).distanceTo(new Vector3(c.x,c.y,c.z))<.002);
+    wake=true;
+   }
+   if(!contact&&events.some(e=>e.type==='ocean-kelp-touch')){
+    assert.ok(muzzle.getWorldPosition(nose).distanceTo(blade.getWorldPosition(tip))<.026);
+    contact=true;
+   }
+   if(contact&&wake)break;
+  }
+  assert.ok(wake&&contact,'入场相位 '+phase);
+ }
+});
+
+test('海豚、鲨鱼和小丑鱼的背鳍整个根部嵌进躯干，鳍尖露出背脊',()=>{
+ const water=makeOceanDiorama(new Scene()),ray=new Raycaster(),point=new Vector3(),down=new Vector3(0,-1,0);
+ for(const name of ['dolphin','shark','clown']){
+  const model=water.actors[name].root.children[0],dorsal=model.getObjectByName('长在背脊上的背鳍');
+  const body=model.children[0],surface=new Mesh(body.geometry,body.material),vertices=dorsal.geometry.attributes.position;
+  for(const i of [0,3,6,9,12,15,vertices.count-1]){
+   point.fromBufferAttribute(vertices,i);
+   ray.set(new Vector3(point.x,1,point.z),down);
+   const top=ray.intersectObject(surface,false)[0].point.y;
+   assert.ok(i<18?point.y<top-.005:point.y>top+.025,name+' 的鳍根和鳍尖');
+  }
+ }
 });

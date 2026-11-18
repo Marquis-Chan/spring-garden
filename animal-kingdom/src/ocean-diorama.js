@@ -1,5 +1,6 @@
 import * as T from 'three';
-import {oceanPoints,oceanStarLedge} from './ocean-state.js';
+import {humpback,linedSeahorse} from './ocean-sculpt.js';
+import {oceanPoints,oceanStarLedge,kelpBlade} from './ocean-state.js';
 
 const pigment=(color,roughness=.54)=>new T.MeshStandardMaterial({color,roughness});
 const sphere=new T.SphereGeometry(1,24,16);
@@ -49,12 +50,23 @@ function body(root,profile,back,bottom,bands=false){
  shape.setAttribute('color',new T.Float32BufferAttribute(colors,3));shape.setIndex(indices);shape.computeVertexNormals();
  return item(root,shape,new T.MeshStandardMaterial({vertexColors:true,roughness:.46,side:T.DoubleSide}));
 }
-function flipper(root,material,points){
- const outline=new T.Shape();
- outline.moveTo(...points[0]);outline.quadraticCurveTo(...points[1],...points[2]);
- outline.quadraticCurveTo(...points[3],...points[0]);outline.closePath();
- const g=new T.ExtrudeGeometry(outline,{depth:.028,curveSegments:16,bevelEnabled:true,bevelSize:.031,bevelThickness:.023,bevelSegments:3,steps:1});
- g.translate(0,0,-.015);return item(root,g,material);
+// 纵截面始于身体内部，鳍从宽基部收向薄尖。水平鳍与直立鳍共用同一厚度轮廓。
+function foil(root,material,sections,horizontal=false){
+ const S=18,xyz=[],faces=[];
+ const outward=(sections.at(-1)[1]>sections[0][1])===horizontal;
+ for(const [i,[x,span,chord,depth,camber=0]] of sections.entries()){
+  for(let j=0;j<S;j++){
+   const angle=j*2*Math.PI/S,along=x+Math.cos(angle)*chord,thickness=Math.sin(angle)*depth+camber;
+   xyz.push(along,horizontal?thickness:span,horizontal?span:thickness);
+   if(i+1===sections.length)continue;
+   const a=i*S+j,b=i*S+(j+1)%S;
+   if(outward)faces.push(a,b,a+S,b,b+S,a+S);
+   else faces.push(a,a+S,b,b,a+S,b+S);
+  }
+ }
+ const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.Float32BufferAttribute(xyz,3));
+ geometry.setIndex(faces);geometry.computeVertexNormals();
+ return item(root,geometry,material);
 }
 function eye(root,x,y,z,scale){
  for(const side of [-1,1]){
@@ -63,77 +75,64 @@ function eye(root,x,y,z,scale){
  }
 }
 function swimmer(root,name){
- const model=group(root),whale=name==='whale',dolphin=name==='dolphin',shark=name==='shark',clown=name==='clown';
- const color=whale?'#4c6683':dolphin?'#87a9bd':shark?'#687e89':'#f19950';
- const edge=pigment(color),fluke=pigment(whale?'#526b91':shark?'#677c8a':dolphin?'#7d9bab':'#dd7944');
- const profile=whale?[[-1.36,-.08,.03,.04],[-1.11,-.06,.11,.12],[-.76,.01,.22,.22],[-.33,.03,.32,.30],
-  [.15,.04,.38,.35],[.55,.03,.37,.33],[.91,.01,.27,.31],[1.16,-.06,.16,.24],[1.36,-.09,.09,.15],[1.49,-.09,.022,.09]]:
-  dolphin?[[-.91,-.04,.022,.031],[-.71,-.02,.07,.07],[-.38,.02,.14,.13],[0,.02,.21,.18],[.36,.03,.198,.20],
+ const model=group(root),dolphin=name==='dolphin',shark=name==='shark',clown=name==='clown';
+ const color=dolphin?'#87a9bd':shark?'#687e89':'#f19950';
+ const edge=pigment(color),fluke=pigment(shark?'#677c8a':dolphin?'#7d9bab':'#dd7944');
+ const profile=dolphin?[[-.91,-.04,.022,.031],[-.71,-.02,.07,.07],[-.38,.02,.14,.13],[0,.02,.21,.18],[.36,.03,.198,.20],
    [.60,.034,.141,.16],[.73,-.045,.065,.086],[.90,-.054,.036,.071],[1.03,-.059,.025,.047]]:
   shark?[[-1.06,.018,.025,.033],[-.79,.02,.08,.081],[-.48,.03,.145,.141],[-.07,.041,.221,.177],[.34,.025,.224,.19],
    [.62,.012,.162,.179],[.85,-.02,.095,.129],[1.03,-.036,.043,.07],[1.095,-.042,.009,.021]]:
   [[-.53,0,.046,.043],[-.41,0,.125,.072],[-.25,0,.216,.114],[0,0,.273,.136],[.20,0,.236,.137],[.36,0,.165,.114],[.48,-.018,.060,.08],[.53,-.02,.023,.031]];
- body(model,profile,color,whale?'#b9c5cf':dolphin?'#c9e3e0':shark?'#d5ded2':'#f9be65',clown);
+ body(model,profile,color,dolphin?'#c9e3e0':shark?'#d5ded2':'#f9be65',clown);
  const tail=group(model,profile[0][0]+.028,profile[0][1],0);
- const width=whale?.68:dolphin?.40:shark?.47:.23;
- if(whale||dolphin){
-  const paddle=flipper(tail,fluke,[[.09,0],[-.06,width*.74],[-.28,width],[-.27,width*.29]]);
-  const other=flipper(tail,fluke,[[.09,0],[-.06,-width*.74],[-.28,-width],[-.27,-width*.29]]);
-  paddle.rotation.x=other.rotation.x=Math.PI/2;
- }else{
-  flipper(tail,fluke,[[.04,.02],[-.04,width*.69],[-.27,width],[-.18,width*.12]]);
-  flipper(tail,fluke,[[.04,.01],[-.05,-width*.46],[-.24,-width*.61],[-.18,-width*.095]]);
+ if(clown){
+  body(tail,[[-.31,0,.031,.007],[-.29,0,.125,.014],[-.25,0,.181,.022],[-.20,0,.184,.024],
+   [-.12,0,.14,.024],[-.045,0,.079,.028],[.051,0,.041,.033]],'#e58a40','#eea354');
+ }else for(const side of [-1,1]){
+  const fork=dolphin?[
+   [.02,0,.086,.030],[-.038,side*.09,.128,.042],[-.098,side*.21,.136,.039],
+   [-.183,side*.33,.085,.024],[-.25,side*.40,.014,.006]
+  ]:[
+   [.015,0,.075,.032],[-.05,side*.075,.095,.027],[-.10,side*(side>0?.24:.16),.090,.024],
+   [-.188,side*(side>0?.41:.24),.057,.014],[-.256,side*(side>0?.51:.29),.005,.004]
+  ];
+  foil(tail,fluke,fork,dolphin);
  }
- const dorsal=group(model,-.11,whale?.31:dolphin?.19:shark?.22:.23,0);
- const peak=whale?.17:dolphin?.31:shark?.48:.105;
- flipper(dorsal,edge,[[.26,0],[.03,peak*.83],[-.26,peak],[-.09,peak*.21]]);
+ const dorsal=foil(model,edge,clown?[
+  [-.058,.127,.25,.033],[-.067,.228,.219,.027],[-.075,.283,.170,.023],
+  [-.104,.317,.088,.013],[-.124,.323,.031,.005]
+ ]:dolphin?[
+  [-.13,.094,.235,.048],[-.132,.185,.206,.041],[-.168,.255,.148,.034],
+  [-.212,.333,.089,.022],[-.269,.397,.045,.013],[-.307,.413,.005,.004]
+ ]:[
+  [-.155,.103,.247,.041],[-.147,.221,.204,.044],[-.17,.345,.148,.036],
+  [-.199,.459,.087,.026],[-.248,.554,.039,.014],[-.273,.598,.005,.003]
+ ]);
+ dorsal.name='长在背脊上的背鳍';
  const flippers=[];
  for(const side of [-1,1]){
-  const fin=group(model,whale?.51:.23,-.09,side*(whale?.26:clown?.12:.14));
-  const length=whale?.79:dolphin?.35:shark?.42:.16;
-  const blade=flipper(fin,clown?pigment('#e7aa54'):edge,[[.18,0],[-.14,length*.74],[-.46*length,length],[-.26,length*.24]]);
-  blade.rotation.x=side*Math.PI*.52;flippers.push(fin);
+  const fin=group(model,clown?.11:.26,clown?0:-.040,side*(clown?.080:.10));
+  const length=dolphin?.36:shark?.46:.15;
+  const rings=clown?[[0,0,.075,.027,0],[-.014,.07,.075,.020,-.020],[-.028,.12,.056,.013,-.041],
+   [-.048,.155,.021,.005,-.058]]:[[0,0,.122,.038,0],[-.010,length*.27,.126,.030,-.035],
+   [-.065,length*.57,.103,.025,-.075],[-.137,length*.81,.073,.017,-.119],[-.205,length,.010,.005,-.153]];
+  foil(fin,clown?pigment('#e0a054'):edge,rings.map(([x,z,c,d,y])=>[x,side*z,c,d,y]),true);
+  flippers.push(fin);
  }
- eye(model,whale?1.01:dolphin?.63:shark?.73:.36,whale?.03:dolphin?.045:shark?.035:.076,
-  whale?.283:dolphin?.144:shark?.133:.112,clown?.049:whale?.045:.039);
- if(whale)for(const [x,y,h,d] of profile.slice(-5,-1)){
-  for(const side of [-1,1]){
-   oval(model,edge,x,y+h*.91,side*d*.375,.052,.027,.049);
-  }
- }
+ eye(model,dolphin?.63:shark?.73:.36,dolphin?.045:shark?.035:.076,
+  dolphin?.144:shark?.133:.112,clown?.049:.039);
  if(shark)for(const sign of [-1,1])for(let i=0;i<4;i++){
   tube(model,fluke,[[.47-i*.061,.09,sign*.181],[.435-i*.061,-.003,sign*.18],[.444-i*.061,-.073,sign*.162]],.009,8);
  }
  model.rotation.y=-.31;
  return a=>{
-  model.rotation.z=(whale?.045:.10)*a.sweep+(dolphin?.19:whale?.09:-.092)*a.pose+(a.pitch??0)*.40;
+  model.rotation.z=.10*a.sweep+(dolphin?.19:-.092)*a.pose+(a.pitch??0)*.40;
   model.rotation.x=a.roll;
   model.rotation.y=Number.isFinite(a.heading)?a.heading-Math.PI/2+a.turn*.25:-.31+a.turn;
-  tail.rotation.y=(whale||dolphin?.07:.39)*a.sweep;
-  tail.rotation.z=whale||dolphin?.28*a.sweep:.06*a.sweep;
+  tail.rotation.y=(dolphin?.07:.39)*a.sweep;
+  tail.rotation.z=dolphin?.28*a.sweep:.06*a.sweep;
   flippers.forEach((fin,i)=>{fin.rotation.x=(i===0?-1:1)*(.08*Math.sin(a.phase+i*.4)+a.pose*.23);});
  };
-}
-function seahorse(root){
- const scale=pigment('#e4ae62'),rim=pigment('#a47554'),pale=pigment('#f7d191'),draft=group(root);
- oval(draft,scale,0,.015,0,.21,.267,.112);
- oval(draft,scale,.065,.29,0,.158,.15,.100);
- oval(draft,scale,.234,.238,0,.17,.053,.064).rotation.z=-.21;
- oval(draft,rim,.367,.204,0,.038,.028,.043).name='海马吻端';
- eye(draft,.125,.328,.09,.044);
- for(let i=0;i<6;i++)oval(draft,pale,.145-(i*.021),.135-i*.057,0,.075,.018,.092-i*.008);
- const tail=group(draft,-.035,-.195,0);
- const spiral=[];
- for(let i=0;i<=25;i++){
-  const f=i/25,r=.150*(1-f)+.018,arc=f*5.68;
-  spiral.push([-.13+r*Math.cos(arc),-.11-r*Math.sin(arc),0]);
- }
- tube(tail,scale,[[0,.047,0],[.011,-.035,0],...spiral],.035,40);
- const flutter=flipper(draft,pale,[[.015,.10],[-.16,.22],[-.26,.06],[-.12,-.03]]);
- flutter.position.set(-.09,.04,.06);
- return a=>{draft.rotation.z=.091*a.sweep+.31*a.pose-.24*(a.touch??0);tail.rotation.z=.35*a.pose;
-  flutter.rotation.y=.44*Math.sin(a.phase*2.1);
-  draft.rotation.y=Number.isFinite(a.heading)?a.heading-Math.PI/2+a.turn*.24:-.04+a.turn;};
 }
 function seastar(root){
  const orange=pigment('#cf7451'),light=pigment('#e59b6d'),arms=[];
@@ -200,10 +199,10 @@ function starReef(root){
 }
 function seabed(root){
  const mat=new T.ShaderMaterial({
-  transparent:true,depthWrite:false,uniforms:{time:{value:0},light:{value:1}},
+  transparent:true,depthWrite:false,uniforms:{time:{value:0},light:{value:1},mapMode:{value:0}},
   vertexShader:`varying vec2 seabed;
    void main(){seabed=(modelMatrix*vec4(position,1.)).xz;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
-  fragmentShader:`varying vec2 seabed;uniform float time,light;
+  fragmentShader:`varying vec2 seabed;uniform float time,light,mapMode;
    void main(){
     float depth=smoothstep(17.5,45.,seabed.y);
     vec3 tint=mix(vec3(.70,.72,.52),vec3(.24,.53,.52),depth*.82);
@@ -211,24 +210,45 @@ function seabed(root){
     float b=sin(seabed.y*6.1+cos(seabed.x*2.7)-time*.42);
     float glint=pow(max(0.,1.-abs(a+b)),8.)*.068;
     float grain=fract(sin(dot(floor(seabed*44.),vec2(12.9898,78.233)))*43758.5453)*.016;
-    gl_FragColor=vec4((tint+glint+grain)*light,smoothstep(12.,17.2,seabed.y));
+    float reef=length((seabed-vec2(55.1,16.8))/vec2(8.8,4.3));
+    float shoal=1.-smoothstep(.56,1.06,reef+.045*sin(seabed.x*1.4+seabed.y*.8));
+    vec3 sandbank=mix(vec3(.45,.69,.66),vec3(.68,.74,.58),.65+.25*cos(seabed.x*.63));
+    gl_FragColor=vec4((mix(tint,sandbank,mapMode)+glint+grain)*light,
+     mix(smoothstep(12.,17.2,seabed.y),shoal*.74,mapMode));
    }`
  });
  const floor=item(root,new T.PlaneGeometry(64,104),mat,54,-.044,41);
  floor.rotation.x=-Math.PI/2;floor.renderOrder=1;
- return mat.uniforms;
+ return {uniforms:mat.uniforms,floor};
 }
 function kelp(root,x,y,z,scale,seed){
  const cluster=group(root,x,y,z);
+ const interactive=x===oceanPoints.kelp.x;
  for(let i=0;i<3;i++){
-  const dir=i-1;
-  const stem=group(cluster,dir*.15,0,.02*i);
-  for(let j=0;j<4;j++){
-   const blade=oval(stem,seaweed[(i+j)%3],dir*.065*j-.09+(j%2)*.18,(j+.55)*.21*scale,.03*j,.13,.27*scale,.045);
-   blade.rotation.z=(j%2?-.44:.51)+dir*.16;
+  const side=i-1,center=side===0,preciseTip=interactive&&center;
+  const ribbon=group(cluster,side*.12,0,side*.031);
+  const dx=preciseTip?kelpBlade.x-x:side*.34+.08*Math.cos(seed);
+  const dz=preciseTip?kelpBlade.z-z:.07*Math.sin(seed+i);
+  const height=preciseTip?kelpBlade.y-y:scale*(center?1.04:.82+.09*Math.cos(seed+i));
+  const pts=[],faces=[],rows=22;
+  for(let j=0;j<=rows;j++){
+   const f=j/rows,bell=Math.sin(Math.PI*f);
+   const width=.007+(.086+.018*(1+side))*bell**.72*(1+.12*Math.sin(4*Math.PI*f+seed));
+   const bend=bell*(.094*Math.sin(f*5+seed+.7*i));
+   const cx=dx*f+bend,cy=height*f,cz=dz*f+.058*bell*Math.sin(f*4+i);
+   const twist=.40*Math.sin(f*3+seed+i),wx=Math.cos(twist)*width,wz=Math.sin(twist)*width;
+   pts.push(cx-wx,cy,cz-wz,cx,cy,cz+.035*bell,cx+wx,cy,cz+wz);
+   if(j<rows){
+    const k=j*3;
+    faces.push(k,k+1,k+3,k+1,k+4,k+3,k+1,k+2,k+4,k+2,k+5,k+4);
+   }
   }
+  const g=new T.BufferGeometry();g.setIndex(faces);g.setAttribute('position',new T.Float32BufferAttribute(pts,3));g.computeVertexNormals();
+  seaweed[i].side=T.DoubleSide;
+  item(ribbon,g,seaweed[i]);
+  if(preciseTip)group(ribbon,dx,height,dz).name='海草叶尖';
  }
- cluster.rotation.y=seed;
+ if(!interactive)cluster.rotation.y=seed*.43;
  return cluster;
 }
 function coralFan(root,x,z,s,id){
@@ -287,18 +307,20 @@ export function makeOceanDiorama(scene){
  const actors={};
  for(const name of ['whale','dolphin','shark','clown','horse','star']){
   const g=group(root);
-  const pose=name==='horse'?seahorse(g):name==='star'?seastar(g):swimmer(g,name);
+  const pose=name==='whale'?humpback(g):name==='horse'?linedSeahorse(g):name==='star'?seastar(g):swimmer(g,name);
   actors[name]={root:g,pose};
  }
  const visitor=group(root),poseVisitor=swimmer(visitor,'clown');
  visitor.scale.setScalar(.57);
- const bubbleMaterial=new T.MeshBasicMaterial({color:'#bceced',transparent:true,opacity:.39,wireframe:true});
- const bubbles=Array.from({length:14},(_,i)=>oval(root,bubbleMaterial,0,0,0,.04+i%4*.018,.05+i%4*.018,.04+i%4*.018));
+ const bubbleMaterial=new T.MeshStandardMaterial({color:'#d1f3ec',roughness:.22,transparent:true,depthWrite:false,opacity:.24});
+ const bubbles=Array.from({length:6},(_,i)=>oval(root,bubbleMaterial,0,0,0,.029+i%3*.010,.031+i%3*.010,.029+i%3*.010));
  const shellBubbles=Array.from({length:5},(_,i)=>oval(root,bubbleMaterial,0,0,0,.048+i*.008));
  const rippleMaterial=new T.MeshBasicMaterial({color:'#c8f6e9',transparent:true,opacity:.35});
  const wave=item(root,new T.TorusGeometry(1,.019,7,52),rippleMaterial);
- const shimmer=new T.PointLight('#80ecee',21,18,2);shimmer.position.set(54,5.8,18.9);root.add(shimmer);
- return {root,actors,reef,hintNodes:{anemone,kelp:plants[3],shell,visitor},tick(ocean,night){
+ const shimmer=new T.PointLight('#d2f2f0',29,20,2);shimmer.position.set(54,5.8,19.6);root.add(shimmer);
+ const seaFill=new T.HemisphereLight('#d8f4fb','#6f9da5',.79);root.add(seaFill);
+ return {root,actors,reef,hintNodes:{anemone,kelp:plants[3],shell,visitor},
+ setMapMode(on){bed.uniforms.mapMode.value=Number(on);shimmer.visible=seaFill.visible=!on;},tick(ocean,night){
   for(const [name,actor] of Object.entries(actors)){
    const a=ocean.animals[name];
    actor.root.position.set(a.x,a.y,a.z);actor.pose(a);
@@ -310,12 +332,15 @@ export function makeOceanDiorama(scene){
    poseVisitor(guest);
   }
   const t=ocean.time;
-  bed.time.value=t;bed.light.value=1-night*.24;
-  plants.forEach((p,i)=>{p.rotation.z=Math.sin(t*.94+i)*.11;});
+  bed.uniforms.time.value=t;bed.uniforms.light.value=1-night*.24;
+  plants.forEach((p,i)=>p.children.forEach((blade,j)=>{
+   const contact=i===3&&j===1?1-ocean.animals.horse.touch:1;
+   blade.rotation.z=contact*Math.sin(t*.83+i+j*.64)*.061;
+  }));
   fronds.forEach((p,i)=>{p.rotation.x=Math.cos(t*1.67+i*.78)*.22;});
   bubbles.forEach((p,i)=>{
-   const q=(t*.31+i*.49)%3.7;
-   p.position.set(51.1+i%3*3.24+Math.sin(q+i)*.22,.24+q,15.2+i%3*.57);
+   const q=(t*.21+i*.59)%3.7;
+   p.position.set((i%2?59.03:51.04)+Math.sin(q+i)*.11,.24+q,15.2+i%3*.57);
   });
   shellBubbles.forEach((p,i)=>{
    const age=ocean.shellAge-i*.087;
@@ -326,10 +351,10 @@ export function makeOceanDiorama(scene){
   const current=ocean.current;
   wave.visible=Boolean(current);
   if(current){
-   wave.position.set(current.x,current.y,current.z+.05);
-   wave.scale.set(current.radius,current.radius*.44,1);
-   rippleMaterial.opacity=.42*(1-current.radius/5);
+   wave.position.set(current.x,current.y,current.z);
+   wave.scale.setScalar(Math.max(.001,current.radius));
+   rippleMaterial.opacity=.30*(1-current.radius/8);
   }
-  shimmer.intensity=21-night*7;
+  shimmer.intensity=29-night*7;
  }};
 }

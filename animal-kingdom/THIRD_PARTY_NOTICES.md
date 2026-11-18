@@ -8,6 +8,8 @@ Three.js 0.180.0 is bundled under the [MIT license](https://github.com/mrdoob/th
 
 ## Recordings
 
+- Polar bear (Ursus maritimus), Günter Tembrock, Tierstimmenarchiv, Museum für Naturkunde Berlin, 1993-01-30. TSA:Ursus_maritimus_V_1879_17_2. https://suche.tierstimmenarchiv.de/search/showdetails.html?unique_identifier=TSA:Ursus_maritimus_V_1879_17_2 . Source and adapted polar-bear.wav: CC BY-SA 3.0 https://creativecommons.org/licenses/by-sa/3.0/ . Original-pitch excerpt 7.76–10.34 s, band-limited, noise reduced, normalized and faded.
+
 The WAVs are processed clips, not the original source files. The frog source MP3 and edited WAV share the same attribution and license.
 
 - Frog: daveincamas, 200703101950PacificChorusFrogsSoloNR.wav, CC BY 4.0; https://freesound.org/people/daveincamas/sounds/32807/ — game excerpt processed and rearranged without pitch changes.

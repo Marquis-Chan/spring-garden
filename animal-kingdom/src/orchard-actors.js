@@ -579,7 +579,7 @@ export function makeCat(T) {
     }
   }
 
-  function pose({ time = 0, stride = 0, gait = 0, stretch = 0, look = 0, lookDown = 0, paw = 0, sleep = 0 } = {}) {
+  function pose({ time = 0, stride = 0, gait = 0, stretch = 0, look = 0, lookDown = 0, lookUp = 0, paw = 0, sleep = 0 } = {}) {
     const rest = s(sleep, 0, 1);
     const reach = stretch * (1 - rest);
     const swat = paw * (1 - rest);
@@ -594,7 +594,7 @@ export function makeCat(T) {
     body.rotation.set(reach * 0.22 + rest * 0.082, rest * -0.09, rest * -0.23 + weightShift * 0.038);
     head.position.set(rest * 0.026, 0.216 - rest * 0.094 - swat * 0.020 - gazeDown * 0.048,
       0.305 + reach * 0.027 - rest * 0.011);
-    head.rotation.set(reach * -0.09 - swat * 0.11 + rest * 0.31 + gazeDown * 0.48,
+      head.rotation.set(reach * -0.09 - swat * 0.11 + rest * 0.31 + gazeDown * 0.48 - lookUp * .32 * (1 - rest),
       gaze * 0.53 + rest * 0.37, gaze * -0.06 + rest * -0.25 - weightShift * 0.024);
     tail.rotation.set(rest * -0.51 + reach * -0.12,
       rest * -0.94 + gaze * 0.21 + Math.sin(time * 2.6) * (0.10 + swat * 0.18) * (1 - rest) - weightShift * 0.15,

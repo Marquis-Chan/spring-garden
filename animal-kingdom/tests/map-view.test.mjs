@@ -1,8 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {OrthographicCamera,Raycaster,Scene,Vector2,Vector3} from 'three';
-import {placeCamera,viewFor,portals,adjacentPortals} from '../src/map-view.js';
+import {atlasNeighborhood,dragAtlas,habitats,nearestHabitat,placeCamera,viewFor,portals,adjacentPortals} from '../src/map-view.js';
 import {orchardPoints} from '../src/orchard-state.js';
+import {createOrchardRabbits, rabbitCarrotPoint} from '../src/orchard-rabbits.js';
+import {grovePoints} from '../src/grove-state.js';
+import {woodlandPoints} from '../src/woodland-state.js';
 import {riverPoints} from '../src/river-state.js';
 import {makeDiorama} from '../src/diorama.js';
 
@@ -33,15 +36,44 @@ test('同一张地图的近景给对应动物更大空间',()=>{
  }
 });
 
+test('全景前排的兔脚和胡萝卜在路牌上方留出触控余量',()=>{
+ const family=createOrchardRabbits(),camera=new OrthographicCamera();
+ for(const [width,height] of [[1440,833],[740,368],[430,631],[390,735]]){
+  const ratio=width/height;
+  placeCamera(camera,viewFor('overview',ratio),ratio);
+  for(const p of [...family.rabbits,rabbitCarrotPoint]){
+   const location=new Vector3(p.x,p.y,p.z).project(camera);
+   assert.ok((1+location.y)*height/2>=22, `画面底边留足点按范围，宽度 ${width}`);
+   assert.ok((1-Math.abs(location.x))*width/2>=22, `左右两侧留足点按范围，宽度 ${width}`);
+  }
+ }
+});
+
 test('果园近景在宽屏和竖屏都保留落果、果篮和两处花地',()=>{
  const poses=[...orchardPoints.apples,orchardPoints.basket,orchardPoints.dog,orchardPoints.cat,
   orchardPoints.hive,...orchardPoints.butterfly,...orchardPoints.beeFlowers];
- for(const ratio of [1440/900,430/740,390/844]){
+ for(const ratio of [1440/900,430/740,390/844,1440/833,430/678,390/782,844/328]){
   const camera=new OrthographicCamera();
   placeCamera(camera,viewFor('orchard',ratio),ratio);
   for(const {x,y,z} of poses){
    const screen=new Vector3(x,y,z).project(camera);
    assert.ok(Math.abs(screen.x)<.85&&Math.abs(screen.y)<.83,'近景留出角色与动作的边距');
+  }
+ }
+});
+
+test('狐狸在两堆落叶间行走时，林兔的两处草丛都仍可直接点中',()=>{
+ for(const [width,height] of [[1440,833],[740,368],[430,678],[390,782]]){
+  const camera=new OrthographicCamera(),ratio=width/height;
+  placeCamera(camera,viewFor('grove',ratio),ratio);
+  const [from,to]=woodlandPoints.foxStops;
+  for(let step=0;step<=12;step++){
+   const progress=step/12;
+   const fox=new Vector3(from.x+(to.x-from.x)*progress,from.y+.39,from.z+(to.z-from.z)*progress).project(camera);
+   for(const g of grovePoints.grasses){
+    const grass=new Vector3(g.x,g.y+.24,g.z+.45).project(camera);
+    assert.ok(Math.hypot((fox.x-grass.x)*width/2,(fox.y-grass.y)*height/2)>35);
+   }
   }
  }
 });
@@ -59,11 +91,34 @@ test('树林像从动物身前看，水域仍看得到水面和前后落点',()=
    assert.ok(new Vector3(0,-1,-1).unproject(camera).y>.64,'近裁切面一直高于脚下的地面');
   }
   assert.ok(Math.abs(viewFor('river',ratio).elevation-(.25+(.43-.25)*portrait**2*(3-2*portrait))-Math.PI/18)<1e-9);
-  for(const name of ['orchard','savanna','grove','coast']){
+  for(const [name,wide,narrow] of [['orchard',.23,.37],['grove',.26,.43]]){
+   const original=wide+(narrow-wide)*portrait**2*(3-2*portrait);
+   assert.ok(Math.abs(viewFor(name,ratio).elevation-original-Math.PI/18)<1e-9);
+  }
+  for(const name of ['savanna','coast']){
    assert.ok(viewFor(name,ratio).elevation<=.46,name+' 近景俯角过大');
   }
   const pool=viewFor('pond',ratio);
   assert.ok(pool.elevation>=.45&&pool.elevation<=.74,'池塘需要保留水面深度');
+ }
+});
+
+test('横竖屏总图可拖至每处原坐标，碰到最远岸边后可以立即折返',()=>{
+ for(const [width,height] of [[1440,833],[390,735],[740,368]]){
+  const base=viewFor('overview',width/height);
+  let view={...base};
+  for(const [name,stop] of Object.entries(habitats)){
+   const dx=stop.x-view.x,dz=stop.z-view.z,a=base.azimuth,s=height/base.height;
+   const screenX=-(dx*Math.cos(a)-dz*Math.sin(a))*s;
+   const screenY=-(dx*Math.sin(a)+dz*Math.cos(a))*s*Math.sin(base.elevation);
+   for(let i=0;i<12;i++)view={...view,...dragAtlas(view,screenX/12,screenY/12,height)};
+   assert.ok(Math.hypot(stop.x-view.x,stop.z-view.z)<1e-6,name);
+   assert.equal(nearestHabitat(view),name);
+   assert.ok(atlasNeighborhood(view,width/height).includes(name));
+  }
+  view={...view,...dragAtlas(view,-width*100,0,height)};
+  const back=dragAtlas(view,25,0,height);
+  assert.ok(back.x<view.x);
  }
 });
 
@@ -77,7 +132,7 @@ test('俯视的河岸给日月和云留出天空，前景石头和路标仍在�
    ray.setFromCamera(new Vector2(2*x-1,.82),camera);
    assert.equal(ray.intersectObject(land,false).length,0,`日月上方须露出天空，比例 ${ratio}`);
   }
-  for(const p of [riverPoints.frogPerch,...Object.values(adjacentPortals.river)]){
+  for(const p of [riverPoints.birdPerch,...Object.values(adjacentPortals.river)]){
    const screen=new Vector3(p.x,p.y,p.z).project(camera);
    assert.ok(Math.abs(screen.x)<.9&&Math.abs(screen.y)<.9,`可点的石头和路标还在画面内，比例 ${ratio}`);
   }
