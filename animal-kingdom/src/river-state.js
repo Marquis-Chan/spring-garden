@@ -1,10 +1,13 @@
 import { clamp, ease, idleDelay, idleTravelRate, mix } from './state.js';
+import { createRiverNeighbors } from './river-neighbors.js';
 
 export const riverPoints = {
   waterY: .51,
   pool: { x: 27.2, z: 7.85, rx: 3.28, rz: 2.12 },
   hippo: { x: 27.48, y: .45, z: 7.33 },
   waveOrigin: { x: 27.48, y: .51, z: 7.94 },
+  toothbrush: { x: 25.45, y: .61, z: 7.24 },
+  frogPerch: { x: 26.69, y: .640, z: 9.68 },
   turtleSites: [{ x: 26.16, y: .45, z: 8.36 }, { x: 24.35, y: .58, z: 8.92 }],
   // 两条水道避开河马划水时的身体，近鱼仍游过犀牛会拂动的水草。
   fish: [{ x: 28.95, y: .395, z: 7.30 }, { x: 29.20, y: .445, z: 8.28 }],
@@ -32,7 +35,9 @@ const valid = (index, list) => Number.isInteger(index) && index >= 0 && index < 
 
 export function createRiver(emit = () => {}, { groundAt = defaultGroundAt } = {}) {
   const points = riverPoints;
-  const hippo = { ...points.hippo, yaw: 0, time: 0, lift: 0, gape: 0, sink: 0, gait: 0, stride: 0 };
+  const neighbors = createRiverNeighbors(emit,points);
+  const hippo = { ...points.hippo, yaw: 0, time: 0, lift: 0, gape: 0, sink: 0, gait: 0, stride: 0, brushing: 0 };
+  const toothbrush = { phase: 'rest', u: 0, v: 0, amount: 0, open: 0, stroke: 0, strokes: 0 };
   const turtle = {
     ...points.turtleSites[0], yaw: .38, time: 0, site: 0, reach: 1, tuck: 0, swim: 0, paddle: 0, gait: 0,
     stride: 0, bask: 0, look: 0, listen: 0, sleep: 0
@@ -66,6 +71,10 @@ export function createRiver(emit = () => {}, { groundAt = defaultGroundAt } = {}
   let rhinoMotion = null;
   let queuedGrass = null;
   let rhinoCallAt = -Infinity;
+  let brushAt = null;
+  let brushFrom = null;
+  let brushMovedAt = -Infinity;
+  let brushTravel = 0;
 
   function alongPath(actor, routine, path, dt, ready, pace, strideSize, pause) {
     if (!ready || bankTime < routine.next) return 0;
@@ -88,9 +97,87 @@ export function createRiver(emit = () => {}, { groundAt = defaultGroundAt } = {}
   }
 
   function tapHippo() {
+    if (toothbrush.phase !== 'rest') return;
     if (hippoMotion) return;
     hippoMotion = { at: Math.abs(turn(hippo.yaw, 0)) < .018 ? time : null, splashed: false };
     emit({ type: 'hippo-call' });
+  }
+
+  function tapToothbrush() {
+    if (toothbrush.phase === 'active' || toothbrush.phase === 'opening') {
+      returnToothbrush();
+      return;
+    }
+    if (toothbrush.phase !== 'rest') return;
+    toothbrush.phase = 'opening';
+    toothbrush.u = toothbrush.v = toothbrush.stroke = 0;
+    toothbrush.strokes = brushTravel = 0;
+    brushAt = null;
+    emit({ type: 'hippo-brush-start' });
+  }
+
+  function returnToothbrush() {
+    if (['rest', 'returning', 'closing'].includes(toothbrush.phase)) return;
+    brushFrom = { amount: toothbrush.amount, open: toothbrush.open };
+    toothbrush.phase = 'returning';
+    brushAt = time;
+    brushMovedAt = -Infinity;
+    emit({ type: 'hippo-brush-return' });
+  }
+
+  function moveToothbrush(u, v = 0) {
+    if (toothbrush.phase !== 'active' || !Number.isFinite(u) || !Number.isFinite(v)) return;
+    const x = clamp(u, -1, 1), y = clamp(v, -1, 1);
+    const moved = Math.hypot(x - toothbrush.u, (y - toothbrush.v) * .18);
+    toothbrush.u = x;
+    toothbrush.v = y;
+    if (moved < .008) return;
+    brushMovedAt = time;
+    brushTravel += moved;
+    if (brushTravel >= .26) {
+      brushTravel %= .26;
+      toothbrush.strokes++;
+      emit({ type: 'hippo-brush-stroke', u: x, v: y, strokes: toothbrush.strokes });
+    }
+  }
+
+  function stepToothbrush(dt) {
+    if (toothbrush.phase === 'rest' || hippoMotion) return false;
+    hippo.gait = Math.max(0, hippo.gait - dt * 7);
+    if (toothbrush.phase === 'opening' && brushAt === null) {
+      const face = turn(hippo.yaw, 0);
+      hippo.yaw += clamp(face, -dt * 5.5, dt * 5.5);
+      if (Math.abs(face) > .018) return true;
+      hippo.yaw = 0;
+      brushAt = time;
+    }
+    const age = time - brushAt;
+    if (toothbrush.phase === 'opening') {
+      toothbrush.open = ease(age / .55);
+      toothbrush.amount = ease((age - .60) / .45);
+      if (age >= 1.05) {
+        toothbrush.phase = 'active';
+        emit({ type: 'hippo-brush-ready' });
+      }
+    } else if (toothbrush.phase === 'returning') {
+      toothbrush.amount = brushFrom.amount * (1 - ease(age / .50));
+      toothbrush.open = brushFrom.open;
+      if (age >= .55) {
+        toothbrush.phase = 'closing';
+        brushAt = time;
+      }
+    } else if (toothbrush.phase === 'closing') {
+      toothbrush.open = brushFrom.open * (1 - ease(age / .45));
+      if (age >= .45) {
+        toothbrush.phase = 'rest';
+        toothbrush.open = toothbrush.amount = 0;
+        hippoRoutine.next = bankTime + idleDelay(2.65);
+        emit({ type: 'hippo-brush-done' });
+      }
+    }
+    toothbrush.stroke = pulse((time - brushMovedAt) / .40);
+    hippo.lift = hippo.gape = hippo.brushing = toothbrush.open;
+    return true;
   }
 
   function startWave() {
@@ -107,9 +194,11 @@ export function createRiver(emit = () => {}, { groundAt = defaultGroundAt } = {}
   }
 
   function stepHippo(dt, active) {
-    hippo.lift = hippo.gape = hippo.sink = 0;
-    let walking = alongPath(hippo, hippoRoutine, hippoSites, dt, active && !hippoMotion, .43, .63, 2.65);
-    if (active && !hippoMotion && bankTime < hippoRoutine.next && hippo.stride > 0) {
+    hippo.lift = hippo.gape = hippo.sink = hippo.brushing = 0;
+    if (stepToothbrush(dt)) return;
+    const free = active && !hippoMotion && toothbrush.phase === 'rest';
+    let walking = alongPath(hippo, hippoRoutine, hippoSites, dt, free, .43, .63, 2.65);
+    if (free && bankTime < hippoRoutine.next && hippo.stride > 0) {
       // 到站后轻轻换脚转回水面，留时间看见眼睛和鼻孔。
       const change = clamp(turn(hippo.yaw, .15), -dt * 2.05, dt * 2.05);
       hippo.yaw += change;
@@ -372,6 +461,7 @@ export function createRiver(emit = () => {}, { groundAt = defaultGroundAt } = {}
 
   function setNight(value) {
     night = Boolean(value);
+    neighbors.setNight(night);
     if (night) {
       queuedStone = null;
       turtleListenAt = -Infinity;
@@ -389,12 +479,15 @@ export function createRiver(emit = () => {}, { groundAt = defaultGroundAt } = {}
     stepFish(dt);
     stepRhino(dt, active);
     stepWaves();
+    neighbors.step(dt,active);
   }
 
   return {
-    hippo, turtle, rhino, fish, leaves, grass,
+    hippo, turtle, rhino, fish, leaves, grass, toothbrush,
+    ducks:neighbors.ducks, frog:neighbors.frog, tapDuck:neighbors.tapDuck, tapFrog:neighbors.tapFrog,
     get time() { return time; },
     get waves() { return waves.map(({ contacts, ...wave }) => wave); },
-    step, setNight, tapHippo, tapTurtle, tapStone, tapRhino, tapGrass, tapFish
+    step, setNight, tapHippo, tapTurtle, tapStone, tapRhino, tapGrass, tapFish,
+    tapToothbrush, moveToothbrush, returnToothbrush
   };
 }

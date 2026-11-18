@@ -2,7 +2,7 @@
 
 **中文** · [English](README.en.md)
 
-春日小花园 v0.5.0 把原来的动物互动小游戏重做成一座可以慢慢逛的 3D 动物王国。它为喜欢动物的幼儿和一起陪玩的家长而做：没有分数或闯关要求，孩子可以点动物、拖动地图，想去哪里就去哪里。
+春日小花园 v0.5.1 把原来的动物互动小游戏重做成一座可以慢慢逛的 3D 动物王国。它为喜欢动物的幼儿和一起陪玩的家长而做：没有分数或闯关要求，孩子可以点动物、拖动地图，想去哪里就去哪里。
 
 **[在线玩](https://marquis-chan.github.io/spring-garden/)** · **[下载离线版](https://github.com/Marquis-Chan/spring-garden/releases/latest/download/spring-garden.html)** · [发布记录](https://github.com/Marquis-Chan/spring-garden/releases)
 

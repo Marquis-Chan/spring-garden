@@ -96,6 +96,17 @@ try{
   await tap(three.orchard.cat.screen);
   await wait(()=>{const s=window.pondInspect();return s.orchard.cat.stretch>.24&&s.audio.starts.cat>=1;});
   await capture('07-cat-stretch');
+  // 先让蝶落在猫附近的第一朵花，再验附近起飞引起的追看。
+  // 远花绕行只有最后一瞬进入猫的视距，不能保证两个动作的峰值同时出现。
+  await wait(()=>window.pondInspect().orchard.butterfly.perch!==null);
+  for(let leg=0;leg<2;leg++){
+   const butterfly=(await read()).orchard.butterfly;
+   if(butterfly.perch===0)break;
+   const next=(butterfly.perch+1)%3;
+   await tap(butterfly.screen);
+   await wait(index=>window.pondInspect().orchard.butterfly.perch===index,next);
+  }
+  assert.equal((await read()).orchard.butterfly.perch,0);
   await tap((await read()).orchard.butterfly.screen);
   await wait(()=>{const s=window.pondInspect().orchard;return s.butterfly.flight>.3&&Math.abs(s.cat.look)>.15;});
   await capture('08-cat-follows-butterfly');

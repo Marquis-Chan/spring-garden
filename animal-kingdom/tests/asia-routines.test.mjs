@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import * as T from 'three';
 import { createAsia, asiaPoints } from '../src/asia-state.js';
+import { makeTiger } from '../src/asia-actors.js';
 
 const position = ({x,y,z}) => ({x,y,z});
 const gap = (a,b) => Math.hypot(a.x-b.x,a.z-b.z);
@@ -74,4 +76,27 @@ test('虎和孔雀沿各自路线分开后，点抖屏仍会引虎抬头', () =>
   advance(.5);
   assert.ok(events.some(({type})=>type==='peacock-rattle'));
   assert.ok(forest.tiger.notice>.65);
+});
+
+test('孔雀抖屏后，虎抬一只前掌再放回，其余三掌不离地', () => {
+  const { forest, advance } = setup();
+  const model = makeTiger(T);
+  const paws = [];
+  model.root.traverse(node => {
+    if (node.name.endsWith('tiger foot')) paws.push(node);
+  });
+  assert.equal(paws.length, 4);
+  forest.tapPeacock();
+  advance(.65, false);
+  forest.tapPeacockFan();
+  let raised = false;
+  for (let frame = 0; frame < 108; frame++) {
+    forest.step(1 / 60);
+    model.pose(forest.tiger);
+    raised ||= paws[0].position.y > forest.tiger.frontLeftY + .065;
+    const floor = [forest.tiger.frontRightY,forest.tiger.hindLeftY,forest.tiger.hindRightY];
+    for (let index = 1; index < 4; index++) assert.equal(paws[index].position.y, floor[index - 1]);
+  }
+  assert.ok(raised);
+  assert.equal(paws[0].position.y, forest.tiger.frontLeftY);
 });

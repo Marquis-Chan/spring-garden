@@ -179,7 +179,7 @@ export function createOcean(emit=()=>{}){
   if(current){
    const radius=(time-current.at)*2.6;
    if(!current.sent&&radius>Math.abs(animals.dolphin.x-current.x)&&nearby(current,animals.dolphin,4.3)){
-    current.sent=true;start('dolphin','whale');
+    current.sent=start('dolphin','whale');
    }
    if(radius>5)current=null;
   }

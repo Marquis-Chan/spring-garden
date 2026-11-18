@@ -1,4 +1,5 @@
 import * as T from 'three';
+import {makeRabbitCarrot} from './orchard-carrot.js';
 import {branch,pathStrip} from './grove-diorama.js';
 import {groundHeight} from './diorama.js';
 
@@ -141,11 +142,13 @@ export function makeOrchardDiorama(scene,points){
  points.beeFlowers.forEach((p,i)=>petals(root,p,i+3));
  const hive=makeHive(root,points.hive),basket=makeBasket(root,points.basket);
  const apples=points.apples.map((_,i)=>fruit(root,i));
+ const carrot=makeRabbitCarrot(root);
  let hiveAt=-99;
  return {
-  hintNodes:{apple:apples.map(({root})=>root),hive,basket,flowers:flowerHeads},
+  hintNodes:{apple:apples.map(({root})=>root),hive,basket,flowers:flowerHeads,carrot:carrot.root},
   react(event,time){if(event.type==='bee-flight')hiveAt=time;},
-  tick(model,hover){
+  tick(model,hover,family){
+   carrot.tick(family?.carrot);
    for(const [i,a] of model.apples.entries()){
     const f=apples[i];
     f.root.position.set(a.x,a.y,a.z);f.root.rotation.x=a.rotation;

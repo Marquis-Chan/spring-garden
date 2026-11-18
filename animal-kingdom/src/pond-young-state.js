@@ -31,7 +31,7 @@ function tadpolePoint(index, phase, center = cove) {
 
 export function createPondYoung(emit = () => {}) {
   const ducks = startingAngles.map((angle, index) => ({ ...duckPoint(angle), y: duckWaterY, index, yaw: 1.52,
-    time: 0, swim: 0, paddle: 0, headUp: 0, dip: 0, wing: 0, shake: 0, call: 0, follow: 0, sleep: 0 }));
+    time: 0, swim: 0, paddle: 0, headUp: 0, dip: 0, wing: 0, shake: 0, call: 0, follow: 0, followLook: 0, sleep: 0 }));
   const tadpoles = Array.from({ length: 4 }, (_, index) => ({ ...tadpolePoint(index, 0), y: -.07 - index * .004,
     index, yaw: 0, time: 0, tail: 0, scatter: 0 }));
   const actions = [null, null];
@@ -152,7 +152,7 @@ export function createPondYoung(emit = () => {}) {
     const index = duck.index;
     const before = spatial(duck);
     duck.time = time;
-    duck.headUp = duck.dip = duck.wing = duck.shake = duck.call = duck.follow = 0;
+    duck.headUp = duck.dip = duck.wing = duck.shake = duck.call = duck.follow = duck.followLook = 0;
     if (night) {
       const age = time - sunset.at;
       const travel = ease(age / 1.43);
@@ -184,6 +184,12 @@ export function createPondYoung(emit = () => {}) {
       duck.yaw += angleDelta(duck.yaw, facing) * Math.min(1, dt * 8.5);
       duck.sleep = Math.max(0, duck.sleep - dt * 3.2);
       duck.swim = clamp(distance(before, duck) / Math.max(.001, dt * .87));
+      if (!action && duck.follow > 0) {
+        const leader = ducks[0];
+        const toward = Math.atan2(leader.x - duck.x, leader.z - duck.z);
+        duck.followLook = clamp(angleDelta(duck.yaw, toward), -.90, .90) * duck.follow;
+        duck.headUp = .68 * pulse((followAge - .045) / .76);
+      }
       if (action) {
         duck.call = pulse(age / .76);
         if (index === 0) {

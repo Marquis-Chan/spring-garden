@@ -94,6 +94,19 @@ try{
    contacts.push({phase:'water-entry',event:entries[0]});
    await shot('06-swim-near-fish');
    phase='回岸左脚着地，另一只滑水时点自己的石';
+   const greetingMotion=page.evaluate(()=>new Promise((resolve,reject)=>{
+    const samples=[],timeout=setTimeout(()=>reject(new Error('没有完成回岸招呼')),12000);
+    const sample=()=>{
+     const c=window.pondInspect().coast,p=c.penguins[1];
+     const event=c.events.find(e=>e.type==='penguin-neighbor-look'&&e.index===1&&e.source===0);
+     if(event){
+      samples.push({age:p.time-event.time,x:p.x,z:p.z,look:p.look,call:p.call,amount:p.acknowledge});
+      if(p.time-event.time>1.7){clearTimeout(timeout);resolve(samples);return;}
+     }
+     requestAnimationFrame(sample);
+    };
+    requestAnimationFrame(sample);
+   }));
    await tap(entry.stones[0]);
    await wait(()=>window.pondInspect().coast.penguins[0].phase==='climb');
    await shot('07-climb-left');
@@ -105,6 +118,17 @@ try{
    assert.ok(back);
    assert.equal(look.length,1,'近处留岸的同伴只回看一次');
    assert.ok(look[0].time>=back.time,'先踩到岸再有邻居回应');
+   phase='留岸同伴面朝归来的企鹅，两次摆鳍招呼';
+   const greeting=(await read()).coast.penguins[1];
+   await shot('07a-neighbor-greeting');
+   const greetingTrace=await greetingMotion;
+   const firstWave=greetingTrace.find(p=>p.age>.25&&p.age<.60&&p.amount>.75);
+   const lowered=greetingTrace.find(p=>p.age>.72&&p.age<.96&&p.amount<.3);
+   const secondWave=greetingTrace.find(p=>p.age>1.10&&p.age<1.40&&p.amount>.75);
+   assert.ok(firstWave&&lowered&&secondWave,'实际渲染帧中有抬鳍、收鳍、再抬鳍');
+   assert.ok(Math.hypot(secondWave.x-greeting.x,secondWave.z-greeting.z)<.01,'同伴摆鳍时仍站在自己的岸台');
+   assert.ok(Math.abs(secondWave.look)>.5&&secondWave.call===0);
+   contacts.push({phase:'neighbor-greeting',firstWave,lowered,secondWave});
    await tap(landed.ramps[1]);
    await wait(()=>['approach','crouch','slide'].includes(window.pondInspect().coast.penguins[1].phase));
    await tap((await read()).coast.stones[1]);

@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import * as T from 'three';
 import { createGrove, grovePoints } from '../src/grove-state.js';
+import { makeRabbit } from '../src/grove-actors.js';
 
 function setup() {
   const events = [];
@@ -220,4 +222,23 @@ test('鸟落地后快速切入夜晚再切回白天，只归巢一次且不会�
   grove.tapBird();
   advance(1.15);
   assert.equal(events.filter(event => event.type === 'peck').length, 1);
+});
+
+test('兔听到左右两侧的伙伴时都会抬头，四爪保持在原地', () => {
+  const rabbit = makeRabbit(T);
+  const head = rabbit.root.getObjectByName('Rabbit head');
+  const feet = [];
+  rabbit.root.traverse(node => {
+    if (node.isGroup && (node.name.endsWith('fore paw') || node.name.endsWith('hind paw'))) feet.push(node);
+  });
+  assert.equal(feet.length, 4);
+  rabbit.pose({ time: 1, peek: .52 });
+  const rest = head.getWorldPosition(new T.Vector3());
+  const anchors = feet.map(foot => foot.getWorldPosition(new T.Vector3()).toArray());
+  for (const side of [-.8, .8]) {
+    rabbit.pose({ time: 1, peek: .52, listen: side });
+    const raised = head.getWorldPosition(new T.Vector3());
+    assert.ok(raised.y > rest.y + .06);
+    assert.deepEqual(feet.map(foot => foot.getWorldPosition(new T.Vector3()).toArray()), anchors);
+  }
 });

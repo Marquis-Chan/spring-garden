@@ -46,6 +46,8 @@ test('抬头鸭先叫、同伴半拍后跟，近水波抵达后才散开', () =>
   assert.ok(follow.time - events[0].time >= .37 && wave.time > follow.time);
   assert.equal(follow.index, 1);
   assert.ok(young.ducks[1].follow > .25);
+  assert.ok(young.ducks[1].headUp > .28 && Math.abs(young.ducks[1].followLook) > .18);
+  assert.equal(young.ducks[1].call, 0);
   assert.equal(events.some(({type}) => type === 'tadpole-scatter'), false);
   run(1.0);
   const reached = events.find(event => event.type === 'tadpole-scatter' && event.cause === 'duck');

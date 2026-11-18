@@ -100,7 +100,7 @@ export function makeDuckling(T, { scale = 1, feather = '#eec665' } = {}) {
   const up = new T.Vector3(0,1,0), hip = new T.Vector3(), axis = new T.Vector3();
 
   function pose({ time = 0, swim = 0, paddle = 0, headUp = 0, dip = 0, wing = 0,
-    call = 0, sleep = 0, follow = 0, shake = 0 } = {}) {
+    call = 0, sleep = 0, followLook = 0, shake = 0 } = {}) {
     const rest = s(sleep,0,1);
     const rowing = swim * (1 - rest), flutter = Math.max(wing,shake) * (1 - rest);
     const downLook = dip * (1 - rest), voice = call * (1 - rest);
@@ -111,7 +111,7 @@ export function makeDuckling(T, { scale = 1, feather = '#eec665' } = {}) {
     head.position.set(.016*rest, .195 + .062*headUp*(1-rest) - downLook*.215 - rest*.026,
       .151 + .046*downLook - .104*rest);
     head.rotation.set(downLook*.72 - .26*headUp*(1-rest) - .13*voice + rest*.19,
-      follow*.25*(1-rest) + rest*1.29 + Math.sin(time*18)*shake*.12*(1-rest), rest*-.19);
+      followLook*(1-rest) + rest*1.29 + Math.sin(time*18)*shake*.12*(1-rest), rest*-.19);
     jaw.rotation.x = voice*.42;
     gap.visible = voice > .09;
     tail.rotation.set(-rowing*.15+downLook*.25, roll*.144, 0);

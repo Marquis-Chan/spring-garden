@@ -38,6 +38,7 @@ import {makeDuckling,makeTadpole} from './pond-young-actors.js';
 import {createPondYoung} from './pond-young-state.js';
 import {createSkyFlight} from './sky-flight.js';
 import {makeInteractionOutline} from './interaction-outline.js';
+import {sceneCue} from './scene-cues.js';
 import {adjacentPortals,blendView,panView,placeCamera,portals,viewFor} from './map-view.js';
 
 const $=id=>document.getElementById(id);
@@ -145,7 +146,10 @@ function setup(renderer){
  const elephant=makeElephant(T),giraffe=makeGiraffe(T),zebra=makeZebra(T),lion=makeLion(T);
  const largeAnimals={elephant,giraffe,zebra,lion};
  const hippo=makeHippo(T,groundHeight),turtle=makeTurtle(T,bank.stoneTopAt),rhino=makeRhino(T,groundHeight);
- const riverAnimals={hippo,turtle,rhino};
+ const riverFrog=makeFrog(T);
+ riverFrog.root.scale.setScalar(.62);
+ const riverDucks=[makeDuckling(T,{scale:.86,feather:'#efc061'}),makeDuckling(T,{scale:.77,feather:'#f8d999'})];
+ const riverAnimals={hippo,turtle,rhino,frog:riverFrog};
  const fox=makeFox(T,groundHeight),squirrel=makeSquirrel(T),pecker=makeWoodpecker(T);
  const woodlandAnimals={fox,squirrel,pecker};
  const bear=makeMoonBear(T,groundHeight),owl=makeScopsOwl(T,thicket.owlTopAt),tiger=makeTiger(T),peacock=makePeacock(T);
@@ -163,8 +167,9 @@ function setup(renderer){
  const coastFish=[makeFish(T),makeFish(T)];
  coastFish.forEach((fish,i)=>fish.root.scale.set(i===0?.69:.54,.25,i===0?.69:.54));
  const nozzlePosition=new T.Vector3(),mouthPosition=new T.Vector3(),billPosition=new T.Vector3(),fanPosition=new T.Vector3();
+ const toothPosition=new T.Vector3();
  scene.add(frog.root,fish.root,rabbit.root,bird.root,dog.root,cat.root,butterfly.root,...bees.map(bee=>bee.root),
-  elephant.root,giraffe.root,zebra.root,lion.root,hippo.root,turtle.root,rhino.root,...riverFish.map(f=>f.root),
+  elephant.root,giraffe.root,zebra.root,lion.root,hippo.root,turtle.root,rhino.root,riverFrog.root,...riverFish.map(f=>f.root),...riverDucks.map(d=>d.root),
   fox.root,squirrel.root,pecker.root,bear.root,owl.root,tiger.root,peacock.root,monkey.root,sloth.root,toucan.root,
   ...penguins.map(p=>p.root),...coastFish.map(f=>f.root),groundMonkey.root,...pondNeighbors.map(f=>f.root),
   ...ducklings.map(actor=>actor.root),...tadpoles.map(actor=>actor.root),...orchardRabbits.map(actor=>actor.root));
@@ -181,13 +186,14 @@ function setup(renderer){
   'bear-leaf':thicket.hintNodes.leaf,'tiger-tuft':thicket.hintNodes.tuft,'shared-fruit':thicket.hintNodes.sharedFruit,
   'peacock-seeds':thicket.hintNodes.seedStone,'sloth-leaf':canopy.hintNodes.leaf,
   'sloth-bough':canopy.hintNodes.slothBough,'toucan-berry':canopy.hintNodes.berry,
+  'rabbit-carrot':garden.hintNodes.carrot,'hippo-brush':bank.hintNodes.toothbrush,'river-frog':riverFrog.root,
   'drop-banana':canopy.hintNodes.dropBanana,'ocean-visitor':oceanView.hintNodes.visitor
  };
  const indexedHints={
   site:diorama.hintNodes.sites,grass:forest.hintNodes.grass,wood:timber.hintNodes.wood,
   litter:timber.hintNodes.litter,'squirrel-root':timber.hintNodes.roots,apple:garden.hintNodes.apple,
   bough:grassland.hintNodes.bough,'savanna-flower':grassland.hintNodes.flower,
-  'river-stone':bank.hintNodes.stones,'river-grass':bank.hintNodes.grass,'river-fish':modelRoots(riverFish),
+  'river-stone':bank.hintNodes.stones,'river-grass':bank.hintNodes.grass,'river-fish':modelRoots(riverFish),'river-duck':modelRoots(riverDucks),
   'asia-fruit':thicket.hintNodes.fruits,banana:canopy.hintNodes.bananas,'monkey-bough':canopy.hintNodes.monkeyBoughs,
   penguin:modelRoots(penguins),'coast-fish':modelRoots(coastFish),'coast-ramp':coastView.hintNodes.ramps,
   'coast-stone':coastView.hintNodes.stones,'pond-neighbor':modelRoots(pondNeighbors),
@@ -223,7 +229,7 @@ function setup(renderer){
  let brushAt=-100,brushX=-99,brushY=-99;
  let hoverPoint=null,cursor='default',leafGlow=0,minCloudX=.06,minCloudY=0;
  let width=1,height=1,pointer=null,frames=0,ready=false,lastFrame=performance.now();
- let mode='overview',rig=null,travel=null,panX=0,panY=0,gesture=null,hintCount=0;
+ let mode='overview',rig=null,travel=null,panX=0,panY=0,gesture=null,hintCount=0,hintIdleAt=0,hintCue=null;
  const nearbyGarden={
   overview:['pond','grove','orchard'],pond:['orchard'],orchard:['pond','grove'],grove:['orchard']
  };
@@ -317,10 +323,12 @@ function setup(renderer){
  const family=createOrchardRabbits(event=>{
   orchardEvents.push({...event,time:family.time});
   if(orchardEvents.length>55)orchardEvents.shift();
+  garden.react(event,family.time);
   if(event.type==='sleep'){
    sleepAt=pond.time;sleeper='orchard-rabbit-'+event.index;notes.textContent='果园里的小兔睡着了';
   }
   if(event.type==='rabbit-hop'&&event.phase==='start'&&!event.routine)notes.textContent='果园里的小兔跳起来了';
+  if(event.type==='carrot-eat')notes.textContent='小兔吃到了胡萝卜，另一只凑近来看';
  },{groundAt:groundHeight});
  const savanna=createSavanna(event=>{
   savannaEvents.push({...event,time:savanna.time});
@@ -335,9 +343,15 @@ function setup(renderer){
   riverEvents.push({...event,time:river.time});
   if(riverEvents.length>80)riverEvents.shift();
   if(event.type.endsWith('-call'))audio.play(event.type.slice(0,-5));
-  if(event.type==='sleep'){sleepAt=pond.time;sleeper='turtle';notes.textContent='乌龟在岸边睡着了';}
+  if(event.type==='sleep'){
+   sleepAt=pond.time;
+   sleeper=event.animal==='river-duck'?'river-duck-'+event.index:'turtle';
+   notes.textContent=event.animal==='river-duck'?'小鸭在浅水里睡着了':'乌龟在岸边睡着了';
+  }
   if(event.type==='wave')notes.textContent='河马推开一道水波';
+  if(event.type==='hippo-brush-ready')notes.textContent='河马张开嘴了，移动鼠标帮它刷牙，再点一下放回牙刷';
   if(event.type==='grass-fish-look')bank.splash(event.originX,event.originZ,river.time);
+  if(event.type==='river-duck-ripple')bank.splash(event.x,event.z,river.time);
  },{groundAt:groundHeight});
  const woodland=createWoodland(event=>{
   woodlandEvents.push({...event,time:woodland.time});
@@ -431,8 +445,9 @@ function setup(renderer){
  }
  function openView(next){
   if(travel||pointer!==null||gesture||(mode===next&&panX===0&&panY===0))return;
-  hoverPoint=null;updateCursor(null);
+  hoverPoint=null;hintIdleAt=pond.time;updateCursor(null);
   const fromMode=mode;
+  if(fromMode==='river'&&next!=='river')river.returnToothbrush();
   panX=panY=0;
   mode=next;root.dataset.view=mode;
   const to=viewFor(mode,width/height);
@@ -450,6 +465,7 @@ function setup(renderer){
   placeCamera(camera,rig,width/height);
   if(t===1){
    travel=null;
+   hintIdleAt=pond.time;
    settleViewCloud();
   }
  }
@@ -466,7 +482,21 @@ function setup(renderer){
  const peacockScreen=p=>point(p.x,p.y+.58,p.z+.13);
  const worldScreen=p=>point(p.x,p.y,p.z);
  const nodeScreen=node=>worldScreen(node.getWorldPosition(fanPosition));
+ const brushScreen=(u,v=0)=>worldScreen(hippo.brushRail(u,v,toothPosition));
+ const brushing=()=>mode==='river'&&river.toothbrush.phase!=='rest';
+ function guideToothbrush(x,y){
+  if(river.toothbrush.phase!=='active')return;
+  const left=brushScreen(-1),right=brushScreen(1);
+  const dx=right.x-left.x,dy=right.y-left.y,length=Math.hypot(dx,dy);
+  if(length<1)return;
+  const offsetX=x-(left.x+right.x)/2,offsetY=y-(left.y+right.y)/2;
+  const u=2*(offsetX*dx+offsetY*dy)/(length*length);
+  const v=(offsetX*dy-offsetY*dx)/(length*Math.max(24,length*.4));
+  river.moveToothbrush(u,v);
+ }
  const orchardRabbitScreen=p=>point(p.x,p.y+.82*p.scale,p.z);
+ const riverFrogScreen=p=>point(p.x,p.y+.40,p.z+.09);
+ const riverDuckScreen=p=>point(p.x,p.y+.26,p.z);
  // 两个目标的边缘可以重合，点在中心时优先触发孩子指到的那个。
  function nearestTarget(x,y,targets){
   let closest=null,minimum=1;
@@ -537,13 +567,17 @@ function setup(renderer){
    return targets;
   }
   if(mode==='river'){
+   if(brushing())return targets;
    const {hippo:h,turtle:t,rhino:r}=river;
+   add('hippo-brush',worldScreen(riverPoints.toothbrush),.36,.26,23,22);
    add('hippo',pos(h,.49,.46),1.04,.62,30,30);
    add('turtle',pos(t,.25),.42,.32,24,22);
    riverPoints.turtleSites.forEach((p,i)=>add('river-stone',pos(p),.44,.27,22,22,i));
    riverPoints.grass.forEach((p,i)=>add('river-grass',point(p.x,groundHeight(p.x,p.z)+.40,p.z),.27,.31,22,21,i));
    add('rhino',pos(r,.69),.65,.58,27,25);
    river.fish.forEach((p,i)=>add('river-fish',pos(p),.32,.25,19,18,i));
+   add('river-frog',riverFrogScreen(river.frog),.31,.30,22,22);
+   river.ducks.forEach((p,i)=>add('river-duck',riverDuckScreen(p),.27,.25,20,20,i));
    return targets;
   }
   if(mode==='savanna'){
@@ -578,6 +612,8 @@ function setup(renderer){
    add('dog',pos(d,.56),.45,.40,25,22);
    add('cat',pos(c,.52),.40,.38,24,26);
    add('basket',pos(basket,.24),.48,.29,25,24);
+   const carrot=family.carrot;
+   if(carrot.phase==='ready')add('rabbit-carrot',worldScreen(carrot.clickPoint),.22,.25,22,22);
    family.rabbits.forEach((r,i)=>add('orchard-rabbit',orchardRabbitScreen(r),.36,.43,22,24,i));
    orchardPoints.butterfly.forEach((p,i)=>add('butterfly',pos(p),.26,.22,18,18,i));
   }
@@ -602,6 +638,7 @@ function setup(renderer){
  }
  function resolve(x,y,targets=sceneTargets()){
   if(travel)return null;
+  if(brushing())return {kind:'hippo-brush'};
   if(mode==='grove'||mode==='orchard'||mode==='river'||mode==='rainforest'||mode==='asia'||mode==='ocean'){
    const nearest=nearestTarget(x,y,targets);
    if(nearest)return nearest;
@@ -626,6 +663,7 @@ function setup(renderer){
  }
  function paintHints(targets,hover){
   hintCount=0;
+  hintCue=null;
   if(travel||gesture?.moving)return;
   const visible=[];
   for(const target of targets){
@@ -639,14 +677,28 @@ function setup(renderer){
    if(nodes)visible.push({kind,index,nodes});
   }
   hintCount=visible.length;
-  outlines.draw(camera,visible,hover,night);
+  let cue=null;
+  const idle=pond.time-hintIdleAt;
+  if(pointer===null&&!quiet.matches&&idle>=3&&mode!=='overview'&&(!nightGoal||mode==='ocean')){
+   // 海岸先提示下水的坡道，有企鹅在水里后改提示它自己的回岸石。
+   const available=visible.filter(({kind,index})=>{
+    if(kind==='site')return !pond.busy&&index!==pond.frog.site;
+    if(kind==='coast-stone')return coast.penguins[index].phase==='swim';
+    return true;
+   });
+   const preferred=mode==='coast'?(coast.penguins.some(p=>p.phase==='swim')?'coast-stone':'coast-ramp'):undefined;
+   cue=sceneCue(mode,idle,available,preferred);
+   if(cue)hintCue={kind:cue.target.kind,index:cue.target.index,strength:cue.strength};
+  }
+  outlines.draw(camera,visible,hover,night,cue);
  }
  function local(ev){
   const r=canvas.getBoundingClientRect();return [ev.clientX-r.left,ev.clientY-r.top];
  }
  function updateCursor(intent){
   let next='default';
-  if(gesture?.moving)next='pan';
+  if(brushing())next='toothbrush';
+  else if(gesture?.moving)next='pan';
   else if(pointer!==null||intent?.kind==='water'||intent?.kind==='river-water'||intent?.kind==='coast-water')next='water';
   else if((intent?.kind==='site'&&intent.index===1)||intent?.kind==='sloth-leaf'||intent?.kind==='sloth-bough')next='leaf';
   else if(intent)next=['grass','river-grass','litter','tiger-tuft','lion-grass'].includes(intent.kind)?'grass':'animal';
@@ -654,9 +706,11 @@ function setup(renderer){
  }
  function beginPlay(ev){
   if(travel||gesture||pointer!==null||ev.button!==0)return;
+  hintIdleAt=pond.time;
   if(ev.pointerType!=='mouse'){hoverPoint=null;updateCursor(null);}
   const [x,y]=local(ev),intent=resolve(x,y);
   canvas.setPointerCapture(ev.pointerId);
+  if(brushing())guideToothbrush(x,y);
   if(mode==='pond'&&intent?.kind==='water'){
    audio.wake();
    pointer=ev.pointerId;pond.guide(intent.location,true);
@@ -678,6 +732,7 @@ function setup(renderer){
   if(intent.kind==='site')pond.playSite(intent.index);
   if(intent.kind==='rabbit')grove.tapRabbit();
   if(intent.kind==='orchard-rabbit')family.tap(intent.index);
+  if(intent.kind==='rabbit-carrot')family.tapCarrot();
   if(intent.kind==='bird')grove.tapBird();
   if(intent.kind==='grass')grove.tapGrass(intent.index);
   if(intent.kind==='apple')orchard.tapApple(intent.index);
@@ -695,11 +750,14 @@ function setup(renderer){
   if(intent.kind==='lion-grass')savanna.tapLionGrass();
   if(intent.kind==='savanna-rock')savanna.tapRock();
   if(intent.kind==='hippo')river.tapHippo();
+  if(intent.kind==='hippo-brush')river.tapToothbrush();
   if(intent.kind==='turtle')river.tapTurtle();
   if(intent.kind==='river-stone')river.tapStone(intent.index);
   if(intent.kind==='rhino')river.tapRhino();
   if(intent.kind==='river-grass')river.tapGrass(intent.index);
   if(intent.kind==='river-fish')river.tapFish(intent.index);
+  if(intent.kind==='river-frog')river.tapFrog();
+  if(intent.kind==='river-duck')river.tapDuck(intent.index);
   if(intent.kind==='river-water')bank.splash(intent.x,intent.z,river.time);
   if(intent.kind==='fox')woodland.tapFox();
   if(intent.kind==='litter')woodland.tapLitter(intent.index);
@@ -740,7 +798,14 @@ function setup(renderer){
  }
  function movePlay(ev){
   const [x,y]=local(ev);
+  hintIdleAt=pond.time;
   if(ev.pointerType==='mouse')hoverPoint=x>=0&&x<width&&y>=0&&y<height?[x,y]:null;
+  if(brushing()){
+   if(gesture?.id===ev.pointerId&&Math.hypot(x-gesture.x,y-gesture.y)>8)gesture.moving=true;
+   guideToothbrush(x,y);
+   updateCursor(null);
+   return;
+  }
   if(pointer===ev.pointerId){
    const location=waterHit(x,y);
    if(location)pond.guide(location,true);
@@ -826,7 +891,7 @@ function setup(renderer){
  function settleViewCloud(){
   if(cloudHand||mode==='ocean')return;
   if(pin)settleCloud();
-  else if(['grove','asia','rainforest'].includes(mode))settleCloud(undefined,4);
+  else if(['grove','river','asia','rainforest'].includes(mode))settleCloud(undefined,4);
  }
  function toggleCloudPin(){
   pin=!pin;
@@ -1021,7 +1086,6 @@ function setup(renderer){
   }
   if(seeGrassland)grassland.tick(savanna,elephant.nozzle.getWorldPosition(nozzlePosition),night,shade);
   const seeRiver=visibleIn('river');
-  if(seeRiver)bank.tick(river,night,shade);
   function placeRiver(actor,state){
    actor.root.visible=seeRiver;
    if(!seeRiver)return;
@@ -1029,6 +1093,8 @@ function setup(renderer){
    actor.pose(state);
   }
   for(const [name,actor] of Object.entries(riverAnimals))placeRiver(actor,river[name]);
+  riverDucks.forEach((actor,index)=>placeRiver(actor,river.ducks[index]));
+  if(seeRiver)bank.tick(river,night,shade,hippo);
   riverFish.forEach((actor,i)=>{
    const state=river.fish[i];
    placeRiver(actor,{...state,dive:state.dive*.45});
@@ -1079,7 +1145,8 @@ function setup(renderer){
   if(seeCoast)coastView.tick(coast,night,shade);
   if(seeOcean)oceanView.tick(ocean,night);
   const sleeperPenguin=sleeper.startsWith('penguin-')?coast.penguins[Number(sleeper.at(-1))]:null;
-  const sleeperDuck=sleeper.startsWith('duckling-')?pondYoung.ducks[Number(sleeper.at(-1))]:null;
+  const sleepingDucks=sleeper.startsWith('river-duck-')?river.ducks:sleeper.startsWith('duckling-')?pondYoung.ducks:null;
+  const sleeperDuck=sleepingDucks?.[Number(sleeper.at(-1))];
   const sleeperRabbit=sleeper.startsWith('orchard-rabbit-')?family.rabbits[Number(sleeper.at(-1))]:null;
   showSleep(sleeperRabbit||sleeperDuck||sleeperPenguin||(sleeper==='bird'?b:savanna[sleeper]||orchard[sleeper]||river[sleeper]||woodland[sleeper]||asia[sleeper]||rainforest[sleeper]||b));
   const a=pond.time-padAt;
@@ -1094,7 +1161,7 @@ function setup(renderer){
   diorama.leafHint(leafGlow);
   diorama.tick(pond.time,night,shade,quiet.matches);
   forest.tick(grove.time,hover?.kind==='grass'?hover.index:null,dt,quiet.matches);
-  garden.tick(orchard,hover?.kind==='apple'?hover.index:null);
+  garden.tick(orchard,hover?.kind==='apple'?hover.index:null,family);
   updateMapButtons();
   renderer.render(scene,camera);frames++;
   paintHints(targets,hover);
@@ -1108,7 +1175,7 @@ function setup(renderer){
    frog:{...f,screen:point(f.x,f.y+.47,f.z)},fish:{...g,screen:point(g.x,g.y+.02,g.z)},
    sites:sites.map(s=>point(s.x,s.y,s.z)),water:[[0,1.2],[1.8,1.6],[-1.6,.3],[.71,1.10]].map(([x,z])=>point(x,.012,z)),
    target:pond.target&&{...pond.target},busy:pond.busy,greetingCount:pond.greetingCount,events:events.map(e=>({...e})),audio:audio.inspect(),
-   view:{mode,moving:!!travel,panX,panY,...rig},hintCount,
+   view:{mode,moving:!!travel,panX,panY,...rig},hintCount,hintCue,
    pondNeighbors:pondNeighbors.map(({resident})=>({...resident,screen:worldScreen(resident)})),
    pondYoung:{
     ducks:pondYoung.ducks.map(actor=>({...actor,screen:point(actor.x,actor.y+.27,actor.z)})),
@@ -1120,6 +1187,7 @@ function setup(renderer){
     events:groveEvents.map(e=>({...e}))
    },orchard:{
     basketCount:orchard.basketCount,basketTilt:orchard.basketTilt,
+    carrot:{...family.carrot,screen:worldScreen(family.carrot.clickPoint)},
     rabbits:family.rabbits.map(r=>({...r,screen:orchardRabbitScreen(r)})),
     apples:orchard.apples.map(a=>({...a,screen:point(a.x,a.y,a.z)})),
     dog:{...orchard.dog,screen:point(orchard.dog.x,orchard.dog.y+.56,orchard.dog.z)},
@@ -1142,12 +1210,16 @@ function setup(renderer){
     mouth:giraffe.mouth.getWorldPosition(mouthPosition).toArray(),events:savannaEvents.map(e=>({...e}))
    },river:{
     hippo:{...river.hippo,screen:point(river.hippo.x,river.hippo.y+.49,river.hippo.z+.46)},
+    toothbrush:{...river.toothbrush,screen:worldScreen(riverPoints.toothbrush),rail:[brushScreen(-1),brushScreen(1)],
+     head:bank.toothbrushHead.getWorldPosition(toothPosition).toArray()},
     turtle:{...river.turtle,screen:point(river.turtle.x,river.turtle.y+.25,river.turtle.z)},
     rhino:{...river.rhino,screen:point(river.rhino.x,river.rhino.y+.69,river.rhino.z)},
     stones:riverPoints.turtleSites.map(p=>point(p.x,p.y,p.z)),
     grass:riverPoints.grass.map(p=>point(p.x,groundHeight(p.x,p.z)+.40,p.z)),
     leaves:river.leaves.map(p=>({...p,screen:point(p.x,p.y,p.z)})),
     fish:river.fish.map(p=>({...p,screen:point(p.x,p.y,p.z)})),
+    frog:{...river.frog,screen:riverFrogScreen(river.frog)},
+    ducks:river.ducks.map(p=>({...p,screen:riverDuckScreen(p)})),
     waves:river.waves.map(w=>({...w})),events:riverEvents.map(e=>({...e}))
    },woodland:{
     fox:{...woodland.fox,screen:point(woodland.fox.x,woodland.fox.y+.39,woodland.fox.z)},

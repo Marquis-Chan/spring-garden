@@ -27,6 +27,7 @@ const feedWalkTime = .46;
 const peacockWalkStops = [{ x: 23.18, z: .96 }, { x: 23.69, z: .80 }];
 const feedBeat = .40;
 const featherShakeTime = .90;
+const tigerNoticeDuration = 1.24;
 const featherLookRange = 3.38;
 const seedLookRange = 2.92;
 const grassLookRange = 1.79;
@@ -438,12 +439,12 @@ export function createAsia(emit = () => {}, { groundAt = () => asiaPoints.floor,
         }
         if (arrived >= .78) tigerWalk = null;
       }
-    } else if (active && touchAge>1.00 && time-tigerGlanceAt>.95) {
+    } else if (active && touchAge>1.00 && time-tigerGlanceAt>tigerNoticeDuration+.10) {
       forestPatrol(tiger,tigerRoutine,tigerHabit,dt,.52,16,2.6);
     }
     tiger.look = tiger.ears * clamp(turn(tiger.yaw, bearing(tiger, tuft)) / 1.2, -1, 1);
     const attentive = night || tiger.gait > 0 || tiger.sniff > .25 || tiger.paw > .25
-      ? 0 : pulse((time - tigerGlanceAt) / .88);
+      ? 0 : pulse((time - tigerGlanceAt) / tigerNoticeDuration);
     tiger.notice = attentive;
     tiger.ears = Math.max(tiger.ears,attentive*.62);
     tiger.look = mix(tiger.look,clamp(turn(tiger.yaw,bearing(tiger,peacock))/1.2,-1,1),attentive*.72);

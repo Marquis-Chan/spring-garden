@@ -72,6 +72,8 @@ try{
    await wait(()=>window.pondInspect().shade<.14);
    phase='猴手碰香蕉并送嘴';
    await tap((await read()).rainforest.monkey.screen);
+   // 自主换枝以后身体点击会吃当前枝上的果，明确再选左香蕉以固定后续跨枝路径。
+   await tap((await read()).rainforest.bananas[0].screen);
    await wait(()=>{const s=window.pondInspect().rainforest;return s.bananas[0].phase==='held'&&s.monkey.bring>.66;});
    await shot('03a-monkey-hand-at-mouth');
    await wait(()=>window.pondInspect().rainforest.events.some(e=>e.type==='banana-mouth'&&e.id===0));
@@ -79,6 +81,9 @@ try{
    await wait(()=>window.pondInspect().rainforest.bananas[0].phase==='branch');
    await shot('05-banana-regrows');
    phase='猴到另一根枝取第二根香蕉';
+   await tap((await read()).rainforest.monkeyBranches[0]);
+   await wait(()=>{const m=window.pondInspect().rainforest.monkey;return m.site===0&&m.air<.02;});
+   const pickedBefore=(await read()).rainforest.events.filter(e=>e.type==='banana-pick'&&e.id===1).length;
    const b=(await read()).rainforest.bananas[1].screen;
    await tap(b);await tap(b);
    await wait(()=>window.pondInspect().rainforest.monkey.air>.62);
@@ -87,7 +92,7 @@ try{
    await shot('07-monkey-second-branch');
    await wait(()=>window.pondInspect().rainforest.events.some(e=>e.type==='banana-mouth'&&e.id===1));
    const monkey=(await read()).rainforest;
-   assert.equal(monkey.events.filter(e=>e.type==='banana-pick'&&e.id===1).length,1);
+   assert.equal(monkey.events.filter(e=>e.type==='banana-pick'&&e.id===1).length,pickedBefore+1);
    assert.equal(monkey.monkey.site,1);
    phase='树懒看近枝猴子、伸爪、抱枝轻摆';
    assert.ok(monkey.events.some(e=>e.type==='sloth-watch'&&e.animal==='monkey'));

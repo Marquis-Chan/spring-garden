@@ -13,6 +13,18 @@ test('鲸尾水流到达后海豚才回应，重复点鲸不叠加动作',()=>{
  assert.equal(events.filter(e=>e.type==='ocean-dolphin'&&e.reason==='whale').length,1);
 });
 
+test('鲸尾水流到了而海豚正在翻身，会等海豚翻完再回应一次',()=>{
+ const events=[],sea=createOcean(event=>events.push(event));
+ step(sea,.65,true);
+ sea.tap('whale');
+ step(sea,.60,true);
+ sea.tap('dolphin');
+ step(sea,1.35,true);
+ assert.deepEqual(events.filter(e=>e.type==='ocean-dolphin').map(e=>e.reason),['tap']);
+ step(sea,1.5,true);
+ assert.deepEqual(events.filter(e=>e.type==='ocean-dolphin').map(e=>e.reason),['tap','whale']);
+});
+
 test('鲨鱼经过时小丑鱼躲进海葵再出来，独立点小丑鱼才让海马探身',()=>{
  const events=[],sea=createOcean(e=>events.push(e));
  sea.tap('shark');step(sea,1.28);

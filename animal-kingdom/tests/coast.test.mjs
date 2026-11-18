@@ -59,6 +59,28 @@ test('同伴真正踏回岸台后才引另一只清醒企鹅摆鳍，远鱼不�
   assert.equal(events.some(({type,index})=>type==='wave-fish'&&index===1),false);
 });
 
+test('回岸招呼能看清两次摆鳍，另一只留在自己的岸台，入夜会收回', () => {
+  const { coast, events, advance } = setup();
+  coast.tapRamp(0);
+  advance(1.52, true);
+  coast.tapStone(0);
+  while (coast.time < 6 && !events.some(({ type }) => type === 'penguin-neighbor-look')) advance(1 / 60, true);
+  const friend = coast.penguins[1];
+  const anchored = { x: friend.x, y: friend.y, z: friend.z };
+  advance(.40, true);
+  assert.ok(friend.acknowledge > .75 && Math.abs(friend.look) > .5);
+  advance(.42, true);
+  assert.ok(friend.acknowledge < .3);
+  advance(.42, true);
+  assert.ok(friend.acknowledge > .70 && Math.abs(friend.look) > .5);
+  assert.deepEqual({ x: friend.x, y: friend.y, z: friend.z }, anchored);
+  assert.equal(friend.call, 0);
+  assert.equal(events.filter(({ type }) => type === 'penguin-neighbor-look').length, 1);
+  coast.setNight(true);
+  advance(.1, true);
+  assert.equal(friend.acknowledge, 0);
+});
+
 test('身体首点有摇步与叫声，但企鹅仍在自己的岸上', () => {
   const { coast, events, advance } = setup();
   coast.tapPenguin(0);

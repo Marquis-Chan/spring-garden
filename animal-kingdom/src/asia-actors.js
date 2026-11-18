@@ -267,9 +267,9 @@ export function makeTiger(T) {
     body.rotation.set(bow * .190 + scent * .103 - voice * .050, look * .036,
       Math.sin(stride) * step * .040);
     body.scale.set(1, 1 - bow * .065, 1 + bow * .100);
-    head.position.set(0, .229 - bow * .081 - scent * .152 + voice * .025 + notice*.047, .472 + bow * .060 + scent * .017);
+    head.position.set(0, .229 - bow * .081 - scent * .152 + voice * .025 + notice*.073, .472 + bow * .060 + scent * .017);
     head.rotation.set(-bow * .081 + scent * .39 - voice * .159 - notice*.25,
-      look * .63+survey, look * -.087+survey*.18);
+      look * .77+survey, look * -.087+survey*.18);
     tail.rotation.set(-bow * .142, Math.sin(time * 2.1) * (.26 + step * .19) + look * .20,
       bow * -.041 + Math.sin(time * 3.3) * .087);
     jaw.rotation.x = voice * .63;
@@ -294,6 +294,11 @@ export function makeTiger(T) {
       const x = sign * ((front ? .178 : .171) + reach * .031);
       const z = front ? .386 : -.480;
       foot.position.set(x, floors[i] + lift * .109, z + reach * .33 + along * .110);
+      // 听到近处孔雀抖屏，先抬头看，再轻抬一只前掌，另外三掌保持承重。
+      if(i===0){
+        foot.position.y+=notice*.087;
+        foot.position.z+=notice*.038;
+      }
       foot.rotation.set(-lift * .14, sign * (.06 + reach * .16), 0);
       if(i===0 && fruitReach>0){
         const touch=s(fruitReach,0,1);

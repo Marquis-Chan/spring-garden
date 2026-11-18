@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import * as T from 'three';
 import { groundHeight } from '../src/diorama.js';
 import { createRiver, riverPoints } from '../src/river-state.js';
+import { makeHippo } from '../src/river-actors.js';
+import { makeRiverDiorama } from '../src/river-diorama.js';
 
 function setup(options) {
   const events = [];
@@ -16,6 +19,33 @@ function setup(options) {
 
 const position = ({ x, y, z }) => ({ x, y, z });
 const gap = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
+
+test('河岸的两只小鸭各自在浅水活动，点任一只跟游，点蛙只引附近小鸭看过去', () => {
+  const {river,events,advance} = setup({groundAt:groundHeight});
+  const [lead,outer] = river.ducks;
+  const start = position(lead);
+  advance(2.1,true);
+  assert.ok(gap(start,lead)>.13);
+  assert.ok(gap(lead,outer)>.65);
+  river.tapDuck(1);
+  advance(.63,true);
+  assert.ok(outer.headUp>.40 && lead.headUp>.25 && lead.call===0);
+  assert.ok(events.some(e=>e.type==='river-duck-reply'&&e.index===0));
+  advance(1.75,true);
+  river.tapFrog();
+  advance(.30,true);
+  assert.ok(river.frog.throat>.08);
+  assert.ok(events.some(e=>e.type==='river-duck-listens'&&e.index===0));
+  assert.ok(!events.some(e=>e.type==='river-duck-listens'&&e.index===1));
+  river.setNight(true);
+  advance(.70,true);
+  const sleeping = position(lead);
+  river.tapDuck(0);
+  advance(.75,true);
+  assert.equal(lead.sleep,1);
+  assert.deepEqual(position(lead),sleeping);
+  assert.equal(events.at(-1).animal,'river-duck');
+});
 
 test('河马沉回水线后才发一圈波，先到近叶再到远叶', () => {
   const { river, events, advance } = setup();
@@ -269,5 +299,110 @@ test('两条鱼靠岸转向和下潜时也留在可容纳鳍身的真实水层�
       assert.ok(fish.y >= groundHeight(fish.x, fish.z) + .065 - 1e-8);
       assert.ok(fish.y <= riverPoints.waterY - .067 + 1e-8);
     }
+  }
+});
+
+test('刷牙先转正张嘴，鼠标只在牙面活动，牙刷收回后才闭嘴', () => {
+  const { river, events, advance } = setup();
+  advance(2.6, true);
+  const anchor = position(river.hippo);
+  river.tapToothbrush();
+  assert.equal(river.toothbrush.phase, 'opening');
+  advance(.35, true);
+  assert.equal(river.toothbrush.amount, 0);
+  advance(1.5, true);
+  assert.equal(river.toothbrush.phase, 'active');
+  assert.deepEqual(position(river.hippo), anchor);
+  assert.equal(river.hippo.gape, 1);
+  assert.equal(river.hippo.yaw, 0);
+  river.moveToothbrush(-4, 3);
+  advance(.14, true);
+  assert.equal(river.toothbrush.u, -1);
+  assert.equal(river.toothbrush.v, 1);
+  river.moveToothbrush(.8, 0);
+  advance(.12, true);
+  assert.ok(river.toothbrush.stroke > 0);
+  assert.ok(events.some(({ type }) => type === 'hippo-brush-stroke'));
+  river.tapToothbrush();
+  advance(.24, true);
+  assert.equal(river.toothbrush.phase, 'returning');
+  assert.equal(river.hippo.gape, 1);
+  assert.ok(river.toothbrush.amount > 0);
+  advance(.35, true);
+  assert.equal(river.toothbrush.amount, 0);
+  advance(.7, true);
+  assert.equal(river.toothbrush.phase, 'rest');
+  assert.equal(river.hippo.gape, 0);
+  assert.equal(events.some(({ type }) => type === 'wave'), false);
+  river.tapHippo();
+  advance(1.5, true);
+  assert.ok(events.some(({ type }) => type === 'wave'));
+});
+
+test('连点刷牙、离场收刷和正在掀浪时预约，都按同一顺序收束', () => {
+  const { river, events, advance } = setup();
+  river.tapHippo();
+  advance(.30, true);
+  river.tapToothbrush();
+  advance(2.1, true);
+  assert.equal(river.toothbrush.phase, 'active');
+  assert.equal(events.filter(({ type }) => type === 'wave').length, 1);
+  river.returnToothbrush();
+  river.returnToothbrush();
+  river.tapToothbrush();
+  advance(1.3, false);
+  assert.equal(river.toothbrush.phase, 'rest');
+  assert.equal(river.hippo.gape, 0);
+  river.tapToothbrush();
+  advance(.25, true);
+  river.returnToothbrush();
+  advance(1.3, false);
+  assert.equal(river.toothbrush.phase, 'rest');
+  assert.equal(river.toothbrush.amount, 0);
+});
+
+test('实际牙刷只在河马下牙外侧运行，刷柄和刷头有几何净空', () => {
+  const { river, advance } = setup({ groundAt: groundHeight });
+  const model = makeHippo(T, groundHeight);
+  const bank = makeRiverDiorama(new T.Scene(), riverPoints, groundHeight);
+  river.tapToothbrush();
+  advance(1.6, true);
+  model.root.position.set(river.hippo.x, river.hippo.y, river.hippo.z);
+  model.root.rotation.y = river.hippo.yaw;
+  const head = new T.Vector3(), rail = new T.Vector3();
+  const mouth = ['Hippo inner mouth', 'Hippopotamus soft lower jaw', 'Hippo tongue']
+    .map(name => model.root.getObjectByName(name)).concat(model.teeth);
+  for (const surface of mouth) {
+    surface.material = surface.material.clone();
+    surface.material.side = T.DoubleSide;
+  }
+  const ray = new T.Raycaster(), direction = new T.Vector3(.918, .371, .137).normalize();
+  function insideMouth(point) {
+    ray.set(point, direction);
+    return mouth.some(surface => ray.intersectObject(surface, false)
+      .filter((hit, index, all) => index === 0 || Math.abs(hit.distance - all[index - 1].distance) > 1e-6)
+      .length % 2 === 1);
+  }
+  for (let i = 0; i <= 24; i++) {
+    river.moveToothbrush(-1 + i / 12, i % 2 ? -1 : 1);
+    advance(1 / 60, true);
+    model.pose(river.hippo);
+    model.root.updateWorldMatrix(true, true);
+    bank.tick(river, 0, 0, model);
+    model.brushRail(river.toothbrush.u, river.toothbrush.v, rail);
+    bank.toothbrush.getWorldPosition(head);
+    assert.ok(head.distanceTo(rail) < .002);
+    assert.equal(insideMouth(rail), false, '刷毛尖留在牙冠的外侧');
+    assert.ok(bank.toothbrushHead.getWorldPosition(head).distanceTo(rail) > .055);
+    assert.equal(insideMouth(head), false, '刷头没有被口腔实体或牙床包住');
+    for (const strand of bank.toothbrush.children.filter(child => child.name === '河马牙刷柔软刷毛')) {
+      const vertices = strand.geometry.attributes.position;
+      for (let n = 0; n < vertices.count; n++) {
+        if (vertices.getY(n) > -.028) continue;
+        head.fromBufferAttribute(vertices, n).applyMatrix4(strand.matrixWorld);
+        assert.equal(insideMouth(head), false, '每根刷毛的端面也停在各颗牙冠外');
+      }
+    }
+    assert.ok(rail.y > riverPoints.waterY + .08);
   }
 });

@@ -132,6 +132,7 @@ export function makeRabbit(T, { back = '#ad7d60', middle = '#d5b28d', belly = '#
   mesh(T, tail, 'Cream tail tip', sphere, fleece, [0, 0.046, -0.095], [0.109, 0.088, 0.094]);
 
   const muzzle = rig(T, head, 'Rabbit muzzle', 0, -0.047, 0.237);
+  const mouth = rig(T, muzzle, 'Rabbit bite point', 0, -.016, .055);
   mesh(T, muzzle, 'Rabbit nose', sculpt(T, [
     [-0.018, 0, 0.015, 0.027, 0.015], [0.002, 0, 0.014, 0.052, 0.030],
     [0.027, 0, 0.009, 0.046, 0.026], [0.048, 0, 0.004, 0.028, 0.017],
@@ -248,24 +249,29 @@ export function makeRabbit(T, { back = '#ad7d60', middle = '#d5b28d', belly = '#
     shape.quaternion.setFromUnitVectors(up, direction.normalize());
   }
 
-  function pose({ time = 0, crouch = 0, air = 0, land = 0, peek = 0, listen = 0, sleep = 0 } = {}) {
+  const targetMouth = new T.Vector3(), currentMouth = new T.Vector3();
+  function pose({ time = 0, crouch = 0, air = 0, land = 0, peek = 0, listen = 0, sleep = 0,
+    lean = 0, nibble = 0, watch = 0, biteX = 0, biteY = 0, biteZ = 0 } = {}) {
     peek *= 1 - sleep;
     const squash = crouch * 0.128 + land * 0.092 + sleep * 0.115;
     const lift = air * 0.049;
     const breath = Math.sin(time * (3.2 - sleep * 1.2)) * 0.008;
     const twitch = Math.sin(time * 13) * (0.004 + 0.008 * peek) * (1 - sleep);
+    const attentive = Math.abs(listen) * (1 - sleep) * (1 - air);
     body.position.set(0, 0.443 - squash + lift + breath * (1 - air) * (1 - crouch), -0.082 - crouch * 0.053);
     body.scale.set(1 + crouch * 0.066 + land * 0.1, 1 - 0.10 * crouch - 0.07 * land, 1 + air * 0.28);
-    body.rotation.x = -air * 0.11 + crouch * 0.17 + land * 0.13;
-    head.position.set(0, 0.251 + peek * 0.09 + listen * 0.049 - sleep * 0.068, 0.243 + peek * 0.087);
-    head.rotation.set(-peek * 0.15 - listen * 0.11 + land * 0.18 + sleep * .21, listen * -0.20, listen * 0.099);
+    body.rotation.x = -air * 0.11 + crouch * 0.17 + land * 0.13 + lean * .18;
+    head.position.set(0, 0.251 + peek * 0.09 + attentive * 0.085 - sleep * 0.068 - lean * .034,
+      0.243 + peek * 0.087 + lean * .12);
+    head.rotation.set(-peek * 0.15 - attentive * 0.16 + land * 0.18 + sleep * .21 + lean * .20,
+      listen * -0.34, listen * 0.099 - watch * .13);
     muzzle.position.z = 0.237 + twitch;
     tail.rotation.x = air * 0.39 - crouch * 0.16;
 
     for (const leg of legs) {
       const { sign, ear, eye, upper, joint, hand, hip, knee, heel } = leg;
-      const flick = Math.sin(time * 4.4 + sign * 0.9) * (0.028 + listen * 0.047) * (1 - sleep);
-      ear.rotation.set(-0.09 - air * 0.85 - crouch * 0.25 + listen * 0.22 + flick - sleep * .53,
+      const flick = Math.sin(time * 4.4 + sign * 0.9) * (0.028 + attentive * 0.047) * (1 - sleep);
+      ear.rotation.set(-0.09 - air * 0.85 - crouch * 0.25 + attentive * 0.31 + flick - sleep * .53 - watch * .20,
         sign * (0.070 + listen * 0.16), sign * (-0.146 + listen * sign * 0.131 - sleep * .18));
       const blink = time % 5.6;
       const openness = blink > 5.43 ? 1 - 0.95 * Math.sin(Math.PI * (blink - 5.43) / 0.17) : 1;
@@ -273,7 +279,7 @@ export function makeRabbit(T, { back = '#ad7d60', middle = '#d5b28d', belly = '#
 
       upper.set(sign * 0.166, 0.450 - squash + lift, 0.151 + air * 0.064);
       joint.set(sign * (0.195 + 0.031 * air), 0.222 - squash * 0.40 + air * 0.126, 0.207 + air * 0.232);
-      hand.set(sign * (0.167 + 0.034 * air), 0.043 + air * 0.246, 0.316 + sign * 0.018 + air * 0.253);
+      hand.set(sign * (0.167 + 0.034 * air), 0.043 + air * 0.246, 0.316 + sign * 0.018 + air * 0.253 + lean * .045);
       hip.set(sign * 0.218, 0.362 - squash + lift, -0.227 - air * 0.044 - crouch * 0.034);
       knee.set(sign * (0.296 + 0.035 * crouch - 0.027 * air), 0.172 - squash * 0.32 + air * 0.116, -0.064 - air * 0.450);
       heel.set(sign * (0.282 + crouch * 0.037 - air * 0.047), 0.040 + air * 0.236, -0.294 - air * 0.400);
@@ -286,10 +292,20 @@ export function makeRabbit(T, { back = '#ad7d60', middle = '#d5b28d', belly = '#
       leg.hindpaw.position.copy(heel);
       leg.hindpaw.rotation.set(air * -0.24, sign * (0.247 + air * 2.25), 0);
     }
+    if (nibble > 0) {
+      // 用同一个真实吻尖对齐萝卜，嘴部、眼睛和头部一起送过去。
+      root.updateWorldMatrix(true, true);
+      targetMouth.set(biteX, biteY + Math.sin(time * 21) * .004, biteZ);
+      root.localToWorld(targetMouth);
+      body.worldToLocal(targetMouth);
+      mouth.getWorldPosition(currentMouth);
+      body.worldToLocal(currentMouth);
+      head.position.addScaledVector(targetMouth.sub(currentMouth), nibble);
+    }
   }
 
   pose();
-  return { root, pose };
+  return { root, pose, mouth };
 }
 
 export function makeBird(T) {

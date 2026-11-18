@@ -39,9 +39,10 @@ export function viewFor(mode,ratio) {
   azimuth:mix(.01,-.12,portrait),elevation:mix(.24,.36,portrait)
  };
  if(mode==='river')return {
-  x:mix(27.77,27.68,portrait),y:mix(1.64,1.31,portrait),z:mix(7.91,7.85,portrait),
-  height:Math.max(6.90,mix(11.5,8.40,portrait)/ratio),
-  azimuth:mix(.01,-.14,portrait),elevation:mix(.25,.43,portrait)
+  // 加俯角后稍微拉远并抬高取景中心，给日月与可拖云朵保留天空。
+  x:mix(27.77,27.68,portrait),y:2.24,z:mix(7.91,7.85,portrait),
+  height:Math.max(8.50,mix(11.5,8.40,portrait)/ratio),
+  azimuth:mix(.01,-.14,portrait),elevation:mix(.25,.43,portrait)+Math.PI/18
  };
  if(mode==='asia')return {
   x:mix(20.97,21.21,portrait),y:mix(1.72,1.51,portrait),z:mix(-.81,-.72,portrait),

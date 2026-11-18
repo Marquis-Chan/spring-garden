@@ -218,23 +218,74 @@ export function makeHippo(T, groundAt = () => 0.19) {
     }
   }
 
+  for (const sign of [-1, 1]) {
+    teeth.push(mesh(T, jaw, (sign < 0 ? 'Left' : 'Right') + ' small front ivory tooth', detail, ivory,
+      [sign * .069, .069, .361], [.040, .047, .040]));
+  }
+
+  const brushRay = new T.Raycaster();
+  const brushNormal = new T.Vector3();
+  const brushOrigin = new T.Vector3();
+  const brushPoint = new T.Vector3();
+  const brushHitLocal = new T.Vector3();
+  const jawInverse = new T.Matrix4();
+  const brushRotation = new T.Quaternion();
+  const brushBristles = [-.031, 0, .031].flatMap(x => [-.049, -.016, .016, .049].map(z => ({ x, z, tip: .005 })));
+  const brushFootprint = [[0, 0], ...Array.from({ length: 8 }, (_, i) =>
+    [Math.cos(i * Math.PI / 4) * .007, Math.sin(i * Math.PI / 4) * .007])];
+
+  function brushRail(u = 0, v = 0, target = new T.Vector3()) {
+    root.updateWorldMatrix(true, true);
+    const x = T.MathUtils.clamp(u, -1, 1) * .224;
+    const z = .361 - .035 * (x / .224) ** 2 + T.MathUtils.clamp(v, -1, 1) * .012;
+    // 刷头始终高于最高的牙冠，柔软刷毛分别按各自的牙面压缩。
+    target.set(x, .121, z).applyMatrix4(jaw.matrixWorld);
+    return target;
+  }
+
+  function brushFrame(u = 0, v = 0) {
+    brushRail(u, v, brushPoint);
+    jawInverse.copy(jaw.matrixWorld).invert();
+    const local = brushHitLocal.copy(brushPoint).applyMatrix4(jawInverse);
+    const x = local.x, z = local.z;
+    brushNormal.set(0, -1, 0).transformDirection(jaw.matrixWorld);
+    let touching = false;
+    for (const bristle of brushBristles) {
+      let height = 0;
+      // 每根刷毛的整个圆形端面都取样，旁边较高的牙冠也会先压缩它。
+      for (const [dx, dz] of brushFootprint) {
+        brushOrigin.set(x + bristle.x + dx, .30, z + bristle.z + dz).applyMatrix4(jaw.matrixWorld);
+        brushRay.set(brushOrigin, brushNormal);
+        const hit = brushRay.intersectObjects(teeth, false)[0];
+        if (hit) height = Math.max(height, brushHitLocal.copy(hit.point).applyMatrix4(jawInverse).y);
+      }
+      bristle.tip = height > .084 ? height + .004 - .121 : .005;
+      touching ||= height > .084;
+    }
+    jaw.getWorldQuaternion(brushRotation);
+    return { point: brushPoint, quaternion: brushRotation, touching, bristles: brushBristles };
+  }
+
   function pose({ x: worldX, y: worldY = 0.45, z: worldZ = 0, yaw = 0, time = 0,
-    stride = 0, gait = 0, lift = 0, gape = 0, sink = 0 } = {}) {
+    stride = 0, gait = 0, lift = 0, gape = 0, sink = 0, brushing = 0 } = {}) {
     const dip = s(sink, 0, 1);
     const rise = s(lift, 0, 1);
     const open = s(gape, 0, 1);
     const walk = gait * (1 - Math.max(dip, rise, open));
     const weight = Math.sin(stride) * walk;
-    const breath = Math.sin(time * 2.25) * 0.009;
+    const breath = Math.sin(time * 2.25) * 0.009 * (1 - brushing);
     body.position.y = 0.062 + rise * 0.119 - dip * 0.128 + breath + (Math.sin(stride * 2) * 0.016 - 0.020) * walk;
     body.rotation.set(-rise * 0.025 + dip * 0.018, 0, weight * 0.039);
     head.position.y = 0.133 + open * 0.106 + rise * 0.053 - walk * 0.040;
     head.rotation.set(-open * 0.136 - rise * 0.066 + dip * 0.042 + walk * 0.064,
-      Math.sin(time * 1.3) * 0.020, -weight * 0.022);
+      Math.sin(time * 1.3) * 0.020 * (1 - brushing), -weight * 0.022);
     jaw.rotation.x = open * 0.785;
     jaw.position.z = 0.126 + open * 0.102;
     throat.position.set(0, -0.097 - open * 0.169, 0.447 + open * 0.031);
     throat.scale.set(0.332, 0.018 + open * 0.160, 0.086);
+    // 张嘴刷牙时，暗色口腔留在牙排后方，给牙冠外侧的刷头让出真实空间。
+    throat.position.z -= brushing * .17;
+    throat.scale.z *= 1 - brushing * .64;
     throat.visible = tongueTip.visible = open > 0.057;
     for (const tooth of teeth) tooth.visible = open > 0.115;
     for (const setEye of lids) setEye(blinkAt(time + 1.21, 5.2));
@@ -267,7 +318,7 @@ export function makeHippo(T, groundAt = () => 0.19) {
   }
 
   pose();
-  return { root, pose, contact };
+  return { root, pose, contact, brushRail, brushFrame, teeth };
 }
 
 function shellDome(T) {

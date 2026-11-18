@@ -1,5 +1,6 @@
 import * as T from 'three';
 import {branch,crownGeometry,pathStrip} from './grove-diorama.js';
+import {ease} from './state.js';
 
 const mat=(color,extra={})=>new T.MeshStandardMaterial({color,roughness:.89,...extra});
 const stone=new T.IcosahedronGeometry(1,3),blade=new T.SphereGeometry(1,14,9);
@@ -72,6 +73,69 @@ function surface(root,points){
  return uniforms;
 }
 
+function hippoToothbrush(root,point){
+ const tray=new T.Group();tray.name='河马牙刷小托盘';root.add(tray);
+ tray.position.set(point.x,point.y-.075,point.z);
+ const wood=mat('#d6bc83'),mint=mat('#4b9b91'),pearl=mat('#f4e8c9');
+ const bristle=mat('#e9f0dd',{roughness:.73}),foamMat=mat('#eef5df',{transparent:true,opacity:.78,depthWrite:false});
+ object(tray,blade,wood,.12,-.012,0,[.47,.047,.20]);
+ object(tray,blade,mat('#dce4b8'),.12,.009,0,[.39,.025,.15]);
+ const brush=new T.Group();brush.name='河马的薄荷色牙刷';root.add(brush);
+ const head=object(brush,blade,mint,0,.082,0,[.061,.018,.090]);
+ head.name='河马牙刷头';
+ const handle=object(brush,blade,mint,.284,.086,0,[.249,.032,.047]);
+ handle.name='河马牙刷柄';
+ object(brush,blade,pearl,.315,.111,0,[.149,.008,.031]);
+ const strands=[];
+ for(const x of [-.031,0,.031])for(const z of [-.049,-.016,.016,.049]){
+  const strand=object(brush,new T.CylinderGeometry(.005,.006,.058,5),bristle,x,.034,z,null);
+  strand.name='河马牙刷柔软刷毛';
+  strands.push(strand);
+ }
+ const bubbles=Array.from({length:5},(_,i)=>{
+  const bubble=object(root,blade,foamMat,0,0,0,[.014,.014,.014],false);
+  bubble.name='刷牙小泡泡';bubble.visible=false;return bubble;
+ });
+ const holder=new T.Vector3(point.x,point.y,point.z);
+ const side=new T.Vector3(),front=new T.Vector3(),contact=new T.Vector3();
+ const resting=new T.Quaternion().setFromEuler(new T.Euler(.11,-.20,-.10));
+ const path=[holder,side,front,contact];
+ const orientation=new T.Quaternion();
+ return {brush,head,tray,tick(model,hippo){
+  const state=model.toothbrush;
+  if(!state||!hippo||state.amount===0){
+   brush.position.copy(holder);brush.quaternion.copy(resting);
+   for(const strand of strands){strand.position.y=.034;strand.scale.y=1;}
+   for(const bubble of bubbles)bubble.visible=false;
+   return;
+  }
+  const frame=hippo.brushFrame(state.u,state.v);
+  contact.copy(frame.point);
+  side.set(model.hippo.x-1.12,Math.max(1.17,contact.y+.40),model.hippo.z+1.65);
+  front.copy(contact).add(new T.Vector3(0,1,0).applyQuaternion(frame.quaternion).multiplyScalar(.31));
+  front.z=Math.max(front.z,model.hippo.z+1.32);
+  const flight=state.amount*3,index=Math.min(2,Math.floor(flight)),progress=ease(flight-index);
+  brush.position.copy(path[index]).lerp(path[index+1],progress);
+  orientation.copy(resting).slerp(frame.quaternion,ease((state.amount-.20)/.50));
+  brush.quaternion.copy(orientation);
+  strands.forEach((strand,i)=>{
+   const tip=state.amount>.99 ? frame.bristles[i].tip : .005;
+   strand.position.y=(.063+tip)/2;
+   strand.scale.y=(.063-tip)/.058;
+  });
+  brush.updateWorldMatrix(true,true);
+  const brushing=state.phase==='active'&&frame.touching&&state.stroke>.08;
+  for(const [i,bubble] of bubbles.entries()){
+   bubble.visible=brushing;
+   if(!brushing)continue;
+   const age=(model.time*.82+i*.19)%1;
+   bubble.position.copy(contact).add(new T.Vector3(
+    Math.cos(i*2.4)*.045,.015+age*.14,Math.sin(i*2.4)*.045));
+   bubble.scale.setScalar(.010+.010*Math.sin(age*Math.PI));
+  }
+ }};
+}
+
 export function makeRiverDiorama(scene,points,groundAt){
  const root=new T.Group();root.name='河岸';scene.add(root);
  const {waterY}=points;
@@ -124,14 +188,19 @@ export function makeRiverDiorama(scene,points,groundAt){
   return center;
  });
  const water=surface(root,points);
+ const frogRock=points.frogPerch;
+ object(root,baskingStone,sandstones[1],frogRock.x,frogRock.y-.107,frogRock.z,[.40,.105,.35]);
+ const dental=hippoToothbrush(root,points.toothbrush);
  const foam=Array.from({length:8},(_,i)=>{
   const droplet=object(root,blade,mat(i%2?'#93c8bd':'#c8e3d4'),0,0,0,[.026,.039,.026],false);
   droplet.visible=false;return droplet;
  });
  return {
-  root,hintNodes:{stones,grass:tufts},stoneTopAt,
+  root,hintNodes:{stones,grass:tufts,toothbrush:dental.brush},stoneTopAt,
+  toothbrush:dental.brush,toothbrushHead:dental.head,
   splash(x,z,time){water.tap.value.set(x,time,z);},
-  tick(model,night,shade){
+  tick(model,night,shade,hippo){
+   dental.tick(model,hippo);
    water.t.value=model.time;water.light.value=1-night;water.shade.value=shade;
    const wave=model.waves.at(-1);
    water.radius.value=wave?.radius??-1;

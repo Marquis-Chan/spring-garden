@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {OrthographicCamera,Vector3} from 'three';
-import {placeCamera,viewFor,portals} from '../src/map-view.js';
+import {OrthographicCamera,Raycaster,Scene,Vector2,Vector3} from 'three';
+import {placeCamera,viewFor,portals,adjacentPortals} from '../src/map-view.js';
 import {orchardPoints} from '../src/orchard-state.js';
+import {riverPoints} from '../src/river-state.js';
+import {makeDiorama} from '../src/diorama.js';
 
 const actors=[
  [-1.67,.75,-.48],[1.93,-.17,1.23],[8.6,1.27,1.25],[10.1,2.61,-.95],
@@ -56,10 +58,28 @@ test('树林像从动物身前看，水域仍看得到水面和前后落点',()=
    placeCamera(camera,rig,ratio);
    assert.ok(new Vector3(0,-1,-1).unproject(camera).y>.64,'近裁切面一直高于脚下的地面');
   }
-  for(const name of ['orchard','savanna','grove','river','coast']){
+  assert.ok(Math.abs(viewFor('river',ratio).elevation-(.25+(.43-.25)*portrait**2*(3-2*portrait))-Math.PI/18)<1e-9);
+  for(const name of ['orchard','savanna','grove','coast']){
    assert.ok(viewFor(name,ratio).elevation<=.46,name+' 近景俯角过大');
   }
   const pool=viewFor('pond',ratio);
   assert.ok(pool.elevation>=.45&&pool.elevation<=.74,'池塘需要保留水面深度');
+ }
+});
+
+test('俯视的河岸给日月和云留出天空，前景石头和路标仍在画幅内',()=>{
+ const scene=new Scene(),{land}=makeDiorama(scene);
+ scene.updateMatrixWorld(true);
+ const camera=new OrthographicCamera(),ray=new Raycaster();
+ for(const ratio of [1.6,430/740,390/844,1280/540]){
+  placeCamera(camera,viewFor('river',ratio),ratio);
+  for(const x of [.26,.35,.53]){
+   ray.setFromCamera(new Vector2(2*x-1,.82),camera);
+   assert.equal(ray.intersectObject(land,false).length,0,`日月上方须露出天空，比例 ${ratio}`);
+  }
+  for(const p of [riverPoints.frogPerch,...Object.values(adjacentPortals.river)]){
+   const screen=new Vector3(p.x,p.y,p.z).project(camera);
+   assert.ok(Math.abs(screen.x)<.9&&Math.abs(screen.y)<.9,`可点的石头和路标还在画面内，比例 ${ratio}`);
+  }
  }
 });

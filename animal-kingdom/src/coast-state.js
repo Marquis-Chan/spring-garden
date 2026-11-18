@@ -28,6 +28,7 @@ const shoreYaw = [.12, -.25];
 const shoreWalk = [{ x: 35.58, z: 12.52 }, { x: 38.00, z: 12.51 }];
 const waveSpeed = 2.8;
 const waveRadius = 1.66;
+const shoreGreetingTime = 1.65;
 const slopePitch = Math.atan(grade);
 const position = ({ x, y, z }) => ({ x, y, z });
 const distance = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
@@ -251,13 +252,15 @@ export function createCoast(emit = () => {}) {
   function stepShore(actor, lane, dt, active) {
     const { index } = actor;
     const gaze = shoreGaze[index];
-    if (!night && gaze && time - gaze.at < 1.0) {
+    if (!night && gaze && time - gaze.at < shoreGreetingTime) {
       const face = bearing(actor,gaze.toward);
       const age = time - gaze.at;
-      actor.acknowledge = pulse(age / 1.0);
+      const watching = ease(age / .16) * (1 - ease((age - 1.30) / .35));
+      // 两次抬起靠近同伴的鳍，脸一直朝它，脚仍留在自己的岸台。
+      actor.acknowledge = watching * (.18 + .82 * (.5 - .5 * Math.cos(age * Math.PI * 4 / shoreGreetingTime)));
       actor.display = Math.max(actor.display, actor.acknowledge * .55);
-      actor.look = clamp(turn(actor.yaw,face) / 1.15,-1,1) * actor.acknowledge;
-      return shoreYaw[index] + turn(shoreYaw[index],face) * .42 * (1 - ease((age-.72)/.28));
+      actor.look = clamp(turn(actor.yaw,face) / 1.15,-1,1) * watching;
+      return shoreYaw[index] + turn(shoreYaw[index],face) * .42 * (1 - ease((age - 1.30) / .35));
     }
     if (gaze) shoreGaze[index] = null;
     const routine = shoreRoutines[index];
