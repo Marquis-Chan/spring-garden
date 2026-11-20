@@ -13,7 +13,7 @@ const url = process.argv[3]
 const sizes = [[1440, 900], [430, 740], [390, 844], [740, 430]].filter(([width]) =>
   !process.env.POND_TEST_WIDTH || width === Number(process.env.POND_TEST_WIDTH));
 assert.ok(sizes.length, 'POND_TEST_WIDTH 须为受测视口宽度之一');
-const places = ['pond', 'grove', 'orchard', 'savanna', 'river', 'asia', 'rainforest', 'coast', 'ice', 'ocean', 'eucalyptus'];
+const places = ['pond', 'grove', 'orchard', 'savanna', 'river', 'asia', 'rainforest', 'coast', 'ice', 'ocean', 'eucalyptus', 'bamboo'];
 
 await fs.mkdir(output, { recursive: true });
 const browser = await chromium.launch({

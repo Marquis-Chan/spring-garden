@@ -62,9 +62,17 @@ button{font:inherit;cursor:pointer;touch-action:none;-webkit-tap-highlight-color
 button[hidden]{display:none}
 #overview{order:-1;border-radius:50%}
 #overview:not([aria-current]){background:#f8f3dd}
-@media(max-width:700px){#places{gap:5px}}
-@media(max-width:615px){
- #places{display:grid;grid-template-columns:repeat(6,var(--badge));grid-auto-rows:var(--badge);gap:5px clamp(3px,1.4vw,9px);min-height:calc(var(--badge)*2 + 21px)}
+@media(max-width:760px){#places{gap:5px}}
+@media(max-width:665px){
+ #places{--space:clamp(2px,1vw,6px);display:grid;grid-template-columns:repeat(14,calc((var(--badge) - var(--space))/2));grid-auto-rows:var(--badge);gap:5px var(--space);padding-inline:3px;min-height:calc(var(--badge)*2 + 21px)}
+ #places .waymark{grid-column:span 2}
+ #places #enter-rainforest{grid-column:2 / span 2}
+}
+@media(max-width:335px){
+ #places{--space:1px}
+}
+@media(max-width:318px){
+ #places{display:flex;flex-wrap:wrap}
 }
 #sun,#cloud{border:0;background:none;padding:0;pointer-events:auto}
 #sun,#sun-art,#cloud,#cloud-art{position:absolute}

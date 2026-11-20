@@ -15,6 +15,7 @@ const stops = [
   ['grove','woodland.fox','woodland.events','fox-call'], ['savanna','savanna.zebra','savanna.events','zebra-call'],
   ['asia','asia.tiger','asia.events','tiger-call'], ['river','river.rhino','river.events','rhino-call'],
   ['eucalyptus','eucalyptus.koala','eucalyptus.events','koala-call'],
+  ['bamboo','bamboo.panda-mother','bamboo.events','panda-call'],
   ['rainforest','rainforest.groundMonkey','rainforest.events','monkey-call'],
   ['coast','coast.penguins.0','coast.events','penguin-call'], ['ice','ice.bear','ice.events','polar-bear-call'],
   ['ocean','ocean.animals.whale','ocean.events','ocean-whale']
@@ -80,14 +81,20 @@ async function check(width,height) {
     await wait(()=>window.pondInspect().night>.93);
     if(place==='ocean') {
       async function carryCloud(centerX) {
+        // 云会暂时飘出屏幕或经过扬声器，要等白色云身确实能抓住再落指。
+        await page.waitForFunction(()=>{
+          const c=document.querySelector('#cloud').getBoundingClientRect();
+          const x=c.x+c.width*.5,y=c.y+c.height*.6;
+          return x>4&&x<innerWidth-4&&document.elementFromPoint(x,y)?.closest('button')?.id==='cloud';
+        },null,{timeout:45000});
         const cloud=await page.locator('#cloud').boundingBox();
         const offset=cloud.height*.10;
         const from={x:cloud.x+cloud.width*.50,y:cloud.y+cloud.height*.5+offset};
         await drag(from,{x:centerX,y:center.y+offset-3});
         await wait(()=>window.pondInspect().cloud.pin);
       }
-      await carryCloud(width*.78); await wait(()=>window.pondInspect().shade<.18);
-      await carryCloud(center.x); await wait(()=>window.pondInspect().shade>.62);
+      report.phase='总图夜空先拖开云朵';await carryCloud(width*.78); await wait(()=>window.pondInspect().shade<.18);
+      report.phase='总图夜空把云拖到月亮前';await carryCloud(center.x); await wait(()=>window.pondInspect().shade>.62);
       await capture('cloud-over-ocean');
     }
     await press('sun');
@@ -221,7 +228,7 @@ async function check(width,height) {
   } catch(error) {
     report.error=error.message;
     const s=await read().catch(()=>null);
-    if(s)report.last={atlas:s.atlas,view:s.view,night:s.night};
+    if(s)report.last={atlas:s.atlas,view:s.view,night:s.night,cloud:s.cloud,shade:s.shade};
     await capture('failure').catch(()=>{});
     console.error(width,report.phase,error.message);process.exitCode=1;
   } finally {

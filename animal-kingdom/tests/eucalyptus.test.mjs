@@ -43,7 +43,7 @@ test('横枝随身摇摆，单独点鸟会先歌唱，再展翼，考拉寻声�
  play(state,1.3);assert.equal(state.bird.perch,0);
  const p=gumPerches[0];
  assert.equal(state.bird.x,gumOrigin.x+p.x);assert.equal(state.bird.y,gumOrigin.y+p.y);
- assert.deepEqual(events.map(e=>e.type),['koala-rock','silvereye-flight','silvereye-land','silvereye-call','koala-listen','silvereye-flight','silvereye-land']);
+ assert.deepEqual(events.map(e=>e.type),['koala-rock','silvereye-flight','silvereye-land','silvereye-call','koala-listen','wallaby-listen','silvereye-flight','silvereye-land']);
  state.tap('koala');play(state,.64);assert.ok(state.koala.stretch>.99&&state.koala.call>.1);
 });
 test('入夜时鸟先落稳再睡，点睡鸟有回应；考拉夜里吃叶，白天偶尔小睡',()=>{

@@ -2,13 +2,13 @@
 
 [中文](README.md) · **English**
 
-Spring Garden v0.5.3 rebuilds the original animal game as a quiet 3D world for young children and their families. Tap an animal or drag the map and explore at your own pace. There are no scores or levels to beat.
+Spring Garden v0.5.4 rebuilds the original animal game as a quiet 3D world for young children and their families. Tap an animal or drag the map and explore at your own pace. There are no scores or levels to beat.
 
 **[Play online](https://marquis-chan.github.io/spring-garden/)** · **[Download for offline play](https://github.com/Marquis-Chan/spring-garden/releases/latest/download/spring-garden.html)** · [Release history](https://github.com/Marquis-Chan/spring-garden/releases)
 
 ## What to explore
 
-- Drag a continuous map and visit eleven habitats: the pond, grove, orchard, savanna, riverbank, Asian woodland, rainforest, coast, ice shore, ocean and eucalyptus grove.
+- Drag a continuous map and visit twelve habitats: the pond, grove, orchard, savanna, riverbank, Asian woodland, rainforest, coast, ice shore, ocean, eucalyptus grove and bamboo grove.
 
 - Watch tadpoles find the frog, tap the orchard rabbits, or see a toucan and a sloth reach for the same berry.
 
@@ -18,7 +18,7 @@ The offline edition is a single HTML file. Open it in a modern browser with WebG
 
 Meet crabs and silver fish in the penguin tidepool, or invite a polar bear out of its ice cave.
 
-v0.5.3 adds a young crocodile, a koala and silvereye in a eucalyptus grove, and a blue-and-yellow macaw in the rainforest.
+v0.5.4 adds a panda mother and two cubs, a red-necked wallaby with her joey, and a bare-nosed wombat.
 
 ## Classic edition
 
@@ -37,4 +37,4 @@ npm run build
 
 The build produces `animal-kingdom/动物王国.html`.
 
-Original code and art are [MIT licensed](LICENSE). Recordings retain their individual licenses, including the non-commercial restriction on the duckling clip. See the [Animal Kingdom audio credits](animal-kingdom/THIRD_PARTY_NOTICES.md).
+Original code and art are [MIT licensed](LICENSE). Recordings retain their individual licenses, including the non-commercial restrictions on the duckling and wombat clips. See the [Animal Kingdom audio credits](animal-kingdom/THIRD_PARTY_NOTICES.md).

@@ -3,6 +3,7 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {branch} from './grove-diorama.js';
 import {group,mesh,tube} from './savanna-actors.js';
 import {makeKoala,makeSilvereye} from './eucalyptus-actors.js';
+import {makeGumGround} from './gum-ground.js';
 import {createEucalyptus,gumOrigin,gumPerches} from './eucalyptus-state.js';
 export {createEucalyptus} from './eucalyptus-state.js';
 
@@ -171,9 +172,11 @@ export function makeEucalyptusDiorama(scene){
  });
  const grip=V(),lips=V(),restTip=V(.63,.66,.48),tip=V(),delta=V(),direction=V(),forward=V(0,0,1);
  const silver=makeSilvereye(root),birdFace=silver.root.getObjectByName('Bird head');
- const hints={koala:adult.root,silvereye:silver.root,'gum-leaves':buds,'gum-bough':perch};
- const click={koala:adult.face,silvereye:birdFace,'gum-leaves':buds,'gum-bough':boughPoint};
+ const ground=makeGumGround(root);
+ const hints={koala:adult.root,silvereye:silver.root,'gum-leaves':buds,'gum-bough':perch,...ground.hints};
+ const click={koala:adult.face,silvereye:birdFace,'gum-leaves':buds,'gum-bough':boughPoint,...ground.points};
  function tick(state){
+  ground.tick(state.ground);
   const k=state.koala,b=state.bird,t=state.time;
   hinge.rotation.z=state.bough.angle;
   adult.pose(state,grip);

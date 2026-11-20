@@ -67,3 +67,11 @@ Nile crocodile: T. Chabert et al., Scientific Reports 5 (2015), supplementary au
 Koala: B. D. Charlton et al., PLOS ONE (2011), Movie S1, Andy at Lone Pine Koala Sanctuary, 11.68–14.76 s. CC BY. https://doi.org/10.1371/journal.pone.0020329.s001
 Blue-and-yellow macaw (Ara ararauna): Hans Lütgens, Museum für Naturkunde Berlin, Tierstimmenarchiv TSA:Ara_ararauna_Lue_54_2_1, 9.35–12.43 s. Adapted recording licensed CC BY-SA 3.0 DE https://creativecommons.org/licenses/by-sa/3.0/de/ . https://suche.tierstimmenarchiv.de/search/showdetails.html?unique_identifier=TSA:Ara_ararauna_Lue_54_2_1
 Silvereye (Zosterops lateralis): Crown Copyright, Department of Conservation (NZ), CC BY 4.0 https://creativecommons.org/licenses/by/4.0/ . https://www.doc.govt.nz/footer-links/copyright/ . Silvereye/wax-eye song, Apple Valley Road, Nelson, 3.07–6.15 s. https://www.doc.govt.nz/nature/native-animals/birds/bird-songs-and-calls/
+
+## v0.5.4 recordings
+
+- Giant panda (Ailuropoda melanoleuca), approximately two-year-old female waiting for food. Günter Tembrock, Tierstimmenarchiv, Museum für Naturkunde Berlin. TSA:Ailuropoda_melanoleuca_S_43_1_1. Excerpts 15.45–16.18, 28.46–29.22 and 36.60–37.45 s, pauses shortened, original pitch, filtered, levelled and faded. Original and adapted panda.wav: CC BY-SA 3.0 https://creativecommons.org/licenses/by-sa/3.0/ . https://suche.tierstimmenarchiv.de/search/showdetails.html?unique_identifier=TSA:Ailuropoda_melanoleuca_S_43_1_1&language=english
+
+- Bare-nosed wombat (Vombatus ursinus), juvenile. katyw, iNaturalist observation 143496235, recording 569304 in New South Wales. Original and adapted wombat.wav: CC BY-NC 4.0 https://creativecommons.org/licenses/by-nc/4.0/ . Excerpt 14.10–17.30 s, filtered, levelled and faded. https://www.inaturalist.org/observations/143496235
+
+- Grass rustle, not an animal call. "grass rustling.wav" by instinctual777, Freesound 636945. Original field recording of grass brushed by hand, excerpt 1.76–2.57 s, filtered, levelled and faded. CC0 1.0 https://creativecommons.org/publicdomain/zero/1.0/ . https://freesound.org/people/instinctual777/sounds/636945/

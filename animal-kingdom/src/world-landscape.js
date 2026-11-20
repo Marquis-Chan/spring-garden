@@ -20,7 +20,8 @@ export function worldSurfaceHeight(x,z){
 const trails=[
  [[4,3.5],[6.2,3.9],[8.9,5.6],[12.3,6.1],[14.8,7.9],[19.2,8.6],[22.8,9.2],[24.1,9.55]],
  [[10.8,-.2],[13.2,.9],[15.8,.3],[18.8,1.6],[23,1.7],[26.8,1.9],[30.4,1.15],[33.7,2.1]],
- [[30.9,8.6],[31.7,9.9],[33.8,11.1],[34.2,12.3]]
+ [[30.9,8.6],[31.7,9.9],[33.8,11.1],[34.2,12.3]],
+ [[18.8,1.6],[18.2,-1.8],[19.6,-4.1],[20.3,-6.4],[19.7,-8.6],[20.5,-10.3]]
 ];
 const segments=trails.flatMap(trail=>trail.slice(1).map(([x,z],i)=>{
  const [ax,az]=trail[i],dx=x-ax,dz=z-az;
@@ -65,7 +66,8 @@ export function makeWorldLandscape(scene){
  const along=306,across=160,xyz=[],colors=[],faces=[],c=new T.Color();
  for(let i=0;i<=along;i++){
   const x=mix(-32,87,i/along);
-  const north=-7.2+1.2*Math.sin(x*.24-.80)+.55*Math.sin(x*.59)-smooth(35,49,x)*22;
+  const bambooValley=14*Math.exp(-((x-19)**2)/96);
+  const north=-7.2+1.2*Math.sin(x*.24-.80)+.55*Math.sin(x*.59)-smooth(35,49,x)*22-bambooValley;
   const south=43+smooth(22,46,x)*20+.86*Math.cos(x*.29);
   for(let j=0;j<=across;j++){
    const z=mix(north,south,j/across);

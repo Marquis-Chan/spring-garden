@@ -1,4 +1,5 @@
 import {clamp,ease,mix} from './state.js';
+import {createGumGround} from './gum-ground-state.js';
 
 export const gumOrigin={x:29,y:.38,z:-1};
 export const gumPerches=[
@@ -9,6 +10,7 @@ const pulse=t=>Math.sin(Math.PI*clamp(t));
 const window=(time,a,b,c,d)=>ease(clamp((time-a)/(b-a)))*(1-ease(clamp((time-c)/(d-c))));
 
 export function createEucalyptus(emit=()=>{}){
+ const ground=createGumGround(emit);
  const koala={action:'rest',sleep:0,reach:0,pull:0,chew:0,stretch:0,call:0,watch:0,ears:0};
  const bird={x:0,y:0,z:0,yaw:0,flight:0,perch:0,night:false,sleep:0,age:0,journey:false,sing:0};
  const leaf={pluck:0,eaten:0},bough={angle:0};
@@ -27,11 +29,13 @@ export function createEucalyptus(emit=()=>{}){
   koala.action=action;age=0;flightInvited=false;return true;
  }
  function tap(kind){
+  if(['wallaby','wallaby-grass','wombat-den','wombat'].includes(kind)){ground.tap(kind);return;}
   if(kind==='silvereye'){
    if(night&&!bird.journey){emit({type:'silvereye-sleep'});return;}
    if(bird.journey||singAge<1.1)return;
    singAge=0;listenAge=0;emit({type:'silvereye-call'});
    if(koala.sleep<.6)emit({type:'koala-listen'});
+   ground.birdSong();
    return;
   }
   if(!['koala','gum-leaves','gum-bough'].includes(kind))return;
@@ -46,6 +50,7 @@ export function createEucalyptus(emit=()=>{}){
   if(!active)return;
   dt=clamp(dt,0,.05);if(!dt)return;
   night=Number(nightValue)>.55;bird.night=night;
+  ground.step(dt,night);
   time+=dt;age+=dt;singAge+=dt;listenAge+=dt;
   if(!night&&koala.action==='rest'){
    dayAwake+=dt;
@@ -85,5 +90,5 @@ export function createEucalyptus(emit=()=>{}){
   const listening=window(listenAge,0,.27,1.62,2.32)*(1-koala.sleep);
   koala.watch=listening;koala.ears=listening*pulse(listenAge/.47)+koala.stretch*.58;
  }
- return {koala,bird,leaf,bough,get time(){return time;},tap,step};
+ return {koala,bird,leaf,bough,ground,canTap:ground.canTap,get time(){return time;},tap,step};
 }

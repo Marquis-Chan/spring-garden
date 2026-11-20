@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#e7ebc8"><title>春日小花园 · 动物王国</title>
-<meta name="description" content="春日小花园的 3D 动物探索游戏：拖动连续大地图，走近十一处栖息地，和考拉、小鳄鱼、金刚鹦鹉一起玩。">
+<meta name="description" content="春日小花园的 3D 动物探索游戏：拖动连续大地图，走近十二处栖息地，发现熊猫一家、沙袋鼠母子和袋熊。">
 <style>/* CSS */</style>
 </head>
 <body>
@@ -32,7 +32,7 @@
   <div id="cloud-art" aria-hidden="true">
    <svg viewBox="0 0 184 92"><defs><linearGradient id="cloud-foam" x2="0" y2="1" gradientUnits="objectBoundingBox"><stop stop-color="#fffbed"/><stop offset="1" stop-color="#d6e5df"/></linearGradient></defs><path id="cloud-body" d="M6 61q0-23 26-23Q36 16 63 17 75 -1 97 12q21 3 26 26 31-7 47 8 13 16-1 31-8 9-32 9H38Q5 86 6 61Z" fill="url(#cloud-foam)" /><path d="M40 38q5-13 20-13m20-8q16-7 31 13" fill="none" stroke="#fffef2" stroke-width="5" opacity=".65" stroke-linecap="round"/></svg>
   </div>
-  <canvas id="stage" aria-label="动物王国，可向四周拖动，探索池塘、林缘、果园、草原、河岸、亚洲树林、桉树林、雨林、企鹅湾、冰岸和海底"></canvas>
+  <canvas id="stage" aria-label="动物王国，可向四周拖动，探索池塘、林缘、果园、草原、河岸、亚洲树林、竹林、桉树林、雨林、企鹅湾、冰岸和海底"></canvas>
   <div id="atlas-waymarks" role="group" aria-label="大地图上的场景入口"></div>
   <div id="sleep-mark" aria-hidden="true" hidden><span>Z</span><span>z</span><span>z</span></div>
   <div id="sky-hand">
@@ -77,6 +77,9 @@
    <button type="button" id="enter-eucalyptus" class="waymark" aria-label="走近考拉的桉树林" hidden>
     <svg viewBox="0 0 44 44" aria-hidden="true"><g fill="#849b95" stroke="#607d75" stroke-width="1.4"><circle cx="9" cy="16" r="7"/><circle cx="35" cy="16" r="7"/><ellipse cx="22" cy="23" rx="13.5" ry="12"/></g><ellipse cx="22" cy="28" rx="7" ry="5" fill="#e1e5cb"/><g fill="#344747"><circle cx="16" cy="22" r="1.6"/><circle cx="28" cy="22" r="1.6"/><path d="M22 20c2.7 0 4 5 4 7.2 0 2.5-8 2.5-8 0 0-2.2 1.3-7.2 4-7.2z"/></g></svg>
    </button>
+   <button type="button" id="enter-bamboo" class="waymark" aria-label="走近三只大熊猫的竹林" hidden>
+    <svg viewBox="0 0 44 44" aria-hidden="true"><g fill="#394944"><circle cx="10" cy="11" r="6.5"/><circle cx="34" cy="11" r="6.5"/></g><ellipse cx="22" cy="23" rx="16" ry="14" fill="#fff5df" stroke="#968f70" stroke-width="1.4"/><g fill="#394944"><ellipse cx="15.2" cy="21" rx="4.6" ry="6" transform="rotate(30 15.2 21)"/><ellipse cx="28.8" cy="21" rx="4.6" ry="6" transform="rotate(-30 28.8 21)"/><path d="M18.5 27q3.5-2 7 0-.5 3-3.5 3.5-3-.5-3.5-3.5"/></g><g fill="#fff5df"><circle cx="16.3" cy="20" r="1.2"/><circle cx="27.7" cy="20" r="1.2"/></g></svg>
+   </button>
    <button type="button" id="overview" class="waymark" aria-label="回到全景" hidden>
      <svg viewBox="0 0 40 40" aria-hidden="true"><path fill="#7c9d62" d="M6 26c2-4 6-4 9-7 4-5 10-6 13-3 4 2 7 4 7 9 0 4-5 8-13 9-8 1-17-1-16-8Z"/><path fill="#7bb8b4" d="M19 25c0 3-5 6-8 4-4-3 5-9 8-4Z"/><path fill="#557c52" d="M28 22h-2v-5l-5 2 6-10 7 10-6-2z"/><path d="M20 29c3-4 5-3 7-7" stroke="#f0d7a0" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
    </button>
@@ -114,4 +117,7 @@ Koala: B. D. Charlton et al., PLOS ONE (2011), Movie S1, Andy at Lone Pine Koala
 Blue-and-yellow macaw (Ara ararauna): Hans Lütgens, Museum für Naturkunde Berlin, Tierstimmenarchiv TSA:Ara_ararauna_Lue_54_2_1, 9.35–12.43 s. Adapted recording licensed CC BY-SA 3.0 DE https://creativecommons.org/licenses/by-sa/3.0/de/ . https://suche.tierstimmenarchiv.de/search/showdetails.html?unique_identifier=TSA:Ara_ararauna_Lue_54_2_1
 Silvereye (Zosterops lateralis): Crown Copyright, Department of Conservation (NZ), CC BY 4.0 https://creativecommons.org/licenses/by/4.0/ . https://www.doc.govt.nz/footer-links/copyright/ . Silvereye/wax-eye song, Apple Valley Road, Nelson, 3.07–6.15 s. https://www.doc.govt.nz/nature/native-animals/birds/bird-songs-and-calls/ -->
 <!-- Polar bear (Ursus maritimus), Günter Tembrock, Tierstimmenarchiv, Museum für Naturkunde Berlin, 1993-01-30. TSA:Ursus_maritimus_V_1879_17_2. https://suche.tierstimmenarchiv.de/search/showdetails.html?unique_identifier=TSA:Ursus_maritimus_V_1879_17_2 . Source and adapted polar-bear.wav: CC BY-SA 3.0 https://creativecommons.org/licenses/by-sa/3.0/ . Original-pitch excerpt 7.76–10.34 s, band-limited, noise reduced, normalized and faded. -->
+<!-- Giant panda (Ailuropoda melanoleuca), approximately two-year-old female waiting for food. Günter Tembrock, Tierstimmenarchiv, Museum für Naturkunde Berlin. TSA:Ailuropoda_melanoleuca_S_43_1_1. Excerpts 15.45–16.18, 28.46–29.22 and 36.60–37.45 s, pauses shortened, original pitch, filtered, levelled and faded. Original and adapted panda.wav: CC BY-SA 3.0 https://creativecommons.org/licenses/by-sa/3.0/ . https://suche.tierstimmenarchiv.de/search/showdetails.html?unique_identifier=TSA:Ailuropoda_melanoleuca_S_43_1_1&language=english -->
+<!-- Bare-nosed wombat (Vombatus ursinus), juvenile. katyw, iNaturalist observation 143496235, recording 569304 in New South Wales. Original and adapted wombat.wav: CC BY-NC 4.0 https://creativecommons.org/licenses/by-nc/4.0/ . Excerpt 14.10–17.30 s, filtered, levelled and faded. https://www.inaturalist.org/observations/143496235 -->
+<!-- Grass rustle, not an animal call. "grass rustling.wav" by instinctual777, Freesound 636945. Original field recording of grass brushed by hand, excerpt 1.76–2.57 s, filtered, levelled and faded. CC0 1.0 https://creativecommons.org/publicdomain/zero/1.0/ . https://freesound.org/people/instinctual777/sounds/636945/ -->
 <script>/* AUDIO */</script><script>/* GAME */</script></body></html>
