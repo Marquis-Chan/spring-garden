@@ -1,5 +1,5 @@
 export const sceneCues = {
-  eucalyptus: [{kind:'wallaby'}, {kind:'gum-leaves'}, {kind:'wallaby-grass'}, {kind:'silvereye'}, {kind:'gum-bough'}, {kind:'wombat-den'}, {kind:'wombat'}, {kind:'koala'}],
+  eucalyptus: [{kind:'wallaby'}, {kind:'gum-leaves'}, {kind:'wallaby-grass'}, {kind:'silvereye'}, {kind:'gum-bough'}, {kind:'hedgehog-den'}, {kind:'hedgehog'}, {kind:'koala'}],
   bamboo: [{kind:'panda-bamboo'}, {kind:'panda-slope'}, {kind:'panda-mother'}, {kind:'panda-left'}, {kind:'panda-right'}],
   pond: [{kind:'duckling',index:0}, {kind:'site'}],
   ice: [{kind:'ice-fish'}, {kind:'ice-cave'}, {kind:'polar-bear'}],

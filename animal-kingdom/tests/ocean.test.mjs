@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {Mesh,Raycaster,Scene,Vector3} from 'three';
+import {Mesh,OrthographicCamera,Raycaster,Scene,Vector3} from 'three';
+import {placeCamera,viewFor} from '../src/map-view.js';
 import {makeOceanDiorama} from '../src/ocean-diorama.js';
 import {createOcean,oceanPoints} from '../src/ocean-state.js';
 
@@ -163,4 +164,32 @@ test('海豚、鲨鱼和小丑鱼的背鳍整个根部嵌进躯干，鳍尖露�
    assert.ok(i<18?point.y<top-.005:point.y>top+.025,name+' 的鳍根和鳍尖');
   }
  }
+});
+
+test('宽屏和窄屏都为转弯后抬起的鲸尾留出完整画幅',()=>{
+ const water=makeOceanDiorama(new Scene()),sea=createOcean(),point=new Vector3(),screen=new Vector3();
+ const fins=water.actors.whale.root.getObjectsByProperty('name','有缺口的水平尾叶');
+ assert.equal(fins.length,2);
+ const views=[[1440,830],[390,735],[740,360]].map(([width,height])=>{
+  const camera=new OrthographicCamera(),ratio=width/height;
+  placeCamera(camera,viewFor('ocean',ratio),ratio);
+  return {height,camera,margin:Infinity};
+ });
+ for(let i=0;i<2100;i++){
+  sea.step(1/30,true);
+  if(i%135===15)sea.tap('whale');
+  if(i%5)continue;
+  water.tick(sea,0);water.actors.whale.root.updateWorldMatrix(true,true);
+  for(const fin of fins){
+   const positions=fin.geometry.attributes.position;
+   for(let j=0;j<positions.count;j++){
+    point.fromBufferAttribute(positions,j).applyMatrix4(fin.matrixWorld);
+    for(const view of views){
+     screen.copy(point).project(view.camera);
+     view.margin=Math.min(view.margin,(1-screen.y)*view.height/2);
+    }
+   }
+  }
+ }
+ for(const view of views)assert.ok(view.margin>6,`鲸尾离顶边只剩 ${view.margin.toFixed(1)} 像素`);
 });

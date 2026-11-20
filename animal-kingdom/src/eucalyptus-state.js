@@ -1,4 +1,4 @@
-import {clamp,ease,mix} from './state.js';
+import {sleepStep, clamp,ease,mix} from './state.js';
 import {createGumGround} from './gum-ground-state.js';
 
 export const gumOrigin={x:29,y:.38,z:-1};
@@ -21,7 +21,7 @@ export function createEucalyptus(emit=()=>{}){
  placeBird(home.x,home.y,home.z);bird.yaw=home.yaw;
  function fly(){
   if(night||bird.journey)return;
-  from=bird.perch;to=1-from;flightAge=0;bird.journey=true;bird.sleep=0;
+  from=bird.perch;to=1-from;flightAge=0;bird.journey=true;
   emit({type:'silvereye-flight',perch:to});
  }
  function begin(action){
@@ -29,7 +29,7 @@ export function createEucalyptus(emit=()=>{}){
   koala.action=action;age=0;flightInvited=false;return true;
  }
  function tap(kind){
-  if(['wallaby','wallaby-grass','wombat-den','wombat'].includes(kind)){ground.tap(kind);return;}
+  if(['wallaby','wallaby-grass','hedgehog-den','hedgehog'].includes(kind)){ground.tap(kind);return;}
   if(kind==='silvereye'){
    if(night&&!bird.journey){emit({type:'silvereye-sleep'});return;}
    if(bird.journey||singAge<1.1)return;
@@ -57,7 +57,7 @@ export function createEucalyptus(emit=()=>{}){
    if(dayAwake>=37){dayAwake=0;dayRest=6;}
   }else if(night){dayRest=0;dayAwake=0;}
   dayRest=Math.max(0,dayRest-dt);
-  drowse=mix(drowse,Number(dayRest>0),1-Math.exp(-4*dt));
+  drowse=sleepStep(drowse,dayRest>0,dt);
   koala.sleep=drowse;
   const feeding=koala.action==='feed',rocking=koala.action==='rock',calling=koala.action==='call';
   koala.reach=feeding?window(age,0,.57,3.23,3.77):0;
@@ -86,7 +86,7 @@ export function createEucalyptus(emit=()=>{}){
    bird.flight=window(t,0,.13,.85,1);
    if(t===1){bird.journey=false;bird.perch=to;bird.yaw=b.yaw;emit({type:'silvereye-land',perch:to});}
   }
-  bird.sleep=mix(bird.sleep,Number(night&&!bird.journey),1-Math.exp(-5*dt));
+  bird.sleep=sleepStep(bird.sleep,night&&!bird.journey,dt);
   const listening=window(listenAge,0,.27,1.62,2.32)*(1-koala.sleep);
   koala.watch=listening;koala.ears=listening*pulse(listenAge/.47)+koala.stretch*.58;
  }

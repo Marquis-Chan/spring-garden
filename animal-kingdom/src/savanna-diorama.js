@@ -1,5 +1,6 @@
 import * as T from 'three';
 import {branch,crownGeometry,pathStrip} from './grove-diorama.js';
+import {browseLeafTip,savannaWaterArc} from './savanna-state.js';
 
 const clay=(color,roughness=.83,extra={})=>new T.MeshStandardMaterial({color,roughness,...extra});
 const soft=new T.SphereGeometry(1,24,14),small=new T.SphereGeometry(1,12,9);
@@ -70,20 +71,28 @@ function feedingTree(root,positions){
  return positions.map((p,i)=>{
   const x=i===0?17.24:20.62,z=i===0?3.32:3.42;
   acacia(root,x,i===0?3.34:3.89,z,i===0?.74:1);
-  const side=i===0?-.36:.38;
-  const tip=[p.x+side,i===0?3.49:3.17,p.z-.20];
-  const bend=i===0?[17.97,3.43,p.z-.96]:[p.x+.64,3.20,p.z-.76];
+  const side=i===0?-1:1;
+  const tip=[p.x+side*.62,p.y+.34,p.z-.26];
+  const bend=i===0?[17.97,p.y+.38,p.z-1.04]:[p.x+.75,p.y+.38,p.z-.96];
   // 左右两棵树从脸外侧递来枝叶，鹿耳后面留出完整的天空。
   branch(root,[[x-.04,i===0?2.49:2.75,z],[x+.36,i===0?2.86:3.12,z+.24],bend,tip],.094,.019);
-  const bud=[tip[0]+side*.98,tip[1]+.19,tip[2]-.18];
+  const bud=[tip[0]+side*.35,tip[1]+.19,tip[2]-.18];
   branch(root,[[(tip[0]+bend[0])*.5,(tip[1]+bend[1])*.5,(tip[2]+bend[2])*.5],bud],.024,.007);
-  for(const [n,k] of [[-1,.65],[0,1.02],[1,1.52]])leaf(root,bud[0]+n*.076,bud[1]+n*.022,bud[2]+Math.abs(n)*.035,k*side*2,.13,leaves[(n+2+i)%4]);
-  const stalkSide=side*(i===0?.79:.37);
-  const twig=branch(root,[tip,[p.x+side*(i===0?1.17:.85),p.y+.17,p.z+.06],
-   [p.x+stalkSide,p.y+.088,p.z+.195]],.016,.005);
-  const cluster=group(root,p.x,p.y,p.z);
-  const blades=Array.from({length:3},(_,n)=>leaf(cluster,(n-1)*.096,-.029+n*.025,.032*n,1.07+n*.58,.126,leaves[(n+i)%4]));
-  leaf(cluster,stalkSide*.78,.069,.144,side*.95,.128,leaves[i]);
+  for(const [n,k] of [[-1,.65],[0,1.02],[1,1.52]])leaf(root,bud[0]+n*.076,bud[1]+n*.022,bud[2]+Math.abs(n)*.035,k*side,.13,leaves[(n+2+i)%4]);
+  const hinge=new T.Vector3(p.x+side*.46,p.y+.20,p.z-.08);
+  const twig=branch(root,[tip,[p.x+side*.52,p.y+.29,p.z-.16],hinge.toArray()],.023,.012);
+  const cluster=group(root,hinge.x,hinge.y,hinge.z);
+  const blades=Array.from({length:3},(_,n)=>{
+   const target=browseLeafTip(i,n);
+   const end=new T.Vector3(target.x,target.y,target.z).sub(hinge);
+   const from=new T.Vector3(-side*(.03+.023*n),-.04*n,(n-1)*.025);
+   const base=from.clone().lerp(end,.33);
+   branch(cluster,[[0,0,0],from.toArray(),base.toArray()],.009,.004);
+   const center=base.clone().lerp(end,.5),axis=end.clone().sub(base);
+   const blade=add(cluster,'可吃的嫩叶',small,leaves[(n+i)%4],center.x,center.y,center.z,[.096,.023,axis.length()*.5],false);
+   blade.quaternion.setFromUnitVectors(new T.Vector3(0,0,1),axis.normalize());
+   return blade;
+  });
   return {cluster,blades,twig};
  });
 }
@@ -103,13 +112,13 @@ function grassesOnRock(root,p){
 }
 function setSparkles(bundle,source,spray,age){
  for(const [i,m] of bundle.entries()){
-  const q=(age-i*.017)/.43;
+  const q=(age-i*.017)/savannaWaterArc.flight;
   m.visible=q>=0&&q<=1;
   if(!m.visible)continue;
   const origin=spray.origins[i]??=source.clone(),destination=spray.to;
   const bend=Math.sin(Math.PI*q);
   m.position.set(T.MathUtils.lerp(origin.x,destination.x,q)+Math.sin(i*1.85)*.11*q,
-   T.MathUtils.lerp(origin.y,destination.y,q)+.61*bend,
+   T.MathUtils.lerp(origin.y,destination.y,q)+savannaWaterArc.height*bend,
    T.MathUtils.lerp(origin.z,destination.z,q)+Math.cos(i*1.44)*.075*q);
   m.scale.set(.042,.055+.022*bend,.042);
  }
@@ -192,7 +201,7 @@ export function makeSavannaDiorama(scene,points){
    }
    for(const [i,node] of treeLeaves.entries()){
     const afterTap=time-leafSelectedAt[i];
-    node.cluster.rotation.x=model.leaves[i].bend*.61+Math.sin(afterTap*24)*Math.max(0,1-afterTap*3)*.19;
+    node.cluster.rotation.x=model.leaves[i].bend*.48+Math.sin(afterTap*24)*Math.max(0,1-afterTap*3)*.16*(1-model.giraffe.browse);
     node.blades.forEach((blade,n)=>{blade.visible=n<model.leaves[i].remaining;});
    }
    const rippleAge=time-scoopAt;

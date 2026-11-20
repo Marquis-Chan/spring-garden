@@ -334,14 +334,14 @@ export function makeButterfly(T) {
     }
   }
 
-  function pose({ time = 0, flap = 0, flight = 0, perch = null } = {}) {
+  function pose({ time = 0, flap = 0, flight = 0, perch = null, sleep = 0 } = {}) {
     const landed = perch == null ? 0 : 1 - flight;
     body.position.y = Math.sin(time * 9) * flight * 0.007;
     body.rotation.x = flight * -0.13;
     for (const { sign, hinge } of wings) {
       const quietWing = flap * 0.25 * landed;
       hinge.rotation.set(flight * 0.10, sign * (0.04 + landed * 0.09),
-        sign * (0.17 + landed * 0.67 + flight * flap * 0.89 + quietWing));
+        sign * (0.17 + landed * (0.67 + sleep * .56) + flight * flap * 0.89 + quietWing));
     }
   }
 

@@ -77,6 +77,12 @@ async function check(width,height){
    assert.equal(tracks.length,1,id+' 不应误触或在熟睡时再叫');
    assert.ok(tracks[0].seconds>=3&&tracks[0].rms>.07&&tracks[0].rms<.12,id+' 叫声的时长和音量');
   }
+  await wait(()=>window.pondInspect().rainforest.macaw.sleep>.98);
+  await click('#sun');await animal('rainforest','macaw');
+  const waking=(await read()).rainforest.macaw;
+  if(waking.sleep>.20)assert.notEqual(waking.action,'flight','鹦鹉还蜷着头时先记住点击');
+  await wait(()=>window.pondInspect().rainforest.events.some(e=>e.type==='macaw-takeoff'));
+  assert.ok((await read()).rainforest.macaw.sleep<=.20,'睁眼后再应点起飞');
   assert.deepEqual(errors,[]);
   console.log(JSON.stringify({width,height,clips,errors}));
  }catch(error){await page.screenshot({path:path.join(output,width+'-failure.png')});throw error;}

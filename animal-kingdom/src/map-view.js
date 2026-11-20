@@ -115,17 +115,18 @@ export function viewFor(mode,ratio) {
  if(mode==='rainforest')return {
   x:mix(36.89,36.95,portrait),y:mix(1.79,1.67,portrait),z:mix(.19,.30,portrait),
   height:Math.max(6.65,mix(11.35,7.55,portrait)/ratio),
-  azimuth:mix(-.065,-.14,portrait),elevation:mix(.18,.29,portrait)
+  azimuth:mix(-.065,-.14,portrait),elevation:mix(.18,.29,portrait)+Math.PI/18
  };
  if(mode==='coast')return {
   x:mix(36.77,36.70,portrait),y:mix(1.33,1.39,portrait),z:14.15,
   height:Math.max(6.69,mix(10.6,7.85,portrait)/ratio),
-  azimuth:mix(-.08,-.10,portrait),elevation:mix(.28,.45,portrait)
+  azimuth:mix(-.08,-.10,portrait),elevation:mix(.28,.45,portrait)+Math.PI/9
  };
  if(mode==='ocean')return {
-  x:54.8,y:2.16,z:16.10,
-  height:Math.max(6.55,mix(11.5,8.85,portrait)/ratio),
-  azimuth:mix(-.021,-.08,portrait),elevation:mix(.12,.22,portrait)
+  // 高角度下鲸尾上扬会贴近宽屏上沿，少量拉远并抬高中心，保留海星脚下的礁石。
+  x:54.8,y:mix(2.79,2.16,portrait),z:16.10,
+  height:Math.max(7.40,mix(11.5,8.85,portrait)/ratio),
+  azimuth:mix(-.021,-.08,portrait),elevation:mix(.12,.22,portrait)+Math.PI/9
  };
  if(mode==='ice')return {
   x:43.7,y:1.13,z:22.45,height:Math.max(6.85,mix(10.8,8.75,portrait)/ratio),

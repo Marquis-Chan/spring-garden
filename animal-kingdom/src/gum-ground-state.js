@@ -3,7 +3,7 @@ import {clamp,ease,mix} from './state.js';
 export const wallabyHome={x:1.42,z:1.40};
 export const wallabyStop={x:.48,z:2.48};
 export const grazingTuft={x:-.10,z:2.85};
-export const wombatDoor={x:-1.72,z:1.26,yaw:.26};
+export const hedgehogDoor={x:-1.72,z:1.26,yaw:.26};
 const pulse=t=>Math.sin(Math.PI*clamp(t));
 const frame=(t,a,b,c,d)=>ease((t-a)/(b-a))*(1-ease((t-c)/(d-c)));
 const follow=(value,target,dt,speed=8)=>mix(value,target,1-Math.exp(-speed*dt));
@@ -11,21 +11,21 @@ const follow=(value,target,dt,speed=8)=>mix(value,target,1-Math.exp(-speed*dt));
 export function createGumGround(emit){
  const wallaby={...wallabyHome,action:'rest',site:0,yaw:-.94,up:0,tuck:0,nibble:0,peek:0,look:0,ears:0};
  const grass={height:1,bend:0};
- const wombat={action:'den',dist:-1.08,turn:0,feet:0,bite:0,visible:false,night:false};
+ const hedgehog={action:'stir',dist:-1.08,turn:0,feet:0,bite:0,preyHidden:false,visible:false,night:false};
  let time=0,age=0,night=false,listen=9,pouch=10,regrow=10,linger=0,depart=0,to=0,phaseAge=0;
- let queuedFeed=false,queuedPouch=false,previousDist=wombat.dist;
+ let sleepAtDen=false,queuedFeed=false,queuedPouch=false,previousDist=hedgehog.dist;
  function act(action){wallaby.action=action;age=0;}
  function hop(site){
   if(wallaby.site===site){act('feed');return;}
   to=site;act('hop');emit({type:'wallaby-hop',site});
  }
  function birdSong(){listen=0;emit({type:'wallaby-listen'});}
- function canTap(kind){return kind!=='wombat'||(wombat.visible&&wombat.dist>-.59);}
- function settleWombat(action){depart=wombat.dist;phaseAge=0;wombat.action=action;}
+ function canTap(kind){return kind!=='hedgehog'||(hedgehog.visible&&hedgehog.dist>-.41);}
+ function settleHedgehog(action){depart=hedgehog.dist;phaseAge=0;hedgehog.action=action;}
  function comeOut(){
-  if(wombat.action==='peek'||wombat.action==='stir'||wombat.action==='den'){
-   settleWombat('out');emit({type:'wombat-emerge'});
-  }else if(wombat.action==='graze'){settleWombat('home-turn');emit({type:'wombat-return'});}
+  if(hedgehog.action==='peek'||hedgehog.action==='stir'||hedgehog.action==='den'){
+   settleHedgehog('out');emit({type:'hedgehog-emerge'});
+  }else if(hedgehog.action==='forage'){settleHedgehog('home-turn');emit({type:'hedgehog-return'});}
  }
  function tap(kind){
   if(kind==='wallaby'){
@@ -37,8 +37,11 @@ export function createGumGround(emit){
    if(wallaby.action==='hop'){queuedFeed=true;return;}
    hop(1);return;
   }
-  if(kind==='wombat'||kind==='wombat-den'){
-   if(!night){emit({type:'wombat-den-sleep'});return;}
+  if(kind==='hedgehog'||kind==='hedgehog-den'){
+   if(night){
+    if(hedgehog.action==='den')emit({type:'hedgehog-den-sleep'});else sleepAtDen=true;
+    return;
+   }
    comeOut();
   }
  }
@@ -83,34 +86,36 @@ export function createGumGround(emit){
   if(w.action==='hop'||w.nibble>.38)targetPeek=0;
   w.peek=follow(w.peek,targetPeek,dt);
   if(regrow>3.3)grass.height=follow(grass.height,1,dt,.85);
-  const b=wombat;
+  const b=hedgehog;
   if(b.night!==night){
    b.night=night;
-   if(night&&b.action==='den')settleWombat('stir');
-   if(!night&&['out','graze'].includes(b.action)){settleWombat('home-turn');}
-   else if(!night&&['peek','stir'].includes(b.action))settleWombat('hide');
+   if(!night){sleepAtDen=false;if(b.action==='den')settleHedgehog('stir');}
+   else if(['out','forage'].includes(b.action)){settleHedgehog('home-turn');}
+   else if(['peek','stir'].includes(b.action))settleHedgehog('hide');
   }
   previousDist=b.dist;b.bite=0;
   if(b.action==='stir'){
-   if(phaseAge>.64){settleWombat('peek');emit({type:'wombat-peek'});}
+   if(phaseAge>.92){settleHedgehog('peek');emit({type:'hedgehog-peek'});}
   }else if(b.action==='peek'){
-   b.dist=mix(depart,-.38,ease(phaseAge/1.05));
+   b.dist=mix(depart,-.17,ease(phaseAge/1.70));
   }else if(b.action==='out'){
    b.dist=mix(depart,1.28,ease(phaseAge/2.3));
-   if(phaseAge>=2.3){settleWombat('graze');emit({type:'wombat-graze'});}
-  }else if(b.action==='graze'){
+   if(phaseAge>=2.3){settleHedgehog('forage');emit({type:'hedgehog-forage'});}
+  }else if(b.action==='forage'){
    b.bite=frame(phaseAge,0,.50,3.1,3.8);
-   if(phaseAge>6){settleWombat('home-turn');emit({type:'wombat-return'});}
+   if(phaseAge>.88)b.preyHidden=true;
+   if(phaseAge>6){settleHedgehog('home-turn');emit({type:'hedgehog-return'});}
   }else if(b.action==='home-turn'){
    // 身体尚在洞内就倒退藏回，完全出了洞才转身，避开洞壁。
-   if(b.dist<.82){settleWombat('hide');}
-   else {b.turn=ease(phaseAge/.9);if(phaseAge>=.9)settleWombat('home');}
+   if(b.dist<.82){settleHedgehog('hide');}
+   else {b.turn=ease(phaseAge/.9);if(phaseAge>=.9)settleHedgehog('home');}
   }else if(b.action==='home'||b.action==='hide'){
-   b.dist=mix(depart,-1.08,ease(phaseAge/(b.action==='hide'?1.2:2.15)));
-   if(b.dist<=-1.079){b.dist=-1.08;b.turn=0;settleWombat(night?'stir':'den');}
+   b.dist=mix(depart,-1.08,ease(phaseAge/(b.action==='hide'?1.85:2.8)));
+   if(b.dist<=-1.079){b.dist=-1.08;b.turn=0;b.preyHidden=false;settleHedgehog(night?'den':'stir');
+    if(night&&sleepAtDen){sleepAtDen=false;emit({type:'hedgehog-den-sleep'});}}
   }
   b.visible=b.dist>-.97;
   b.feet+=Math.abs(b.dist-previousDist)*17+(b.action==='home-turn'?dt*7:0);
  }
- return {wallaby,wombat,grass,tap,step,canTap,birdSong,get time(){return time;}};
+ return {wallaby,hedgehog,grass,tap,step,canTap,birdSong,get time(){return time;}};
 }

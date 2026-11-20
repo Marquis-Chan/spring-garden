@@ -4,6 +4,10 @@ export const callPulses=[[.044,.356],[.827,1.134],[1.636,1.935]];
 export const clamp=(n,a=0,b=1)=>Math.min(b,Math.max(a,n));
 export const ease=t=>{t=clamp(t);return t*t*(3-2*t)};
 export const mix=(a,b,q)=>a+(b-a)*q;
+// 0 为完全清醒，1 为睡稳。中途再点日月，从当前姿势平顺反向。
+export function sleepStep(value, resting, dt){
+ return clamp(value+(resting?dt/2.4:-dt/1.8));
+}
 // 留出观察时间，点按触发的动作仍沿实际时间播放。
 export const idleDelay=seconds=>seconds*1.32;
 // 等待下一次自发活动和匀速巡游各自减半。跳跃、触碰和叫声继续使用真实时间。

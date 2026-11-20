@@ -70,7 +70,8 @@ async function play(width,height){
   await button('sun');
   await wait(night=>night?window.pondInspect().night>.94:window.pondInspect().night<.06,night);
  }
- async function idle(){await wait(()=>window.pondInspect().bamboo.play.phase==='idle');}
+ // 两只幼崽完成一轮翻滚接力需要近七秒游戏时间，软件渲染下仍须等两只均归位。
+ async function idle(){await page.waitForFunction(()=>window.pondInspect().bamboo.play.phase==='idle',null,{timeout:75000});}
  try{
   await page.goto(file);await wait(()=>window.pondInspect?.().ready);
   await enter('eucalyptus');await photo('family');
@@ -78,12 +79,13 @@ async function play(width,height){
   await tapFor('wallaby-grass','wallaby-graze');await captureSound('gum-grass');
   await wait(()=>window.pondInspect().eucalyptus.grass.height<.9);
   await tapFor('silvereye','wallaby-listen');await captureSound('silvereye');
-  await tapFor('wombat-den','wombat-den-sleep');
-  await wait(()=>!document.querySelector('#sleep-mark').hidden);
-  await sky(true);await wait(()=>window.pondInspect().eucalyptus.wombat.clickable);
-  await tapFor('wombat','wombat-emerge');await captureSound('wombat');
-  await wait(()=>window.pondInspect().eucalyptus.burrow.action==='graze');await photo('wombat');
-  await tapFor('wombat','wombat-return');await sky(false);
+  await wait(()=>window.pondInspect().eucalyptus.hedgehog.clickable);
+  await tapFor('hedgehog','hedgehog-emerge');await captureSound('hedgehog');
+  await wait(()=>window.pondInspect().eucalyptus.burrow.action==='forage');await photo('hedgehog');
+  await tapFor('hedgehog','hedgehog-return');await sky(true);
+  await wait(()=>window.pondInspect().eucalyptus.burrow.action==='den');
+  await tapFor('hedgehog-den','hedgehog-den-sleep');
+  await wait(()=>!document.querySelector('#sleep-mark').hidden);await sky(false);
   await enter('bamboo');await photo('bamboo');
   await tapFor('panda-mother','panda-call');await captureSound('panda');
   const greeting=(await read()).bamboo.events.filter(e=>e.type==='panda-call'||e.type==='panda-greeting').slice(-2);
@@ -92,7 +94,7 @@ async function play(width,height){
   await idle();
   await tapFor('panda-bamboo','panda-taste');
   const first=(await read()).bamboo.events.filter(e=>e.type==='panda-taste').at(-1).animal;
-  await photo('leaf');await idle();await tapFor('panda-bamboo','panda-taste');
+  await photo('leaf-left');await idle();await tapFor('panda-bamboo','panda-taste');await photo('leaf-right');
   assert.notEqual((await read()).bamboo.events.filter(e=>e.type==='panda-taste').at(-1).animal,first);
   await idle();
   await tapFor('panda-right','panda-roll-start');await wait(()=>window.pondInspect().bamboo['panda-right'].tuck>.7);

@@ -2,7 +2,7 @@
 
 [中文](README.md) · **English**
 
-Spring Garden v0.5.4 rebuilds the original animal game as a quiet 3D world for young children and their families. Tap an animal or drag the map and explore at your own pace. There are no scores or levels to beat.
+Spring Garden v0.5.5 rebuilds the original animal game as a quiet 3D world for young children and their families. Tap an animal or drag the map and explore at your own pace. There are no scores or levels to beat.
 
 **[Play online](https://marquis-chan.github.io/spring-garden/)** · **[Download for offline play](https://github.com/Marquis-Chan/spring-garden/releases/latest/download/spring-garden.html)** · [Release history](https://github.com/Marquis-Chan/spring-garden/releases)
 
@@ -18,7 +18,7 @@ The offline edition is a single HTML file. Open it in a modern browser with WebG
 
 Meet crabs and silver fish in the penguin tidepool, or invite a polar bear out of its ice cave.
 
-v0.5.4 adds a panda mother and two cubs, a red-necked wallaby with her joey, and a bare-nosed wombat.
+v0.5.5 refines panda feeding, savanna movement, day/night transitions and cameras, with updated scarlet macaw, hedgehog, mallard and polar bear recordings.
 
 ## Classic edition
 
@@ -37,4 +37,4 @@ npm run build
 
 The build produces `animal-kingdom/动物王国.html`.
 
-Original code and art are [MIT licensed](LICENSE). Recordings retain their individual licenses, including the non-commercial restrictions on the duckling and wombat clips. See the [Animal Kingdom audio credits](animal-kingdom/THIRD_PARTY_NOTICES.md).
+Original code and art are [MIT licensed](LICENSE). Recordings retain their individual licenses; source credits are maintained separately. Consult the current asset list; historical releases retain their original terms. See the [Animal Kingdom audio credits](animal-kingdom/THIRD_PARTY_NOTICES.md).

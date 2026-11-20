@@ -1,4 +1,4 @@
-import { aroundRock, clamp, idleClockRate, ease, idleTravelRate, mix, waterPoint } from './state.js';
+import {sleepStep,  aroundRock, clamp, idleClockRate, ease, idleTravelRate, mix, waterPoint } from './state.js';
 
 const duckWaterY = .025;
 const duckPath = { x: .44, z: -1.58, rx: 1.13, rz: .50 };
@@ -164,7 +164,7 @@ export function createPondYoung(emit = () => {}) {
       const facing = distance(before, duck) > .001 ? Math.atan2(duck.x - before.x, duck.z - before.z) : nest.yaw;
       const turning = mix(facing, nest.yaw, ease((age - .94) / .49));
       duck.yaw += angleDelta(duck.yaw, turning) * Math.min(1, dt * 10);
-      duck.sleep = ease((age - 1.08) / .58);
+      if(age>=1.08)duck.sleep=sleepStep(duck.sleep,true,dt);
       duck.swim = clamp(distance(before, duck) / Math.max(.001, dt * .96)) * (1 - duck.sleep);
     } else {
       const action = actions[index];
@@ -182,7 +182,7 @@ export function createPondYoung(emit = () => {}) {
       const facing = travel < .83 && distance(before, duck) > .001
         ? Math.atan2(duck.x - before.x, duck.z - before.z) : heading;
       duck.yaw += angleDelta(duck.yaw, facing) * Math.min(1, dt * 8.5);
-      duck.sleep = Math.max(0, duck.sleep - dt * 3.2);
+      duck.sleep=sleepStep(duck.sleep,false,dt);
       duck.swim = clamp(distance(before, duck) / Math.max(.001, dt * .87));
       if (!action && duck.follow > 0) {
         const leader = ducks[0];

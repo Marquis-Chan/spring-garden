@@ -162,7 +162,7 @@ test('入夜让正在飞的蜜蜂归巢、猫狗渐睡，苹果继续滚动入�
   assert.ok(orchard.dog.sleep > 0 && orchard.dog.sleep < 1);
   assert.ok(orchard.cat.sleep > 0 && orchard.cat.sleep < 1);
 
-  advance(2.4);
+  advance(3.1);
   assert.equal(orchard.dog.sleep, 1);
   assert.equal(orchard.cat.sleep, 1);
   assert.deepEqual(position(orchard.dog), atRest);
@@ -174,7 +174,7 @@ test('入夜让正在飞的蜜蜂归巢、猫狗渐睡，苹果继续滚动入�
 
   const chases = events.filter(event => event.type === 'dog-chase').length;
   orchard.setNight(false);
-  advance(.65);
+  advance(2.0);
   assert.equal(orchard.dog.sleep, 0);
   assert.equal(orchard.cat.sleep, 0);
   assert.deepEqual(orchard.bees.map(bee => bee.visible), [true, false]);
@@ -196,13 +196,15 @@ test('蝴蝶入夜完成在途飞行后停息，夜点只回应休息，天亮�
   advance(.70);
   assert.equal(orchard.butterfly.perch, 1);
   assert.deepEqual(position(orchard.butterfly), orchardPoints.butterfly[1]);
-  const restingTime = orchard.butterfly.time;
+  const startingFold = orchard.butterfly.sleep;
   orchard.tapButterfly();
   advance(.35);
   assert.equal(orchard.butterfly.perch, 1);
   assert.equal(orchard.butterfly.flight, 0);
-  assert.equal(orchard.butterfly.flap, 0);
-  assert.equal(orchard.butterfly.time, restingTime);
+  assert.ok(orchard.butterfly.sleep>startingFold&&orchard.butterfly.sleep<1);
+  advance(2.5);
+  assert.equal(orchard.butterfly.flap,0);
+  assert.equal(orchard.butterfly.sleep,1);
   assert.deepEqual(events.map(({ time, ...event }) => event), [
     { type: 'sleep', animal: 'butterfly' }, { type: 'sleep', animal: 'butterfly' }
   ]);
@@ -211,7 +213,9 @@ test('蝴蝶入夜完成在途飞行后停息，夜点只回应休息，天亮�
   orchard.tapButterfly();
   advance(1);
   assert.equal(orchard.butterfly.perch, 2);
-  assert.ok(orchard.butterfly.time > restingTime);
+  assert.ok(orchard.butterfly.sleep>0&&orchard.butterfly.sleep<1);
+  advance(1);
+  assert.equal(orchard.butterfly.sleep,0);
 });
 
 test('果园活跃时每种醒着的动物会安静移位，入夜后不再巡游', () => {
@@ -232,7 +236,7 @@ test('果园活跃时每种醒着的动物会安静移位，入夜后不再巡�
   assert.deepEqual(events, []);
 
   orchard.setNight(true);
-  advance(1.2, true);
+  advance(3, true);
   const rest = awake.map(position);
   advance(8, true);
   assert.deepEqual(awake.map(position), rest);

@@ -2,6 +2,7 @@ import * as T from 'three';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {group,mesh} from './savanna-actors.js';
 import {bambooKinds,bambooOrigin,createBamboo,hillHeight} from './bamboo-state.js';
+import {ease} from './state.js';
 import {makePanda} from './bamboo-pandas.js';
 export {bambooKinds,bambooOrigin,createBamboo} from './bamboo-state.js';
 
@@ -96,7 +97,7 @@ function hill(parent){
 }
 const Z=V(0,0,1),aim=V(),tip=V(),contact=V(),from=V(),to=V(),pA=V(),pB=V();
 function bambooShoot(root){
- const base=V(.25,.15,-.23),control=V(),grip=V(),shoulder=V(),end=V(),near=V(),lip=V();
+ const base=V(.73,.15,-.13),control=V(),grip=V(),shoulder=V(),end=V(),bud=V(),lip=V(),approach=V();
  const joints=group(T,root,'会弯的嫩竹'),bloom=group(T,joints,'可握住的竹梢');
  const segments=[];
  for(let i=0;i<22;i++){
@@ -112,13 +113,21 @@ function bambooShoot(root){
  function tick(state,pandas){
   const {play}=state,b=play.bend,t=state.time;
   const mother=pandas[0],cub=pandas[play.lead];
-  const arm=mother.arms[play.side===1?1:0];
+  const arm=mother.arms[1];
   root.worldToLocal(arm.paw.getWorldPosition(contact));
   root.worldToLocal(cub.lips.getWorldPosition(lip));
-  grip.set(.68,1.10,-.21).lerp(contact,state.bears[0].reach);
-  control.set(.58,.51,.04).lerp(from.set(contact.x,.58,contact.z+.13),b);
-  shoulder.set(.90,2.0,-.44).lerp(to.set(grip.x+.45*play.side,grip.y+.32,grip.z+.35),b);
-  end.set(.90+.043*Math.sin(t*.75),2.38,-.43).lerp(near.set(lip.x+.17*play.side,lip.y+.086,lip.z+.17),b);
+  // 先把竹梢压到母子之间的空地，再从幼崽胸前递进，收枝时退回同一路线。
+  const lower=ease(b/.55),offer=ease((b-.45)/.55);
+  const hand=cub.arms[play.side<0?1:0].paw;
+  root.worldToLocal(hand.localToWorld(bud.set(0,.20,.90)));
+  grip.set(.72,1.10,-.16).lerp(contact,state.bears[0].reach);
+  control.set(.73,.54,-.07).lerp(from.set(grip.x*.80,.55,grip.z+.18),state.bears[0].reach);
+  approach.set(0,lip.y-.20,lip.z+.33);
+  end.set(.92+.037*Math.sin(t*.75),2.32,-.13).lerp(approach,lower);
+  // 竹梢先在妈妈脸侧下降，低过下巴后才向两只幼崽之间横移。
+  end.x=(.92+.037*Math.sin(t*.75))*(1-ease((lower-.30)/.70));
+  end.lerp(bud,offer);
+  shoulder.set(.87,1.94,-.12).lerp(to.set(grip.x*.44,grip.y+.03,end.z+.24),lower);
   function position(u,out){
    if(u<.48){const f=u/.48;out.copy(base).multiplyScalar((1-f)**2).addScaledVector(control,2*(1-f)*f).addScaledVector(grip,f*f);}
    else{const f=(u-.48)/.52;out.copy(grip).multiplyScalar((1-f)**2).addScaledVector(shoulder,2*(1-f)*f).addScaledVector(end,f*f);}
@@ -128,13 +137,14 @@ function bambooShoot(root){
    aim.subVectors(pB,pA);stem.position.copy(pA).lerp(pB,.5);
    stem.scale.set(r,aim.length()+.006,r);stem.quaternion.setFromUnitVectors(Y,aim.normalize());
   }
-  bloom.position.copy(end);tip.set(.53,2.49,-.18).lerp(lip,b);
+  bloom.position.copy(end);
+  tip.copy(end).add(from.set(-.24,.15,.23)).lerp(lip,offer);
   aim.subVectors(tip,end);const len=aim.length();shootTip.quaternion.setFromUnitVectors(Z,aim.normalize());
-  shootTip.scale.set(.99-.72*play.bite,.14,len);shootTip.position.set(0,0,0);
+  shootTip.scale.set(.63-.44*play.bite,.09,len);shootTip.position.set(0,0,0);
   for(const [i,m] of bracts.entries()){
    const s=i%2?1:-1,short=1-.54*play.bite-.23*b;
    // 下垂的侧叶留在下巴下面，使熊猫衔住叶尖时仍看得见眼睛。
-   m.rotation.order='YXZ';m.rotation.set(-.17+1.14*b,s*(.78+.31*i)+.13*Math.sin(t*1.4+i),s*.25);
+   m.rotation.order='YXZ';m.rotation.set(-.17+1.29*lower,s*(.78+.20*i)*(1-.62*lower)+.08*Math.sin(t*1.4+i),s*.25);
    m.scale.set((1.13-.07*i)*short,.65,(.52-.067*i)*short);m.position.set(s*.024,0,-.026*i);
   }
  }

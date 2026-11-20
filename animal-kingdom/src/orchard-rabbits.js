@@ -1,4 +1,4 @@
-import { clamp, idleClockRate, ease, mix } from './state.js';
+import {sleepStep,  clamp, idleClockRate, ease, mix } from './state.js';
 
 export const rabbitCoats = [
   { back: '#bd885e', middle: '#e3bb94', belly: '#f6e6c9', leg: '#d2a27a', innerEar: '#dea391' },
@@ -220,7 +220,7 @@ export function createOrchardRabbits(emit = () => {}, { groundAt = () => .38 } =
       rabbit.time = time + rabbit.index * 1.3;
       rabbit.crouch = rabbit.air = rabbit.land = rabbit.listen = rabbit.lean = rabbit.nibble = rabbit.watch = 0;
       rabbit.peek = .50;
-      rabbit.sleep = clamp(rabbit.sleep + dt * (night && !hop ? 2.1 : -2.8));
+      rabbit.sleep = sleepStep(rabbit.sleep, night && !hop, dt);
       if (hop) {
         stepHop(rabbit, hop);
       } else if (heard[rabbit.index]) {

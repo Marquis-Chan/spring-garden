@@ -1,4 +1,4 @@
-import { clamp, idleClockRate, ease, idleDelay, mix } from './state.js';
+import {sleepStep,  clamp, idleClockRate, ease, idleDelay, mix } from './state.js';
 
 export const grovePoints = {
   grasses: [{ x: 8.6, y: .38, z: 1.25 }, { x: 12.2, y: .38, z: 1.5 }],
@@ -107,7 +107,6 @@ export function createGrove(emit = () => {}) {
     };
     birdMove = { perch, reason, from, to, approach, at: time };
     pendingPeck = false;
-    bird.sleep = 0;
     bird.flight = .18;
     bird.flap = .55;
     emit({ type: 'flight', phase: 'start', reason, ...from });
@@ -224,8 +223,8 @@ export function createGrove(emit = () => {}) {
   function stepBird(dt) {
     bird.look = pulse((time - lookAt) / .46);
     bird.flap = bird.flight = bird.peck = 0;
+    bird.sleep = sleepStep(bird.sleep,night&&!birdMove&&bird.perch!==null,dt);
     if (!birdMove) {
-      if (bird.perch !== null) bird.sleep = clamp(bird.sleep + (night ? dt / .50 : -dt / .36));
       if (bird.perch === null) {
         bird.yaw += turn(bird.yaw, bearing(bird, grasses[0])) * Math.min(1, dt * 12);
         const age=time-peckAt;

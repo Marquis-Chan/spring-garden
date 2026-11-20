@@ -2,8 +2,8 @@ import { blink, clay, closedShape, group, mesh, tube } from './savanna-actors.js
 
 const circle = Math.PI * 2;
 
-export function makeDuckling(T, { scale = 1, feather = '#eec665' } = {}) {
-  const root = group(T, null, '池塘幼鸭');
+export function makeDuckling(T, { scale = 1, adult = false, feather = '#eec665' } = {}) {
+  const root = group(T, null, adult ? '绿头鸭妈妈' : '池塘幼鸭');
   root.scale.setScalar(scale);
   const torso = group(T, root, '浮在水面的身体', [0, .119, 0]);
   const head = group(T, torso, '连着颈部的头', [0, .195, .151]);
@@ -15,17 +15,19 @@ export function makeDuckling(T, { scale = 1, feather = '#eec665' } = {}) {
   const velvet = clay(T, '#ffffff', .76, true);
   const down = clay(T, feather, .83);
   const butter = new T.Color(feather);
-  const cream = new T.Color('#f7dc8e');
-  const shadow = new T.Color('#cf993e');
+  const cream = new T.Color(adult?'#d4b993':'#f7dc8e');
+  const shadow = new T.Color(adult?'#785f47':'#cf993e');
   const tint = new T.Color();
   const orange = clay(T, '#d88a50', .61);
-  const paleOrange = clay(T, '#eda665', .67);
+  const paleOrange = clay(T, adult?'#ab7953':'#eda665', .67);
   const web = clay(T, '#d29359', .72);
   const toeMark = clay(T, '#c3804c', .79);
   const dark = clay(T, '#4b352c', .50);
   const eyelid = clay(T, '#a47838', .80);
   const glint = clay(T, '#fff3d3', .52);
   const s = T.MathUtils.smoothstep;
+
+  if(adult){torso.scale.set(.96,.98,1.12);head.scale.set(.88,.90,.95);}
 
   function downColor(x, y, z) {
     const warm = s(y, -.043, .173);
@@ -47,8 +49,10 @@ export function makeDuckling(T, { scale = 1, feather = '#eec665' } = {}) {
     [.064, -.003, .152, .144], [.111, -.019, .112, .105],
     [.143, -.023, .061, .069], [.157, -.026, .011, .015],
   ], 30, downColor), velvet);
-  for (const [x, y, z, tip] of [[-.028,.149,-.045,.29],[.009,.155,-.062,.39],[.042,.139,-.055,.42]]) {
-    mesh(T, head, '小撮绒羽', detail, down, [x,y,z], [.035,.052,.024]).rotation.x = tip;
+  if(!adult){
+    for (const [x, y, z, tip] of [[-.028,.149,-.045,.29],[.009,.155,-.062,.39],[.042,.139,-.055,.42]]) {
+      mesh(T, head, '小撮绒羽', detail, down, [x,y,z], [.035,.052,.024]).rotation.x = tip;
+    }
   }
   mesh(T, bill, '上喙轮廓', closedShape(T, [
     [-.014, -.002, .035, .019], [.008, .002, .076, .029],
@@ -65,6 +69,10 @@ export function makeDuckling(T, { scale = 1, feather = '#eec665' } = {}) {
   ], 22, downColor);
   const flippers = [], eyes = [], legs = [];
   for (const side of [-1, 1]) {
+    if(adult){
+      tube(T,head,'褐色过眼纹',[[side*.097,.041,.100],[side*.138,.048,.048],
+        [side*.154,.048,-.012],[side*.133,.046,-.068],[side*.097,.047,-.100]],.010,dark,12);
+    }
     const eye = group(T, head, '眼睑', [side * .123, .039, .069]);
     eye.rotation.y = side * .80;
     const open = group(T, eye, '睁眼');
@@ -77,7 +85,12 @@ export function makeDuckling(T, { scale = 1, feather = '#eec665' } = {}) {
 
     const wing = group(T, torso, '肩部连着的翅膀', [side * .162,.041,.059]);
     mesh(T, wing, '连成一体的翼面', wingShape, velvet).scale.x = side;
-    const featherLine = clay(T, '#dfb457', .82);
+    const featherLine = clay(T, adult?'#74583e':'#dfb457', .82);
+    if(adult){
+      const edge=clay(T,'#decfb1'),speculum=clay(T,'#44577d');
+      mesh(T,wing,'浅边翼镜',detail,edge,[side*.041,.004,-.105],[.009,.029,.078]);
+      mesh(T,wing,'靛蓝色翼镜',detail,speculum,[side*.047,.007,-.107],[.006,.020,.073]);
+    }
     for (const y of [-.025,.006]) {
       tube(T, wing, '翅上自然分开的羽路', [[side*.031,y+.014,-.167],[side*.039,y,-.111],
         [side*.043,y+.012,-.051]], .0037, featherLine, 8);

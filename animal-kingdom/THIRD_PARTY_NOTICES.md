@@ -6,11 +6,9 @@ Game code and original game art are covered by the repository MIT license. Recor
 
 Three.js 0.180.0 is bundled under the [MIT license](https://github.com/mrdoob/three.js/blob/r180/LICENSE); the full license text is included in the standalone HTML. [esbuild](https://github.com/evanw/esbuild) is used at build time.
 
-## Recordings
+## Recordings · v0.5.5
 
-- Polar bear (Ursus maritimus), Günter Tembrock, Tierstimmenarchiv, Museum für Naturkunde Berlin, 1993-01-30. TSA:Ursus_maritimus_V_1879_17_2. https://suche.tierstimmenarchiv.de/search/showdetails.html?unique_identifier=TSA:Ursus_maritimus_V_1879_17_2 . Source and adapted polar-bear.wav: CC BY-SA 3.0 https://creativecommons.org/licenses/by-sa/3.0/ . Original-pitch excerpt 7.76–10.34 s, band-limited, noise reduced, normalized and faded.
-
-The WAVs are processed clips, not the original source files. The frog source MP3 and edited WAV share the same attribution and license.
+Recordings are processed clips, not covered by the game's MIT license. Preserve their individual attribution and license when reusing them. This edition replaces the old duckling, polar bear and macaw clips; hedgehog replaces wombat. The former wombat asset is absent from the current build. Historical releases retain their original licenses.
 
 - Frog: daveincamas, 200703101950PacificChorusFrogsSoloNR.wav, CC BY 4.0; https://freesound.org/people/daveincamas/sounds/32807/ — game excerpt processed and rearranged without pitch changes.
 
@@ -56,22 +54,14 @@ The WAVs are processed clips, not the original source files. The frog source MP3
 
 - Humpback whale and bottlenose dolphin field recordings: NOAA Fisheries, Northeast Fisheries Science Center, Passive Acoustics Branch. Meno-song-NOAA-PAGroup-13 and Tutr-multisound-NOAA-PAGroup-03, respectively. https://www.fisheries.noaa.gov/national/science-data/sounds-ocean-mammals — natural-pitch excerpts, filtered, normalized and faded.
 
-- Duckling (duckling.wav): Alexander / Orange Free Sounds, [Duckling Sound Effect](https://orangefreesounds.com/duckling-sound-effect/), [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/). Edited excerpt with low-frequency cleanup and fades. The recording is included for non-commercial use only; replace or remove it for commercial redistribution.
+- New wildlife recordings, mono PCM excerpts. Original pitch, filtered, level matched and faded for this game. Nile crocodile: T. Chabert et al., Scientific Reports 5 (2015), supplementary audio no. 1, first natural call (35.5 cm juvenile), 0.58–1.23 s repeated with pauses. CC BY 4.0. https://doi.org/10.1038/srep15547 Koala: B. D. Charlton et al., PLOS ONE (2011), Movie S1, Andy at Lone Pine Koala Sanctuary, 11.68–14.76 s. CC BY. https://doi.org/10.1371/journal.pone.0020329.s001 Scarlet macaw (Ara macao): © keesgroenendijk, iNaturalist observation 411846948, sound 2214653, 2026-10-30. Three calls in an unbroken excerpt from 8.98 to 12.12 s; filtered, noise-reduced, level matched and faded without changing pitch or speed. CC BY 4.0 https://creativecommons.org/licenses/by/4.0/ . https://www.inaturalist.org/observations/411846948 Silvereye (Zosterops lateralis): Crown Copyright, Department of Conservation (NZ), CC BY 4.0 https://creativecommons.org/licenses/by/4.0/ . https://www.doc.govt.nz/footer-links/copyright/ . Silvereye/wax-eye song, Apple Valley Road, Nelson, 3.07–6.15 s. https://www.doc.govt.nz/nature/native-animals/birds/bird-songs-and-calls/
 
-Where Creative Commons license names are abbreviated above, see [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/), [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/), [CC BY-SA 3.0 DE](https://creativecommons.org/licenses/by-sa/3.0/de/) and [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
+- Polar bear (Ursus maritimus), calls between two bears, Günter Tembrock, Tierstimmenarchiv, Museum für Naturkunde Berlin, 1999-07-20. TSA:Ursus_maritimus_V_2075_27_2, 37.96–41.12 s. Original and adapted polar-bear.wav licensed CC BY-SA 3.0 https://creativecommons.org/licenses/by-sa/3.0/ . https://suche.tierstimmenarchiv.de/search/showdetails.html?unique_identifier=TSA:Ursus_maritimus_V_2075_27_2
 
-## v0.5.3 recordings
+- Female mallard (Anas platyrhynchos), Günter Tembrock, Tierstimmenarchiv, Museum für Naturkunde Berlin, 1983-09-17. TSA:Anas_platyrhynchos_V_1542_26_2, 10.48–13.66 s. The mother voices duckling.wav in the game. Original and adaptation licensed CC BY-SA 3.0 https://creativecommons.org/licenses/by-sa/3.0/ . https://suche.tierstimmenarchiv.de/search/showdetails.html?unique_identifier=TSA:Anas_platyrhynchos_V_1542_26_2
 
-New wildlife recordings, mono PCM excerpts. Original pitch, filtered, level matched and faded for this game.
-Nile crocodile: T. Chabert et al., Scientific Reports 5 (2015), supplementary audio no. 1, first natural call (35.5 cm juvenile), 0.58–1.23 s repeated with pauses. CC BY 4.0. https://doi.org/10.1038/srep15547
-Koala: B. D. Charlton et al., PLOS ONE (2011), Movie S1, Andy at Lone Pine Koala Sanctuary, 11.68–14.76 s. CC BY. https://doi.org/10.1371/journal.pone.0020329.s001
-Blue-and-yellow macaw (Ara ararauna): Hans Lütgens, Museum für Naturkunde Berlin, Tierstimmenarchiv TSA:Ara_ararauna_Lue_54_2_1, 9.35–12.43 s. Adapted recording licensed CC BY-SA 3.0 DE https://creativecommons.org/licenses/by-sa/3.0/de/ . https://suche.tierstimmenarchiv.de/search/showdetails.html?unique_identifier=TSA:Ara_ararauna_Lue_54_2_1
-Silvereye (Zosterops lateralis): Crown Copyright, Department of Conservation (NZ), CC BY 4.0 https://creativecommons.org/licenses/by/4.0/ . https://www.doc.govt.nz/footer-links/copyright/ . Silvereye/wax-eye song, Apple Valley Road, Nelson, 3.07–6.15 s. https://www.doc.govt.nz/nature/native-animals/birds/bird-songs-and-calls/
-
-## v0.5.4 recordings
+- Hedgehog snuffling, recorded indoors by soundmary, Freesound, "hedgehog.mp3", 2013-07-22, 3.43–6.57 s. Original and adapted hedgehog.wav licensed CC BY 4.0 https://creativecommons.org/licenses/by/4.0/ . https://freesound.org/people/soundmary/sounds/194938/ . These three excerpts retain their original pitch, with noise reduction, level matching and fades.
 
 - Giant panda (Ailuropoda melanoleuca), approximately two-year-old female waiting for food. Günter Tembrock, Tierstimmenarchiv, Museum für Naturkunde Berlin. TSA:Ailuropoda_melanoleuca_S_43_1_1. Excerpts 15.45–16.18, 28.46–29.22 and 36.60–37.45 s, pauses shortened, original pitch, filtered, levelled and faded. Original and adapted panda.wav: CC BY-SA 3.0 https://creativecommons.org/licenses/by-sa/3.0/ . https://suche.tierstimmenarchiv.de/search/showdetails.html?unique_identifier=TSA:Ailuropoda_melanoleuca_S_43_1_1&language=english
-
-- Bare-nosed wombat (Vombatus ursinus), juvenile. katyw, iNaturalist observation 143496235, recording 569304 in New South Wales. Original and adapted wombat.wav: CC BY-NC 4.0 https://creativecommons.org/licenses/by-nc/4.0/ . Excerpt 14.10–17.30 s, filtered, levelled and faded. https://www.inaturalist.org/observations/143496235
 
 - Grass rustle, not an animal call. "grass rustling.wav" by instinctual777, Freesound 636945. Original field recording of grass brushed by hand, excerpt 1.76–2.57 s, filtered, levelled and faded. CC0 1.0 https://creativecommons.org/publicdomain/zero/1.0/ . https://freesound.org/people/instinctual777/sounds/636945/

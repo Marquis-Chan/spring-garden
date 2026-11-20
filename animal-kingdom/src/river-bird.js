@@ -1,4 +1,4 @@
-import {clamp, ease, idleClockRate, mix} from './state.js';
+import {sleepStep, clamp, ease, idleClockRate, mix} from './state.js';
 
 const sites=['rhino','hippo','branch'];
 const turn=(a,b)=>Math.atan2(Math.sin(b-a),Math.cos(b-a));
@@ -35,7 +35,7 @@ export function createRiverBird(emit) {
     if(!bird.to){
       bird.x=p.x;bird.y=p.y;bird.z=p.z;
       bird.yaw=p.yaw;ready=true;
-      bird.sleep=mix(bird.sleep,night&&bird.site==='branch'?1:0,Math.min(1,dt*4));
+      bird.sleep=sleepStep(bird.sleep,night&&bird.site==='branch',dt);
       if(active&&!night)rest-=dt*idleClockRate;
     }
     if((night && (bird.to??bird.site)!=='branch') ||
@@ -45,7 +45,7 @@ export function createRiverBird(emit) {
     elapsed+=dt;
     const t=clamp(elapsed/duration),horizontal=ease(t),lift=Math.sin(t*Math.PI);
     const dest=anchors[bird.to];
-    bird.sleep=Math.max(0,bird.sleep-dt*5);
+    bird.sleep=sleepStep(bird.sleep,false,dt);
     bird.flight=clamp(lift*4);
     bird.flap=Math.sin(elapsed*23+.38);
     bird.x=mix(from.x,dest.x,horizontal);

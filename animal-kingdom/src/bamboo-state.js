@@ -1,4 +1,4 @@
-import {clamp,ease,mix} from './state.js';
+import {sleepStep, clamp,ease,mix} from './state.js';
 
 export const bambooOrigin={x:19,y:.38,z:-12};
 export const bambooKinds=['panda-mother','panda-left','panda-right','panda-bamboo','panda-slope'];
@@ -56,7 +56,7 @@ export function createBamboo(emit=()=>{}){
   for(const [i,b] of bears.entries()){
    b.ear=Math.max(0,b.ear-1.8*dt);
    b.x=homes[i][0];b.z=homes[i][1];b.yaw=homes[i][2];b.roll=b.tuck=b.walk=b.stride=b.reach=b.nibble=b.voice=b.greet=0;
-   b.sleep=mix(b.sleep,Number(play.night&&play.phase==='idle'),1-Math.exp(-dt*4));
+   b.sleep=sleepStep(b.sleep,play.night&&play.phase==='idle',dt);
    b.look=.12*Math.sin(time*.59+i*1.8)*(1-b.sleep);b.attention=0;
   }
   if(play.phase==='call'){

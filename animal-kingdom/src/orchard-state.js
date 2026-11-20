@@ -1,4 +1,4 @@
-import { clamp, idleClockRate, ease, idleDelay, mix } from './state.js';
+import {sleepStep,  clamp, idleClockRate, ease, idleDelay, mix } from './state.js';
 
 export const orchardPoints = {
   floor: .38,
@@ -39,7 +39,7 @@ export function createOrchard(emit = () => {}) {
   const appleMoves = apples.map(() => null);
   const dog = { ...points.dog, yaw: -.15, time: 0, stride: 0, gait: 0, sniff: 0, bark: 0, sleep: 0 };
   const cat = { ...points.cat, yaw: -.09, time: 0, stride: 0, gait: 0, stretch: 0, look: 0, lookDown: 0, lookUp: 0, paw: 0, sleep: 0 };
-  const butterfly = insectAt(points.butterfly[0], 0, true);
+  const butterfly = {...insectAt(points.butterfly[0], 0, true),sleep:0};
   const bees = [{ ...insectAt(points.hiveIdle, null, true), hiveIdle: true }, insectAt(points.hive, null, false)];
   const beeMoves = bees.map(() => null);
   let time = 0;
@@ -228,7 +228,7 @@ export function createOrchard(emit = () => {}) {
     dog.stride += travel * 12;
     const gait = dt ? clamp((travel - wandering) / (dt * 2.75) + wandering / (dt * .95)) : 0;
     dog.gait = mix(dog.gait, gait, Math.min(1, dt * 11));
-    dog.sleep = clamp(dog.sleep + dt * (night ? 2.0 : -2.8));
+    dog.sleep = sleepStep(dog.sleep, night, dt);
   }
 
   function nearbyRollingApple() {
@@ -267,7 +267,7 @@ export function createOrchard(emit = () => {}) {
     cat.stride += moved * (2 * Math.PI / .40);
     cat.gait = mix(cat.gait, dt ? clamp(moved / (dt * .36)) : 0, Math.min(1, dt * 11));
     if (Math.abs(cat.look) < .001) cat.look = 0;
-    cat.sleep = clamp(cat.sleep + dt * (night ? 2.0 : -2.8));
+    cat.sleep = sleepStep(cat.sleep, night, dt);
   }
 
   function flight(insect, to, perch, duration, height, delay = 0, visible = true) {
@@ -297,7 +297,7 @@ export function createOrchard(emit = () => {}) {
     nextButterfly = dayTime + idleDelay(4.2);
   }
 
-  function guideBees(outside) {
+  function guideBees(outside, skyChanged=false) {
     beesOutside = outside;
     for (const [index, bee] of bees.entries()) {
       const hiveIdle = !outside && !night && index === 0;
@@ -309,7 +309,7 @@ export function createOrchard(emit = () => {}) {
       const target = outside ? points.beeFlowers[index] : hiveIdle ? points.hiveIdle : points.hive;
       const waking = hiveIdle && !bee.visible;
       bee.hiveIdle = false;
-      beeMoves[index] = flight(bee, target, outside ? index : null, waking ? .51 : .78 + index * .10,
+      beeMoves[index] = flight(bee, target, outside ? index : null, skyChanged ? (waking?1.8:2.4+index*.15) : waking ? .51 : .78 + index * .10,
         waking ? .14 : .32 + index * .18, index * .12, visible);
       // 赴花和回巢都让第二只蜜蜂绕右侧，错开两只在巢口前的飞行路线。
       if (index === 1) beeMoves[index].via = {
@@ -321,7 +321,10 @@ export function createOrchard(emit = () => {}) {
   }
 
   function tapHive() {
-    if (night) return;
+    if(night){
+      if(bees.every(bee=>!bee.visible))emit({type:'sleep',animal:'hive'});
+      return;
+    }
     guideBees(!beesOutside);
     if (beesOutside) emit({ type: 'bee-flight' });
   }
@@ -363,7 +366,7 @@ export function createOrchard(emit = () => {}) {
     const next = Boolean(value);
     if (next === night) return;
     night = next;
-    guideBees(false);
+    guideBees(false,true);
     if (!night) {
       dogRoutine.next = dayTime + 1.2;
       catRoutine.next = dayTime + 1.9;
@@ -387,8 +390,9 @@ export function createOrchard(emit = () => {}) {
     for (const apple of apples) stepApple(apple);
     if (daily && !butterflyMove && dayTime >= nextButterfly) moveButterfly();
     // 在途的蝴蝶照常落花。停在花上后保留姿势，不再推进扇翅时间。
-    if (night && !butterflyMove) butterfly.flap = 0;
-    else butterflyMove = stepInsect(butterfly, butterflyMove, dt, 44);
+    butterfly.sleep=sleepStep(butterfly.sleep,night&&!butterflyMove,dt);
+    butterflyMove=stepInsect(butterfly,butterflyMove,dt,44);
+    butterfly.flap=butterfly.sleep===1?0:butterfly.flap*(1-butterfly.sleep);
     for (const [index, bee] of bees.entries()) {
       if (daily && bee.visible && !beeMoves[index] && dayTime >= nextBee[index]) {
         if (beesOutside) {

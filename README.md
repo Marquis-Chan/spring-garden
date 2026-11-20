@@ -2,7 +2,7 @@
 
 **中文** · [English](README.en.md)
 
-春日小花园 v0.5.4 把原来的动物互动小游戏重做成一座可以慢慢逛的 3D 动物王国。它为喜欢动物的幼儿和一起陪玩的家长而做：没有分数或闯关要求，孩子可以点动物、拖动地图，想去哪里就去哪里。
+春日小花园 v0.5.5 把原来的动物互动小游戏重做成一座可以慢慢逛的 3D 动物王国。它为喜欢动物的幼儿和一起陪玩的家长而做：没有分数或闯关要求，孩子可以点动物、拖动地图，想去哪里就去哪里。
 
 **[在线玩](https://marquis-chan.github.io/spring-garden/)** · **[下载离线版](https://github.com/Marquis-Chan/spring-garden/releases/latest/download/spring-garden.html)** · [发布记录](https://github.com/Marquis-Chan/spring-garden/releases)
 
@@ -18,7 +18,7 @@
 
 企鹅湾可以点潮池请出螃蟹、点海藻让银鱼换群；北极熊会从冰洞探头走出来。
 
-v0.5.4 新增熊猫妈妈与两只幼崽、红颈沙袋鼠母子和裸鼻袋熊。点竹梢喂食、看幼崽翻滚，或在桉树下发现袋口的小耳朵。
+v0.5.5 修正熊猫递竹子的接触动作，调整草原动物、昼夜过渡与镜头；绯红金刚鹦鹉、刺猬、鸭妈妈和北极熊使用更新后的真实录音。
 
 ## 经典版
 
@@ -37,4 +37,4 @@ npm run build
 
 构建生成 `animal-kingdom/动物王国.html`。
 
-原创代码和美术使用 [MIT 许可](LICENSE)。录音保留各自的许可；其中幼鸭和袋熊录音只允许非商业使用。来源和改动见[新版素材署名](animal-kingdom/THIRD_PARTY_NOTICES.md)。
+原创代码和美术使用 [MIT 许可](LICENSE)。录音保留各自的许可；旧版录音说明不适用于已替换的音轨，复用时请按当前素材清单核对。来源和改动见[新版素材署名](animal-kingdom/THIRD_PARTY_NOTICES.md)。

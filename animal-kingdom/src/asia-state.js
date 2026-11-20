@@ -1,4 +1,4 @@
-import { clamp, idleClockRate, ease, idleDelay, mix } from './state.js';
+import {sleepStep,  clamp, idleClockRate, ease, idleDelay, mix } from './state.js';
 
 export const asiaPoints = {
   floor: .38,
@@ -135,7 +135,7 @@ export function createAsia(emit = () => {}, { groundAt = () => asiaPoints.floor,
 
   function tapBear() {
     if (bearAction || sharedDuel) return;
-    const approach=distance(bear,points.leaf)>.89;
+    const approach=distance(bear,points.leaf)>.68;
     const wellAimed=!approach && Math.abs(turn(bear.yaw,bearing(bear,points.leaf)))<1.03;
     bearAction = { kind: 'leaf', at: wellAimed ? time : null, approach, prop: leaf.phase === 'branch' ? leaf : null };
     if (wellAimed) emit({ type: 'bear-rise', ...position(bear) });
@@ -596,7 +596,7 @@ export function createAsia(emit = () => {}, { groundAt = () => asiaPoints.floor,
     }
     const feedingYaw = stepPeacockFeed(active);
     const targetSite = night ? 1 : 0;
-    if (!peacockMove && !peacockFeed && targetSite !== peacock.site && peacock.fan === 0) {
+    if (!peacockMove && !peacockFeed && targetSite !== peacock.site && peacock.fan === 0 && (night || peacock.sleep<.10)) {
       if (peacockReadyAt === null) peacockReadyAt = time;
       const prepared = (time - peacockReadyAt) / .19;
       peacock.crouch = ease(prepared);
@@ -642,7 +642,7 @@ export function createAsia(emit = () => {}, { groundAt = () => asiaPoints.floor,
     const glance = night || peacockFeed || peacockMove ? 0 : pulse((time-peacockGlanceAt)/.80);
     peacock.look = mix(.23*peacock.fan,-.82,glance);
     peacock.land = 1 - ease((time - peacockLandAt) / .22);
-    peacock.sleep = clamp(peacock.sleep + dt * (night && peacock.site === 1 && !peacockMove ? 2.35 : -2.8));
+    peacock.sleep = sleepStep(peacock.sleep, night && peacock.site === 1 && !peacockMove, dt);
     if (!peacockMove && peacock.site === 0) samplePeacockFeet();
   }
 
@@ -658,7 +658,6 @@ export function createAsia(emit = () => {}, { groundAt = () => asiaPoints.floor,
     if (owlVoiceAt !== null || owlMove) return;
     owlNext = routineTime + 10.2;
     owlVoiceAt = time;
-    owl.sleep = Math.min(owl.sleep, .30);
     emit({ type: 'owl-call' });
   }
 
@@ -700,7 +699,7 @@ export function createAsia(emit = () => {}, { groundAt = () => asiaPoints.floor,
     }
     owl.yaw += turn(owl.yaw, yaw) * Math.min(1, dt * 11);
     owl.land = 1 - ease((time - owlLandAt) / .20);
-    owl.sleep = clamp(owl.sleep + dt * (!night && !owlMove ? 2.25 : -2.9));
+    owl.sleep = sleepStep(owl.sleep, !night && !owlMove, dt);
   }
 
   function setNight(value) {

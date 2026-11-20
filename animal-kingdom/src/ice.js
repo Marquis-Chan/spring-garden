@@ -255,14 +255,18 @@ function polarBear(root){
   bear.position.set(s.x,s.y,s.z);bear.rotation.y=s.yaw;
   const bob=.025*Math.sin(s.stride*2)*s.gait,shake=Math.sin(s.time*16)*s.shake;
   const lean=s.reach*(1-s.offer);
-  pelvis.position.set(0,bob-.36*s.crouch-.087*lean+.009*Math.sin(s.time*1.73),.13*lean);
-  pelvis.rotation.set(.38*lean,0,.066*shake-.07*lean);
+  // 下水前先把重心送到冰沿，左肩随身侧下沉。掌心仍落在鱼游到的那一点。
+  pelvis.position.set(-.043*lean,bob-.36*s.crouch-.087*lean-.012*s.dip+.009*Math.sin(s.time*1.73),.265*lean);
+  pelvis.rotation.set(.485*lean,0,.066*shake+.135*lean);
   neck.rotation.set(-.24*s.sniff+.068*s.crouch+.36*s.reach+.18*s.offer,
-   s.look+.19*shake-.27*s.offer,.085*shake-.09*s.reach);
+   s.look+.19*shake-.16*s.offer,.085*shake-.09*s.reach);
+  neck.rotation.x+=.26*s.offer;
+  grip.position.x=-.21*s.mealScale*s.offer;
   jaw.rotation.x=.58*s.bite;
   if(s.offer>0){
    bear.worldToLocal(lips.getWorldPosition(foodAtLips));
-   foodAtLips.x-=.48*s.mealScale;
+   // 靠近鱼鳃处托起，鱼头与嘴接触时前掌自然折回胸前。
+   foodAtLips.x-=.27*s.mealScale;
   }
   for(const eye of eyes)eye.scale.y=blink(s.time+.55,4.7);
   for(const {side,front,skin,paw,pts,rings,segments} of legs){

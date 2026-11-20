@@ -152,7 +152,7 @@ test('入夜后松鼠和啄木鸟停息，夜点发休息事件，狐狸仍可�
   advance(.27);
   const originalKnocks = events.filter(event => event.type === 'peck-hit').length;
   woodland.setNight(true);
-  advance(1.52);
+  advance(3.6);
   assert.equal(woodland.squirrel.site, 1);
   assert.equal(woodland.squirrel.sleep, 1);
   assert.equal(woodland.pecker.sleep, 1);
@@ -168,7 +168,7 @@ test('入夜后松鼠和啄木鸟停息，夜点发休息事件，狐狸仍可�
   assert.ok(events.some(event => event.type === 'litter-flip' && event.index === 0));
 
   woodland.setNight(false);
-  advance(.52);
+  advance(1.94);
   assert.equal(woodland.squirrel.sleep, 0);
   assert.equal(woodland.pecker.sleep, 0);
   woodland.tapPecker();

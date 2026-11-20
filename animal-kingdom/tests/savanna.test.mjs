@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import * as T from 'three';
-import { createSavanna, savannaPoints } from '../src/savanna-state.js';
+import { createSavanna, savannaPoints, savannaWaterArc } from '../src/savanna-state.js';
 import { makeElephant, makeGiraffe, makeLion } from '../src/savanna-actors.js';
 import { makeSavannaDiorama } from '../src/savanna-diorama.js';
 
@@ -42,14 +42,14 @@ test('象、鹿、斑马和狮安静各走几步，不会擅自喷水、吃叶�
 
 test('大象走开时点下就回应，归位对准水面再取水，实际洒近花才引斑马回头', () => {
   const { savanna, events, advance } = setup();
-  advance(2.7, true);
+  advance(3.32, true);
   assert.ok(savanna.elephant.x < savannaPoints.elephant.x - .20);
   savanna.tapFlower(1);
   savanna.tapElephant();
   assert.equal(events.at(-1).type, 'elephant-call');
   advance(.23, true);
   assert.equal(savanna.elephant.scoop, 0);
-  while (savanna.time < 6 && !events.some(({ type }) => type === 'scoop')) advance(.05, true);
+  while (savanna.time < 8 && !events.some(({ type }) => type === 'scoop')) advance(.05, true);
   assert.ok(events.some(({ type }) => type === 'scoop'));
   assert.deepEqual(position(savanna.elephant), savannaPoints.elephant);
   assert.ok(Math.abs(savanna.elephant.yaw) < .02);
@@ -112,7 +112,10 @@ test('大象先在水边取水，喷出的水到达所选花才开，另一丛�
   assert.equal(events.some(event => event.type === 'spray'), false);
   assert.ok(savanna.flowers.every(flower => flower.wet === 0 && flower.bloom === 0));
 
-  advance(.51);
+  advance(.41);
+  assert.ok(savanna.elephant.scoop>.98,'贴住水面稍作停留');
+  assert.equal(events.some(event=>event.type==='spray'),false);
+  advance(.64);
   const scoop = events.find(event => event.type === 'scoop');
   const spray = events.find(event => event.type === 'spray');
   assert.deepEqual(position(scoop), savannaPoints.water);
@@ -136,12 +139,12 @@ test('连点象鼻只完成当前一程，改选花影响下一程', () => {
   advance(.22);
   savanna.tapFlower(1);
   for (let tap = 0; tap < 5; tap++) savanna.tapElephant();
-  advance(1.4);
+  advance(2.26);
   assert.deepEqual(events.filter(event => event.type === 'water-hit').map(event => event.index), [0]);
   assert.equal(events.filter(event => event.type === 'elephant-call').length, 1);
 
   savanna.tapElephant();
-  advance(1.6);
+  advance(2.0);
   assert.deepEqual(events.filter(event => event.type === 'water-hit').map(event => event.index), [0, 1]);
   assert.ok(savanna.flowers.every(flower => flower.bloom > .8));
 });
@@ -245,12 +248,14 @@ test('点狮张嘴发声，点晒石只让它安静伸展', () => {
 test('夜里斑马休息、鹿只哼叫，已经喷出的水仍然落花', () => {
   const { savanna, events, advance } = setup();
   savanna.tapElephant();
-  advance(.75);
+  advance(1.30);
   assert.ok(events.some(event => event.type === 'spray'));
   savanna.setNight(true);
   savanna.tapZebra();
   savanna.tapGiraffe();
-  advance(.75);
+  advance(1.2);
+  assert.ok(savanna.zebra.sleep>.48&&savanna.zebra.sleep<.53);
+  advance(1.24);
 
   assert.equal(savanna.zebra.sleep, 1);
   assert.deepEqual(position(savanna.zebra), savannaPoints.zebra);
@@ -260,12 +265,40 @@ test('夜里斑马休息、鹿只哼叫，已经喷出的水仍然落花', () =>
   assert.equal(events.some(event => event.type === 'leaf-bite' || event.type === 'hoof'), false);
 
   savanna.setNight(false);
-  advance(.51);
+  advance(.90);
+  assert.ok(savanna.zebra.sleep>.48&&savanna.zebra.sleep<.53);
+  advance(.93);
   assert.equal(savanna.zebra.sleep, 0);
   savanna.tapGiraffe();
   advance(.73);
   assert.ok(events.some(event => event.type === 'leaf-bite'));
   assert.equal(events.filter(event => event.type === 'giraffe-call').length, 1);
+});
+
+test('大象慢慢下探、吸水、举鼻，持鼻角与真实水弧吻合，浇花后缓缓放低',()=>{
+ for(const i of [0,1]){
+  const events=[],s=createSavanna(e=>events.push({...e,t:s.time})),rig=makeElephant(T);
+  s.tapFlower(i);assert.equal(events.at(-1).type,'elephant-call');
+  let held=0,drinking=0,sprayAt=null;
+  for(let f=0;f<150;f++){
+   s.step(1/60,true);const e=s.elephant;
+   rig.root.position.set(e.x,e.y,e.z);rig.root.rotation.y=e.yaw;rig.pose(e);
+   const tip=rig.nozzle.getWorldPosition(new T.Vector3());
+   if(e.scoop>.999){
+    assert.ok(tip.distanceTo(new T.Vector3(savannaPoints.water.x,savannaPoints.water.y,savannaPoints.water.z))<.01);drinking++;
+   }
+   sprayAt??=events.find(x=>x.type==='spray')?.t;
+   if(sprayAt!=null&&e.time-sprayAt<.56){
+    const flower=s.flowers[i],direction=new T.Vector3(flower.x-tip.x,flower.y-tip.y+Math.PI*savannaWaterArc.height,flower.z-tip.z).normalize();
+    assert.ok(direction.angleTo(rig.nozzle.getWorldDirection(new T.Vector3()))<.003);
+    held++;
+   }
+  }
+  assert.ok(drinking>=8&&held>=30);
+  const scoop=events.find(e=>e.type==='scoop'),land=events.find(e=>e.type==='water-hit');
+  assert.ok(scoop.t>=.52&&sprayAt-scoop.t>.68&&land.t-sprayAt>=.42);
+  assert.equal(s.elephant.lift,0);
+ }
 });
 
 test('长颈鹿走路转身时的支撑蹄不滑，实际模型就地碰到两侧的叶面', () => {

@@ -27,7 +27,7 @@ test('点嫩叶：考拉抓稳再吃，银眼鸟起飞换枝，松手后叶子�
   if(state.bird.flight>.5)flapping++;
  }
  assert.ok(eating>65&&flapping>40);
- assert.deepEqual(events.map(e=>e.type),['koala-feed','silvereye-flight','silvereye-land']);
+ assert.deepEqual(events.filter(e=>e.type!=='hedgehog-peek').map(e=>e.type),['koala-feed','silvereye-flight','silvereye-land']);
  assert.equal(state.bird.perch,1);assert.equal(state.koala.action,'rest');assert.equal(state.leaf.eaten,0);
  state.tap('gum-leaves');assert.equal(state.koala.action,'feed');
 });
@@ -43,17 +43,17 @@ test('横枝随身摇摆，单独点鸟会先歌唱，再展翼，考拉寻声�
  play(state,1.3);assert.equal(state.bird.perch,0);
  const p=gumPerches[0];
  assert.equal(state.bird.x,gumOrigin.x+p.x);assert.equal(state.bird.y,gumOrigin.y+p.y);
- assert.deepEqual(events.map(e=>e.type),['koala-rock','silvereye-flight','silvereye-land','silvereye-call','koala-listen','wallaby-listen','silvereye-flight','silvereye-land']);
+ assert.deepEqual(events.filter(e=>e.type!=='hedgehog-peek').map(e=>e.type),['koala-rock','silvereye-flight','silvereye-land','silvereye-call','koala-listen','wallaby-listen','silvereye-flight','silvereye-land']);
  state.tap('koala');play(state,.64);assert.ok(state.koala.stretch>.99&&state.koala.call>.1);
 });
 test('入夜时鸟先落稳再睡，点睡鸟有回应；考拉夜里吃叶，白天偶尔小睡',()=>{
  const events=[],s=createEucalyptus(e=>events.push(e));
  s.tap('silvereye');play(s,.67);assert.equal(s.bird.journey,true);
- play(s,2.5,true);assert.ok(!s.bird.journey&&s.bird.sleep>.95);
+ play(s,4,true);assert.ok(!s.bird.journey&&s.bird.sleep>.95);
  s.tap('silvereye');s.tap('gum-leaves');play(s,4.0,true);
  assert.ok(events.some(e=>e.type==='silvereye-sleep'));
  assert.equal(events.filter(e=>e.type==='silvereye-flight').length,1);
- play(s,38);assert.ok(s.koala.sleep>.75);s.tap('koala');
+ play(s,39.4);assert.ok(s.koala.sleep>.75);s.tap('koala');
  assert.equal(events.at(-1).type,'koala-sleep');
  play(s,2,true);s.tap('koala');assert.equal(events.at(-1).type,'koala-call');
 });

@@ -24,7 +24,7 @@ test('同一声招呼由巨嘴鸟回鸣，落香蕉能将高枝鹦鹉引到前�
  forest.tapDropBanana();advance(4.25);
  assert.equal(macaw.bird.site,0);assert.ok(events.some(e=>e.type==='macaw-watch-banana'));
  assert.ok(events.some(e=>e.type==='drop-banana-land'));
- forest.setNight(true);macaw.setNight(true);advance(.65);assert.equal(macaw.bird.sleep,1);
+ forest.setNight(true);macaw.setNight(true);advance(2.5);assert.equal(macaw.bird.sleep,1);
  const calls=events.filter(e=>e.type==='macaw-call').length;
  macaw.tap();macaw.onBananaDrop();advance(3);assert.equal(macaw.bird.site,0);
  assert.equal(events.filter(e=>e.type==='macaw-call').length,calls);
@@ -44,7 +44,7 @@ test('两只脚都停在实枝，翼腕连续拍打，飞行避开原栖枝，�
  }
  step(1/60);planted();
  m.tap();run(1.68,step);m.tap();const flap=[];
- const shoulder=v.bird.getObjectsByProperty('name','蓝翼肩')[1];
+ const shoulder=v.bird.getObjectsByProperty('name','绯红翼肩')[1];
  const cameras=[390/735,1440/836].map(ratio=>{
   const camera=new T.OrthographicCamera();const rig=viewFor('rainforest',ratio);
   placeCamera(camera,rig,ratio);return {camera,rig,ratio};
@@ -66,7 +66,7 @@ test('两只脚都停在实枝，翼腕连续拍打，飞行避开原栖枝，�
  });
  assert.ok(Math.max(...flap)>.96&&Math.min(...flap)<-.96);
  assert.equal(m.bird.x,macawPerches[1].x);planted();
- m.tap();run(.7,step);const bill=v.bird.getObjectByName('向下弯曲的黑色上喙');
+ m.tap();run(.7,step);const bill=v.bird.getObjectByName('向下弯曲的象牙色上喙');
  bill.localToWorld(tip.set(0,-.087,.176));let nearest=Infinity;
  shoulder.traverse(node=>{
   const vertices=node.geometry?.attributes.position;if(!vertices)return;
@@ -79,5 +79,14 @@ test('两只脚都停在实枝，翼腕连续拍打，飞行避开原栖枝，�
 test('切夜后飞行仍落到枝上，离开场景期间保持原位',()=>{
  const m=createMacaw();m.tap();run(1.7,dt=>m.step(dt,true));m.tap();run(.55,dt=>m.step(dt,true));
  m.setNight(true);const before={...m.bird};run(20,dt=>m.step(dt,false));assert.deepEqual(m.bird,before);
- run(2,dt=>m.step(dt,true));assert.equal(m.bird.sleep,1);assert.equal(m.bird.y,macawPerches[1].y);
+ run(3.8,dt=>m.step(dt,true));assert.equal(m.bird.sleep,1);assert.equal(m.bird.y,macawPerches[1].y);
+});
+
+test('较低帧率时，巨嘴鸟仍按实录时间接话；切夜会取消尚未播放的答声',()=>{
+ let seconds=0;const responses=[];
+ const forest=createRainforest(e=>{if(e.reason==='macaw')responses.push(e);},{soundClock:()=>seconds});
+ const bird=createMacaw().bird;
+ forest.answerMacaw(bird,3.86);seconds=3.7;forest.step(.04,true);assert.equal(responses.length,0);
+ seconds=3.88;forest.step(.04,true);assert.equal(responses.length,1);
+ forest.answerMacaw(bird,3.86);forest.setNight(true);seconds=7.9;forest.step(.04,true);assert.equal(responses.length,1);
 });

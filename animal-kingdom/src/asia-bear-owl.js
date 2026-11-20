@@ -37,18 +37,25 @@ export function makeMoonBear(T,groundAt){
   eyes.push(eye(T,head,'熊眼',small,[side*.138,.022,.187],side*.52,muzzle,nose,white));
   for(const front of [true,false]){
    const leg=makeLeg(T,root,front?'前掌':'后足',legPart(T),fur,paws,'掌',[.089,.076,.128]);
+   if(front){
+    const pad=leg.foot.children[0];pad.geometry=sphere;pad.scale.set(.105,.057,.137);pad.position.y=.056;
+   }
    for(let i=-1;i<=1;i++)mesh(T,leg.foot,'趾',small,coat,[i*.046,.048,.117-Math.abs(i)*.010],[.028,.034,.040]);
    legs.push({leg,side,front});
   }
  }
  const toe=new T.Vector3(),toMouth=new T.Vector3(),shoulder=new T.Vector3();
+ const wrist=new T.Vector3(),upperAxis=new T.Vector3(),elbow=new T.Vector3(),fold=new T.Vector3();
+ const reachPoint=new T.Vector3(),snackPoint=new T.Vector3(),standPaw=new T.Vector3();
  const s=T.MathUtils.smoothstep;
  function pose({x:worldX,y:worldY=0,z:worldZ=0,yaw=0,time=0,stand=0,reach=0,reachX=.12,reachY=1.21,reachZ=.61,
   hold=0,bring=0,chew=0,gait=0,stride=0}={}){
   const calm=1-Math.max(stand,reach,hold,chew,gait);
   const idle=calm*Math.sin(time*1.26+.9);
-  trunk.position.set(0,.641+stand*.303+gait*.022*Math.abs(Math.sin(stride))+idle*.012,-.055-.045*stand);
-  trunk.rotation.set(.86-.84*stand,0,gait*.028*Math.sin(stride));
+  const forage=reach*(1-stand),pluck=stand*reach;
+  trunk.position.set(0,.56+stand*.375-.065*forage+gait*.016*Math.abs(Math.sin(stride))+idle*.010,
+   -.055-.025*stand+.113*reach);
+  trunk.rotation.set(.99-.92*stand+.12*forage+.16*pluck,0,gait*.025*Math.sin(stride));
   head.rotation.x=-.42*(1-stand)+.10*chew;
   head.rotation.y=idle*.153;
   head.rotation.z=.038*stand*Math.cos(time*2.4)+idle*.033;
@@ -58,24 +65,34 @@ export function makeMoonBear(T,groundAt){
   toMouth.copy(mouth.position).applyMatrix4(head.matrix).applyMatrix4(trunk.matrix);
   const c=Math.cos(yaw),d=Math.sin(yaw);
   for(const {leg,side,front} of legs){
-   const phase=stride+((front?side:-side)>0?Math.PI:0),x=side*(front?.219:.252),z=front?.425:-.389;
-   const travel=Math.cos(phase)*gait*.159;
+   const phase=stride+((front?side:-side)>0?Math.PI:0),x=side*(front?.219:.252),z=front?.345:-.389;
+   const travel=Math.cos(phase)*gait*(front?.110:.159);
    const lift=Math.max(0,Math.sin(phase))*gait*.115;
    const floor=worldX===undefined?0:groundAt(worldX+x*c+(z+travel)*d,worldZ-x*d+(z+travel)*c)-worldY;
    toe.set(x,floor+lift,z+travel);
    if(front){
-    shoulder.set(x,.16,.16).applyMatrix4(trunk.matrix);
+    shoulder.set(x,.129,.150).applyMatrix4(trunk.matrix);
     const raised=s(stand,.12,.73);
-    toe.lerp(new T.Vector3(x,.783,.303),raised);
+    toe.lerp(standPaw.set(x,.756,.266),raised);
     if(side>0){
-     const reachPoint=new T.Vector3(reachX,Math.max(floor,reachY-.056),reachZ);
-     const snackPoint=toMouth.clone();snackPoint.x+=.085;snackPoint.y-=.150;snackPoint.z+=.105;
-     toe.lerp(snackPoint,hold*bring).lerp(reachPoint,reach);
+     reachPoint.set(reachX,Math.max(floor,reachY-.056),reachZ);
+     snackPoint.copy(toMouth);snackPoint.x+=.059;snackPoint.y-=.076;snackPoint.z+=.045;
+     if(hold)toe.copy(reachPoint).lerp(snackPoint,bring);
+     else toe.lerp(snackPoint,bring).lerp(reachPoint,reach);
      paw.position.copy(toe);paw.position.y+=.056;
     }
-   }else shoulder.set(x,.52+stand*.21,-.289);
-   const flex=front?.086:-.077;
-   leg.place(shoulder.toArray(),[(shoulder.x+toe.x)*.5,(shoulder.y+toe.y)*.5, (shoulder.z+toe.z)*.5+flex],toe.toArray(),front?.099:.116,.074,-.16*lift);
+    // 前掌固定在地面或食物上，肘在肩与腕之间向后折。屈肘吸收距离变化。
+    wrist.copy(toe);wrist.y+=.076*.84;upperAxis.subVectors(wrist,shoulder);
+    const distance=upperAxis.length(),upper=.286,lower=.270;
+    upperAxis.divideScalar(Math.max(.001,distance));
+    const along=Math.min(distance,(distance*distance+upper*upper-lower*lower)/(2*Math.max(distance,.001)));
+    fold.set(side*.25,-.42,-1).addScaledVector(upperAxis,-fold.dot(upperAxis)).normalize();
+    elbow.copy(shoulder).addScaledVector(upperAxis,along).addScaledVector(fold,Math.sqrt(Math.max(0,upper*upper-along*along)));
+    leg.place(shoulder.toArray(),elbow.toArray(),toe.toArray(),.125,.092,-.16*lift);
+   }else{
+    shoulder.set(x,.49+stand*.21,-.289);
+    leg.place(shoulder.toArray(),[(shoulder.x+toe.x)*.5,(shoulder.y+toe.y)*.5,(shoulder.z+toe.z)*.5-.077],toe.toArray(),.116,.074,-.16*lift);
+   }
   }
  }
  pose();

@@ -1,4 +1,4 @@
-import { clamp, idleClockRate, ease, idleDelay, idleTravelRate, mix } from './state.js';
+import {sleepStep,  clamp, idleClockRate, ease, idleDelay, idleTravelRate, mix } from './state.js';
 import { createRiverNeighbors } from './river-neighbors.js';
 import { createRiverBird } from './river-bird.js';
 
@@ -304,7 +304,7 @@ export function createRiver(emit = () => {}, { groundAt = defaultGroundAt } = {}
     }
     turtle.swim = turtle.paddle;
     turtle.bask = !turtleMotion && turtle.site === 1 && turtle.gait < .08 ? 1 : 0;
-    turtle.sleep = clamp(turtle.sleep + dt * (night && !turtleMotion ? 1.95 : -2.65));
+    turtle.sleep = sleepStep(turtle.sleep, night && !turtleMotion, dt);
     const age = time - tuckAt;
     const tuck = ease(age / .16) * (1 - ease((age - .27) / .43));
     turtle.reach = (1 - tuck) * (1 - turtle.sleep * .76);

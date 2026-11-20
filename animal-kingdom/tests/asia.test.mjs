@@ -225,12 +225,12 @@ test('孔雀在当前开度回收，入夜先闭屏再蹬地上低枝，醒来�
   assert.equal(takeoff.fan, 0);
   assert.deepEqual(position(asia.peacock), asiaPoints.peacockPerch);
   assert.ok(asia.peacock.sleep > 0);
-  advance(.30);
+  advance(2.48);
   assert.ok(asia.peacock.sleep > .95);
   asia.tapPeacock();
   assert.ok(events.some(event => event.type === 'sleep' && event.animal === 'peacock'));
   asia.setNight(false);
-  advance(1.46);
+  advance(4.2);
   assert.deepEqual(position(asia.peacock), asiaPoints.peacock);
   assert.equal(asia.peacock.sleep, 0);
 });

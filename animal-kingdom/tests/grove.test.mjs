@@ -153,7 +153,7 @@ test('夜间鸟在枝上渐睡，点按只回应休息，兔从下方经过也�
   grove.setNight(true);
   advance(.15);
   assert.ok(grove.bird.sleep > 0 && grove.bird.sleep < 1);
-  advance(.55);
+  advance(2.4);
   assert.equal(grove.bird.sleep, 1);
 
   grove.tapBird();
@@ -168,7 +168,7 @@ test('夜间鸟在枝上渐睡，点按只回应休息，兔从下方经过也�
   grove.setNight(false);
   advance(.12);
   assert.ok(grove.bird.sleep > 0 && grove.bird.sleep < 1);
-  advance(.55);
+  advance(1.8);
   assert.equal(grove.bird.sleep, 0);
   grove.tapBird();
   advance(1.15);
@@ -190,7 +190,7 @@ test('鸟正飞向地面时入夜，沿原轨迹落地后归枝，途中不睡�
   assert.ok(events.some(event => event.type === 'flight' && event.phase === 'start' && event.reason === 'night'));
   grove.setNight(true);
   grove.tapBird();
-  advance(1.4);
+  advance(3.8);
 
   assert.deepEqual(events.filter(event => event.type === 'flight').map(event => [event.phase, event.reason]),
     [['start', 'tap'], ['land', 'tap'], ['start', 'night'], ['land', 'night']]);

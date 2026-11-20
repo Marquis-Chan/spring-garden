@@ -232,7 +232,7 @@ test('滑到一半入夜先入水再上岸睡，夜点只回应 Zzz，天亮可�
   coast.setNight(true);
   advance(.23);
   assert.equal(coast.penguins[0].sleep, 0);
-  advance(3.1);
+  advance(5.2);
   assert.ok(coast.penguins.every(actor => actor.phase === 'land' && actor.sleep === 1));
   const entry = events.find(event => event.type === 'water-entry');
   const land = events.find(event => event.type === 'penguin-land');

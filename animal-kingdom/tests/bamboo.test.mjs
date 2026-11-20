@@ -20,14 +20,37 @@ test('妈妈先抬掌，等待回应的较大幼崽开口，两只交替接嫩�
   if(peak)assert.ok(state.bears[1].voice>.97);else assert.equal(state.bears[1].voice,0);
  }
  play(state,.83);
+ const protectedParts=[],bambooPieces=[],sample=new T.Vector3(),matrix=new T.Matrix4();
+ for(const {root} of view.bears)root.traverse(part=>{
+  if(['眼圈长在脸上','奶油色肚皮与绕肩的深色毛带','宽圆的黑鼻头','吻部绒毛'].includes(part.name)){
+   protectedParts.push({part,inverse:new T.Matrix4()});
+  }
+ });
+ view.shoot.root.traverse(piece=>{if(piece.isMesh)bambooPieces.push(piece);});
  for(const n of [1,2]){
   state.tap('panda-bamboo');let bites=0;
   for(let i=0;i<310;i++){
    state.step(1/60,true);view.tick(state);
+   // 两个方向都检查整段竹秆和陪衬叶的真实表面，包含弯下、咀嚼和收回。
+   view.root.updateWorldMatrix(true,true);
+   for(const {part,inverse} of protectedParts){
+    inverse.copy(part.matrixWorld).invert();
+    for(const piece of bambooPieces){
+     const map=matrix.multiplyMatrices(inverse,piece.matrixWorld);
+     const vertices=piece.geometry.attributes.position;
+     for(let k=0;k<vertices.count;k++){
+      assert.ok(sample.fromBufferAttribute(vertices,k).applyMatrix4(map).lengthSq()>=.996,
+       '竹枝或竹叶进入了'+part.name);
+     }
+    }
+   }
    if(state.play.bend===1){
     const geo=view.shoot.tip.geometry.attributes.position;
     const leaf=view.shoot.tip.localToWorld(new T.Vector3().fromBufferAttribute(geo,geo.count-2));
     assert.ok(leaf.distanceTo(view.bears[n].lips.getWorldPosition(new T.Vector3()))<.0001);
+    const grip=view.bears[n].arms[n===1?1:0].paw;
+    grip.worldToLocal(view.shoot.bloom.getWorldPosition(sample));
+    assert.ok(sample.length()<=1.01&&sample.z>=.8,'竹梢要搭在幼崽伸出的前掌上');
     bites++;
    }
   }
@@ -76,11 +99,12 @@ test('切夜时先收动作，睡稳后点动物再出现睡眠符号，回到�
  state.tap('panda-left');play(state,.65);state.tap('panda-bamboo');play(state,.05,true);
  state.tap('panda-left');assert.ok(!events.some(e=>e.type==='panda-sleep'));
  const t=state.time;state.step(.05,false,true);assert.equal(t,state.time);
- play(state,7.65,true);
+ play(state,9.4,true);
  for(const k of bambooKinds.slice(0,3))state.tap(k);
  assert.ok(state.bears.every(b=>b.sleep>.94));
  assert.deepEqual(events.filter(e=>e.type==='panda-sleep').map(e=>e.animal),bambooKinds.slice(0,3));
- play(state,1);assert.ok(state.bears.every(b=>b.sleep<.05));
+ play(state,1);assert.ok(state.bears.every(b=>b.sleep>0&&b.sleep<.6));
+ play(state,1);assert.ok(state.bears.every(b=>b.sleep===0));
  assert.equal(events.filter(e=>e.type==='panda-lower-bamboo').length,0);
  state.tap('panda-mother');assert.equal(events.at(-1).type,'panda-greeting');
  play(state,.22);play(state,.40,true);assert.equal(events.filter(e=>e.type==='panda-call').length,0);

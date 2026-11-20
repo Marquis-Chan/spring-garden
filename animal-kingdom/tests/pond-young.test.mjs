@@ -74,7 +74,7 @@ test('远鸭抖翅拨水不会带动蝌蚪，手点可重复散开，天黑两�
   assert.equal(events.filter(({cause}) => cause === 'tap').length, 2);
 
   young.setNight(true);
-  run(1.88);
+  run(3.6);
   const asleep = young.ducks.map(where), tads = young.tadpoles.map(where);
   assert.ok(young.ducks.every(({sleep, swim, z}) => sleep === 1 && swim === 0 && z <= -2.11));
   young.tapDuck(0);
@@ -85,7 +85,7 @@ test('远鸭抖翅拨水不会带动蝌蚪，手点可重复散开，天黑两�
   young.setNight(false);
   run(.03);
   assert.ok(young.ducks.every((actor, i) => gap(actor, asleep[i]) < .02));
-  run(1.35);
+  run(1.92);
   assert.ok(young.ducks.every(({sleep}) => sleep === 0));
 });
 

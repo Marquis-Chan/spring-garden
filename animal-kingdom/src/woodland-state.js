@@ -1,4 +1,4 @@
-import { clamp, idleClockRate, ease, idleDelay, mix } from './state.js';
+import {sleepStep,  clamp, idleClockRate, ease, idleDelay, mix } from './state.js';
 
 const peckerYaw = -2.10;
 const barkOutward = { x: -Math.sin(peckerYaw), z: -Math.cos(peckerYaw) };
@@ -144,7 +144,7 @@ export function createWoodland(emit = () => {}, { groundAt = () => .38 } = {}) {
       }
     }
     squirrel.yaw += angleDelta(squirrel.yaw, heading) * Math.min(1, dt * (squirrelMove ? 14 : 5));
-    squirrel.sleep = clamp(squirrel.sleep + dt * (night && !squirrelMove ? 2.05 : -2.8));
+    squirrel.sleep = sleepStep(squirrel.sleep, night && !squirrelMove, dt);
     const listening = night ? 0 : pulse((time - squirrelListenAt) / .95);
     squirrel.listen = listening ? clamp(angleDelta(squirrel.yaw, bearing(squirrel, soundSource)) / 1.2, -1, 1) * listening : 0;
     squirrel.look = squirrel.listen;
@@ -260,7 +260,7 @@ export function createWoodland(emit = () => {}, { groundAt = () => .38 } = {}) {
         }
       }
     }
-    pecker.sleep = clamp(pecker.sleep + dt * (night && !peckerMove ? 2.05 : -2.8));
+    pecker.sleep = sleepStep(pecker.sleep, night && !peckerMove, dt);
     if (!peckerPack) return;
     const action = peckerPack;
     const next = action.at + .23 + action.hits * .25;

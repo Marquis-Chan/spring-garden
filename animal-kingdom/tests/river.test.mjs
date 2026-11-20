@@ -75,7 +75,7 @@ test('河岸小鸟跟随实际背部落点，刷牙时离开河马，入夜回�
   for(let i=0;i<115;i++)frame();
   assert.equal(bird.site,'rhino');
   river.setNight(true);
-  for(let i=0;i<185;i++)frame();
+  for(let i=0;i<255;i++)frame();
   assert.ok(bird.sleep>.97 && bird.site==='branch');
   river.tapBird();
   assert.equal(events.at(-1).animal,'river-bird');
@@ -106,7 +106,7 @@ test('点常驻鸭请出第二只，客鸭回到遮蔽后不接收点击', () =>
   advance(.70,true);
   const sleeping = position(lead);
   river.tapDuck(0);
-  advance(.75,true);
+  advance(2,true);
   assert.equal(lead.sleep,1);
   assert.deepEqual(position(lead),sleeping);
   assert.equal(events.at(-1).animal,'river-duck');
@@ -214,7 +214,7 @@ test('连续点踏石只保留最后一个在途目标，夜间到站后休息',
   river.tapStone(1);
   river.setNight(true);
   assert.equal(river.turtle.sleep, 0);
-  advance(1.6);
+  advance(3.8);
   assert.equal(river.turtle.site, 0);
   assert.equal(river.turtle.sleep, 1);
   river.tapStone(1);

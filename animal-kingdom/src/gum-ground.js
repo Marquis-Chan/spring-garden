@@ -1,6 +1,6 @@
 import * as T from 'three';
 import {group,mesh,clay,closedShape,paintSphere} from './savanna-actors.js';
-import {grazingTuft,wombatDoor} from './gum-ground-state.js';
+import {grazingTuft,hedgehogDoor} from './gum-ground-state.js';
 
 const V=(x=0,y=0,z=0)=>new T.Vector3(x,y,z);
 const tau=Math.PI*2;
@@ -125,39 +125,64 @@ function wallabyModel(parent){
  return {root,focus,pose};
 }
 
-function wombatModel(parent){
- const root=group(T,parent,'裸鼻袋熊'),trunk=group(T,root,'贴地的厚圆身躯');
- profile(trunk,'臀到肩的短粗褐毛躯干',[[-.49,.248,.035,.066],[-.41,.258,.176,.182],
-  [-.28,.269,.252,.236],[-.12,.281,.266,.254],[.092,.277,.262,.248],[.232,.259,.237,.219],[.335,.259,.156,.147]]);
- const head=group(T,trunk,'低头觅草的宽脑袋',[0,.281,.208]);
- profile(head,'平宽的额部和两腮',[[-.093,0,.101,.120],[-.028,.012,.196,.177],[.079,.016,.212,.181],
-  [.195,.013,.194,.153],[.283,-.014,.137,.095],[.324,-.017,.092,.070]],
- coat('#988575','#b29b81','#d0b998',(x,y,z,a)=>.66*band(.18,.87,-Math.cos(a))));
- oval(head,'宽扁的裸露鼻吻',nose,0,.015,.315,.115,.086,.056);
- for(const s of [-1,1]){
-  oval(head,'鼻孔',ink,s*.070,.022,.355,.016,.013,.011);
-  const ear=oval(head,'厚短的圆耳',darkFur,s*.143,.169,-.018,.075,.084,.038);ear.rotation.z=-s*.28;
-  oval(head,'短耳内面',pink,s*.147,.177,.008,.042,.051,.015);
-  oval(head,'细亮的眼',ink,s*.183,.075,.148,.027,.027,.022);
-  oval(head,'眼光',gloss,s*.197,.086,.158,.006,.006,.006);
+// 每根刺都从弧形背皮长出，浅色环与棕色刺尖会随身体一起起伏。
+function spineCoat(trunk){
+ const positions=[],colors=[],indices=[],base=V(),axis=V(),across=V(),along=V(),point=V();
+ const palette=['#6d5040','#c8ab83','#ead4ab','#71503d'].map(c=>new T.Color(c));
+ for(let row=0;row<17;row++){
+  const lat=-1.24+row*.141,ringSize=Math.max(7,Math.round(21*Math.cos(lat)));
+  for(let i=0;i<ringSize;i++){
+   const angle=-1.80+3.60*(i+.28*(row%2))/(ringSize-.55),c=Math.cos(lat);
+   const dx=Math.sin(angle)*c,dy=Math.cos(angle)*c,dz=Math.sin(lat);
+   base.set(.221*dx,.194+.177*dy,-.085+.317*dz);
+   axis.set(.68*dx,.70*dy+.15,.63*dz-.64).normalize();
+   across.set(0,0,1).cross(axis).normalize();along.crossVectors(axis,across);
+   const first=positions.length/3,length=.071+.018*Math.cos(i*4.1+row*1.55);
+   for(const [j,[t,r]] of [[0,.018],[.57,.014],[.80,.010],[1,.001]].entries()){
+    for(let k=0;k<4;k++){
+     const a=k*Math.PI/2+.36*row;
+     point.copy(base).addScaledVector(axis,length*t).addScaledVector(across,r*Math.cos(a)).addScaledVector(along,r*Math.sin(a));
+     positions.push(point.x,point.y,point.z);const color=palette[j];colors.push(color.r,color.g,color.b);
+     if(j<3){const v=first+j*4+k,next=first+j*4+(k+1)%4;indices.push(v,next,v+4,next,next+4,v+4);}
+    }
+   }
+  }
+ }
+ const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(positions,3));
+ geo.setAttribute('color',new T.Float32BufferAttribute(colors,3));geo.setIndex(indices);geo.computeVertexNormals();
+ return mesh(T,trunk,'层层交错的背刺',geo,pelt);
+}
+function hedgehogModel(parent){
+ const root=group(T,parent,'欧洲刺猬'),trunk=group(T,root,'低矮的拱背');
+ oval(trunk,'背刺下的栗色绒毛',darkFur,0,.194,-.085,.222,.178,.322);
+ spineCoat(trunk);
+ const head=group(T,trunk,'贴地探闻的尖脸',[0,.176,.165]);
+ profile(head,'由脸颊渐细到鼻尖',[[-.095,.01,.135,.124],[-.03,.017,.155,.128],[.055,.005,.139,.116],
+  [.133,-.003,.105,.083],[.198,-.020,.072,.060],[.260,-.026,.030,.032]],
+  coat('#ab8b71','#d3b18b','#ead7b5',(x,y,z,a)=>.68*band(.12,.88,-Math.cos(a))));
+ const snout=oval(head,'湿亮的小鼻尖',nose,0,-.022,.263,.037,.031,.028);
+ for(const side of [-1,1]){
+  oval(head,'短圆绒耳',darkFur,side*.113,.106,-.006,.047,.050,.028);
+  oval(head,'耳窝',pink,side*.120,.109,.012,.029,.032,.014);
+  oval(head,'黑亮的小眼睛',ink,side*.117,.047,.099,.023,.023,.021);
+  oval(head,'眼光',gloss,side*.131,.055,.111,.006,.006,.005);
  }
  const legs=[];
- for(const s of [-1,1])for(const z of [-.27,.205]){
-  const leg=group(T,trunk,'贴地的小粗腿',[s*.156,.185,z]);
-  furry(leg,'腿与脚跟',flank,0,-.066,0,.074,.107,.081);
-  oval(leg,'挖洞的脚掌',darkFur,0,-.143,.042,.077,.041,.098);
-  for(let j=-1;j<=1;j++)oval(leg,'短钝脚爪',cream,j*.030,-.150,.118,.014,.015,.026);
-  legs.push(leg);
+ for(const side of [-1,1])for(const z of [-.245,.116]){
+  const leg=group(T,trunk,'腹下的小短腿',[side*.133,.120,z]);
+  oval(leg,'覆着绒毛的小腿',darkFur,0,-.042,0,.034,.061,.034);
+  oval(leg,'踩着落叶的小脚',darkFur,0,-.099,.016,.033,.019,.050);legs.push(leg);
  }
- const focus=marker(head,'鼻梁上的点按中心',0,.070,.232);
+ const focus=marker(head,'鼻梁上的点按中心',0,.04,.161);
  return {root,focus,pose(s,t){
-  root.visible=s.visible;root.position.set(Math.sin(wombatDoor.yaw)*s.dist,0,Math.cos(wombatDoor.yaw)*s.dist);
-  root.rotation.y=wombatDoor.yaw+Math.PI*s.turn;
+  root.visible=s.visible;root.position.set(Math.sin(hedgehogDoor.yaw)*s.dist,0,Math.cos(hedgehogDoor.yaw)*s.dist);
+  root.rotation.y=hedgehogDoor.yaw+Math.PI*s.turn;
   const walk=['out','home','hide','home-turn'].includes(s.action)?1:0;
-  trunk.position.y=.009*walk*Math.abs(Math.sin(s.feet))+.004*(1-walk)*Math.sin(t*1.2);
-  head.rotation.x=s.bite*(.63+.045*Math.sin(t*8))-.07*(s.action==='peek'?1:0);
-  head.rotation.y=s.action==='peek'?.19*Math.sin(t*1.6):0;
-  legs.forEach((leg,i)=>{const beat=Math.sin(s.feet+(i===0||i===3?0:Math.PI));leg.rotation.x=.35*walk*beat;});
+  trunk.position.y=.006*walk*Math.abs(Math.sin(s.feet))+.003*(1-walk)*Math.sin(t*1.2);
+  head.rotation.x=s.bite*(.45+.025*Math.sin(t*8))-(s.action==='peek'?.12:0);
+  head.rotation.y=(s.action==='peek'?.25:.24*s.bite)*Math.sin(t*2.2);
+  snout.position.y=-.022+.006*Math.sin(t*12);
+  legs.forEach((leg,i)=>{leg.rotation.x=.45*walk*Math.sin(s.feet+(i===0||i===3?0:Math.PI));});
  }};
 }
 
@@ -180,8 +205,8 @@ function grassPatch(root,x,z,size,seed){
  patch.scale.setScalar(size);return {patch,base,focus:marker(base,'草尖',0,.25,0)};
 }
 function burrow(parent){
- const root=group(T,parent,'树根下的土洞',[wombatDoor.x,0,wombatDoor.z]),mound=group(T,root,'拱形洞口');
- mound.rotation.y=wombatDoor.yaw;
+ const root=group(T,parent,'树根下的土洞',[hedgehogDoor.x,0,hedgehogDoor.z]),mound=group(T,root,'拱形洞口');
+ mound.rotation.y=hedgehogDoor.yaw;
  const verts=[],indices=[],col=[],tint=new T.Color(),warm=new T.Color('#b9a27b'),dirt=new T.Color('#8e795b');
  const rings=[[-1.54,.22,.24],[-1.31,.63,.64],[-.86,.79,.81],[-.43,.77,.79],[-.11,.73,.72],[.035,.62,.69],[.046,.45,.64],[-.15,.46,.63],[-1.16,.47,.65]];
  const slices=29;
@@ -213,14 +238,23 @@ function burrow(parent){
 }
 
 export function makeGumGround(root){
- const adult=wallabyModel(root),den=burrow(root),wombat=wombatModel(den.root);
+ const adult=wallabyModel(root),den=burrow(root),hedgehog=hedgehogModel(den.root);
  const tuft=grassPatch(root,grazingTuft.x,grazingTuft.z,1,4);
- const far=grassPatch(den.root,Math.sin(wombatDoor.yaw)*1.89,Math.cos(wombatDoor.yaw)*1.89,.72,1);
- return {hints:{wallaby:adult.root,'wombat-den':den.mound,wombat:wombat.root,'wallaby-grass':tuft.patch},
-  points:{wallaby:adult.focus,'wombat-den':den.focus,wombat:wombat.focus,'wallaby-grass':tuft.focus},
+ const path=group(T,den.root,'洞口外的林地');path.rotation.y=hedgehogDoor.yaw;
+ const litter=group(T,path,'洞外的落叶和小甲虫',[0,.015,1.72]);
+ const russet=clay(T,'#a96e43'),ochre=clay(T,'#ce9c53'),shell=clay(T,'#62503c',.51);
+ for(const [x,z,angle] of [[-.17,.04,.84],[.14,.12,1.94],[.08,.16,.30]]){
+  const leaf=oval(litter,'卷起的小落叶',x<0?russet:ochre,x,.012,z,.056,.012,.107);leaf.rotation.y=angle;
+ }
+ const beetle=group(T,litter,'落叶边的金龟子');
+ oval(beetle,'甲虫的翅鞘',shell,0,.028,0,.037,.029,.063);
+ oval(beetle,'小甲虫的脑袋',ink,0,.025,-.052,.026,.020,.023);
+ return {hints:{wallaby:adult.root,'hedgehog-den':den.mound,hedgehog:hedgehog.root,'wallaby-grass':tuft.patch},
+  points:{wallaby:adult.focus,'hedgehog-den':den.focus,hedgehog:hedgehog.focus,'wallaby-grass':tuft.focus},
   tick(s){
-   adult.pose(s.wallaby,s.time);wombat.pose(s.wombat,s.time);
+   adult.pose(s.wallaby,s.time);hedgehog.pose(s.hedgehog,s.time);
    tuft.base.scale.y=s.grass.height;tuft.base.rotation.z=.13*s.grass.bend+.032*Math.sin(s.time*2.3);
-   far.base.scale.y=1-.35*s.wombat.bite;
+   beetle.visible=!s.hedgehog.preyHidden;
+   beetle.position.x=.018*Math.sin(s.time*2);
   }};
 }

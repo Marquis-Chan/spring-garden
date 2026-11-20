@@ -81,7 +81,6 @@ test('狐狸在两堆落叶间行走时，林兔的两处草丛都仍可直接�
 test('树林像从动物身前看，水域仍看得到水面和前后落点',()=>{
  for(const ratio of [1440/900,430/740,390/844]){
   const rainforest=viewFor('rainforest',ratio),asia=viewFor('asia',ratio);
-  assert.ok(rainforest.elevation>=.15&&rainforest.elevation<=.31);
   const portrait=Math.max(0,Math.min(1,(1.2-ratio)/.62));
   const before=.19+(.30-.19)*portrait**2*(3-2*portrait);
   assert.ok(Math.abs(asia.elevation-before-Math.PI/18)<1e-9);
@@ -95,9 +94,11 @@ test('树林像从动物身前看，水域仍看得到水面和前后落点',()=
    const original=wide+(narrow-wide)*portrait**2*(3-2*portrait);
    assert.ok(Math.abs(viewFor(name,ratio).elevation-original-Math.PI/18)<1e-9);
   }
-  for(const name of ['savanna','coast']){
-   assert.ok(viewFor(name,ratio).elevation<=.46,name+' 近景俯角过大');
+  for(const [name,wide,narrow,adjustment] of [['rainforest',.18,.29,10],['coast',.28,.45,20],['ocean',.12,.22,20]]){
+   const baseline=wide+(narrow-wide)*portrait**2*(3-2*portrait);
+   assert.ok(Math.abs(viewFor(name,ratio).elevation-baseline-adjustment*Math.PI/180)<1e-9,name+' 近景俯角增量');
   }
+  assert.ok(viewFor('savanna',ratio).elevation<=.46,'草原近景俯角过大');
   const pool=viewFor('pond',ratio);
   assert.ok(pool.elevation>=.45&&pool.elevation<=.74,'池塘需要保留水面深度');
  }

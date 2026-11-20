@@ -1,3 +1,5 @@
+import {savannaWaterArc} from './savanna-state.js';
+
 export function group(T, parent, name, position = [0, 0, 0]) {
   const item = new T.Group();
   item.name = name;
@@ -347,11 +349,11 @@ export function makeElephant(T) {
   const tangent = new T.Vector3();
 
   function pose({ time = 0, stride = 0, gait = 0, scoop = 0, lift = 0, spray = 0, look = 0, call = 0,
-    listen = 0, sniff = 0, sniffSide = 0 } = {}) {
+    listen = 0, sniff = 0, sniffSide = 0,aimX=0,aimY=.34,aimZ=2.12 } = {}) {
     const rising = Math.max(lift, spray);
     const sip = scoop * (1 - rising);
     const smelling=sniff*(1-scoop)*(1-rising);
-    const sway = Math.sin(time * 2.8);
+    const sway = Math.sin(time * 1.86);
     const walk = gait * (1 - Math.max(scoop, rising));
     const bob = Math.sin(stride * 2) * walk * 0.023;
     const weight = Math.sin(stride) * walk;
@@ -360,7 +362,7 @@ export function makeElephant(T) {
     head.position.y = 1.475 + rising * 0.029 + call * 0.018 + bob * 0.64;
     head.rotation.z = weight * 0.023;
     jaw.rotation.x = call * 0.31;
-    tail.rotation.y = Math.sin(time * 1.65) * 0.21;
+    tail.rotation.y = Math.sin(time * 1.12) * 0.21;
     for (const { sign, ear } of ears) {
       ear.rotation.set(-0.06-listen*.16, sign * (0.16 + sway * 0.052 + call * 0.10 + rising * 0.09 + listen*.45),
         sign * (-0.12 + look * 0.042 + listen*.27));
@@ -386,9 +388,17 @@ export function makeElephant(T) {
       const [x, y, z] = rest[i];
       const swayX = (look * 0.21 + sway * 0.026 + weight * 0.048) * t * (1 - sip) * (1 - spray * 0.75);
       // 先听见蹄声再卷鼻朝向声源，四足仍落在原地。
-      p.set(x + swayX + smelling*sniffSide*t*t*.83,
+      p.set(x + swayX + smelling*sniffSide*t*t*.83+look*.38*rising*t*t,
         T.MathUtils.lerp(y, low[i][1], sip) * (1 - rising) + held[i][1] * rising + call * 0.025 * (1 - sip) + bob * 0.64 + smelling*t*t*.97,
         T.MathUtils.lerp(T.MathUtils.lerp(z, low[i][2], sip), held[i][2], rising) + smelling*Math.sin(t*Math.PI*1.4)*.22);
+    }
+    if(rising>0){
+      // 鼻孔朝真实水弧的出射切线，末端一节和鼻孔共用同一方向。
+      const tip=trunk.points.at(-1);
+      tangent.set(aimX-tip.x,aimY-tip.y+Math.PI*savannaWaterArc.height,aimZ-tip.z).normalize();
+      const guide=trunk.points.at(-2);
+      const length=guide.distanceTo(tip);
+      guide.lerp(tangent.multiplyScalar(-length).add(tip),rising);
     }
     trunk.update();
     nozzle.position.copy(trunk.points.at(-1));
@@ -525,8 +535,8 @@ export function makeGiraffe(T) {
     body.position.y = 1.450 + breathe + rise;
     body.rotation.z = -rock * 0.033;
     tail.rotation.y = Math.sin(time * 2.02) * 0.24 + rock * 0.15;
-    head.rotation.set(0.017 + reach * (0.28 + (2.67 - reachY) * 0.23) + rise * 0.7,
-      Math.atan2(reachX, 1.11) * reach * 0.84, reach * reachX * -0.079 + rock * 0.023);
+    head.rotation.set(.017 + reach*(.045+(2.95-reachY)*.23) + rise*.7,
+      Math.atan2(reachX, Math.max(.75,reachZ)) * reach * .87, reach * reachX * -.055 + rock * .023);
     target.set(reachX * reach + rock * 0.045, T.MathUtils.lerp(2.894 + breathe + rise * 1.21, reachY, reach),
       T.MathUtils.lerp(1.033, reachZ, reach));
     // 从目标叶簇反算头的位置，吻节点在够叶时精确落到叶面。
@@ -534,8 +544,9 @@ export function makeGiraffe(T) {
     head.position.copy(target).sub(offset);
     contact.copy(headMount).applyEuler(head.rotation).add(head.position);
     neck.points[0].set(0, 1.535 + breathe + rise, 0.126);
-    neck.points[1].set(contact.x * 0.22, T.MathUtils.lerp(1.923 + rise, contact.y - 0.589, reach), 0.488 + reach * 0.154);
-    neck.points[2].set(contact.x * 0.67, contact.y - 0.291, contact.z + reach * 0.044);
+    // 每个颈段沿肩与枕骨之间的线逐渐伸向叶子。平顺分配弯度，不让靠头的一段反折回胸前。
+    neck.points[1].copy(neck.points[0]).lerp(contact,.34);neck.points[1].z+=.074;
+    neck.points[2].copy(neck.points[0]).lerp(contact,.68);neck.points[2].z+=.059;
     neck.points[3].copy(contact);
     neck.update();
 
@@ -569,7 +580,8 @@ export function makeGiraffe(T) {
 export function makeZebra(T) {
   const root = group(T, null, 'Savanna zebra');
   const body = group(T, root, 'Zebra barrel', [0, 0.785, -0.086]);
-  const head = group(T, body, 'Zebra head', [0, 0.307, 0.556]);
+  const neckFrame = group(T, body, 'Zebra shoulder and poll', [0,.068,.288]);
+  const head = group(T, neckFrame, 'Zebra head', [0,.648,.057]);
   const jaw = group(T, head, 'Zebra jaw', [0, -0.071, 0.086]);
   const tail = group(T, body, 'Zebra tail', [0, -0.030, -0.665]);
   const sphere = new T.SphereGeometry(1, 22, 16);
@@ -605,10 +617,13 @@ export function makeZebra(T) {
   ]), 40, (x, y, z) => stripes(z * 42 + Math.sin(y * 11 + z * 3) * 1.56
     + Math.sin(x * 11 - z * 6) * 0.98, 1 - s(y, -0.19, 0.052)));
   mesh(T, body, 'Striped zebra torso', bodyShape, painted);
-  const neckShape = paintSphere(T, (x, y, z) =>
-    stripes(y * 14.5 + z * 1.73 + Math.sin(x * 2.5 + z * 1.58), 1 - s(y, -0.75, 0.31)), 34, 25);
-  const neck = mesh(T, body, 'Striped uphill neck', neckShape, painted, [0, 0.143, 0.360], [0.186, 0.344, 0.226]);
-  neck.rotation.x = 0.39;
+  const neckShape=closedShape(T,denseRings(T,[
+    [-.16,0,.098,.132],[-.08,0,.167,.208],[.06,.008,.194,.228],
+    [.19,.017,.177,.211],[.35,.018,.154,.179],[.51,.012,.117,.139],
+    [.61,.006,.096,.108],[.679,0,.063,.068]
+  ]),40,(x,y,z)=>stripes(z*44+Math.sin(y*9+x*4)*1.32,1-s(z,-.14,.17)));
+  const neck=mesh(T,neckFrame,'Striped uphill neck',neckShape,painted);
+  neck.rotation.x=-Math.PI/2;
   const headShape = closedShape(T, [
     [-0.185, 0.002, 0.011, 0.015], [-0.164, 0.018, 0.075, 0.086],
     [-0.125, 0.023, 0.124, 0.122], [-0.073, 0.018, 0.146, 0.138],
@@ -621,12 +636,12 @@ export function makeZebra(T) {
   mesh(T, head, 'Round gray muzzle', sphere, muzzle, [0, -0.107, 0.218], [0.103, 0.080, 0.103]);
   mesh(T, jaw, 'Small lower zebra lip', small, ink, [0, -0.085, 0.101], [0.089, 0.056, 0.109]);
 
-  const crest = [[0, 0.272, 0.014], [0, 0.359, 0.118], [0, 0.404, 0.208], [0, 0.451, 0.342], [0, 0.463, 0.451]];
-  tube(T, body, 'Short black crest base', crest, 0.036, ink, 14);
+  const crest = [[0,.061,-.218],[0,.15,-.216],[0,.24,-.211],[0,.33,-.192],[0,.42,-.170],[0,.51,-.140],[0,.60,-.105],[0,.659,-.063]];
+  tube(T, neckFrame, 'Short black crest base', crest, .032, ink, 20);
   crest.forEach(([x, y, z], index) => {
-    const tuft = mesh(T, body, 'Raised crest tuft', small, index % 3 === 0 ? ivory : ink,
-      [x, y + 0.035, z], [0.046, 0.066, 0.060]);
-    tuft.rotation.x = 0.46;
+    const tuft = mesh(T, neckFrame, 'Raised crest tuft', small, index % 3 === 0 ? ivory : ink,
+      [x,y+.015,z-.030],[.038,.065,.051]);
+    tuft.rotation.x=-.43;
   });
   tube(T, tail, 'Hanging zebra tail', [[0, 0, 0], [0.025, -0.079, -0.104],
     [0.064, -0.255, -0.148], [0.069, -0.447, -0.142]], 0.019, ink);
@@ -672,9 +687,8 @@ export function makeZebra(T) {
     const sway = Math.sin(stride) * moving;
     body.position.y = 0.785 + Math.sin(time * 3.15) * 0.006 + Math.abs(sway) * 0.016 - rest * 0.032;
     body.rotation.z = sway * 0.023 + shake*.045;
-    neck.rotation.x = 0.39 + rest * 0.13 + glance * 0.10;
-    head.position.set(0, 0.307 - rest * 0.071 - glance * 0.091, 0.556 + rest * 0.034 + glance * 0.045);
-    head.rotation.set(rest * 0.28 - voice * 0.095 + glance * 0.16 + Math.sin(stride * 2) * moving * 0.052,
+    neckFrame.rotation.set(.54+rest*.28+glance*.16+moving*Math.sin(stride*2)*.04,aware*.13+shake*.065,shake*.07);
+    head.rotation.set(-neckFrame.rotation.x+rest*.28-voice*.095+glance*.16+Math.sin(stride*2)*moving*.052,
       aware * 0.40 + rest * 0.125 + shake*.31, aware * 0.12 + shake*.27);
     jaw.rotation.x = voice * 0.39;
     tail.rotation.y = Math.sin(time * 2.28) * (0.13 + moving * 0.18) * (1 - rest) + .46*shake;
@@ -699,7 +713,7 @@ export function makeZebra(T) {
   }
 
   pose();
-  return { root, pose };
+  return { root, pose, head };
 }
 
 export function makeLion(T) {

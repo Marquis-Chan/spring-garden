@@ -138,14 +138,16 @@ export function makePanda(parent,index){
    const goal=arm.goal.set(side*.335,-.144,.312);
    goal.lerp(loc.set(side*.26,-.17,.55),restingLow);
    goal.lerp(loc.set(side*.31,.10,.455),b.tuck);
-   goal.lerp(loc.set(side*.33,-.29-side*.11*b.stride,.49+side*.10*b.stride),b.walk);
+   // 四足回坡时前掌绕肩摆动，向前迈步不会同时把上下臂拉长。
+   const swing=.71+side*.34*b.stride;
+   goal.lerp(loc.set(side*.33,.213-.57*Math.cos(swing),.027+.57*Math.sin(swing)),b.walk);
    if(index===0){
     if(side===-1)goal.lerp(loc.set(-.44,.30,.32),b.greet);
-    const invite=play.phase==='share'?play.side:1;
-    if(side===invite)goal.lerp(loc.set(side*.53,.21,.25),b.reach);
+    if(side===1)goal.lerp(loc.set(side*.40,.20,.49),b.reach);
     else goal.lerp(loc.set(side*.28,-.04,.40),b.reach*.61);
    }else if(b.reach){
-    goal.lerp(loc.set(side*.195,.24,.455),b.reach*(side===-s?1:.72));
+    if(side===-s)goal.lerp(loc.set(side*.170,.205,.588),b.reach);
+    else goal.lerp(loc.set(side*.27,.08,.39),b.reach*.72);
    }
    arm.solve(goal);
   }

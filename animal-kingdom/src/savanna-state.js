@@ -1,4 +1,4 @@
-import { clamp, idleClockRate, ease, idleDelay, mix } from './state.js';
+import {sleepStep,  clamp, idleClockRate, ease, idleDelay, mix } from './state.js';
 
 export const savannaPoints = {
   floor: .38,
@@ -6,7 +6,7 @@ export const savannaPoints = {
   water: { x: 16.20, y: .437, z: 6.24 },
   flowers: [{ x: 15.30, y: .72, z: 7.11 }, { x: 17.43, y: .72, z: 7.22 }],
   giraffe: { x: 19.10, y: .38, z: 4.91 },
-  leaves: [{ x: 18.62, y: 3.03, z: 5.82 }, { x: 20.00, y: 2.85, z: 5.62 }],
+  leaves: [{ x: 18.62, y: 3.35, z: 5.93 }, { x: 20.00, y: 3.31, z: 5.76 }],
   zebra: { x: 18.05, y: .38, z: 6.53 },
   zebraRun: { x: 18.26, y: .38, z: 7.86 },
   lion: { x: 21.20, y: .58, z: 6.12 },
@@ -14,16 +14,25 @@ export const savannaPoints = {
   lionGrass: { x: 21.64, y: .77, z: 6.82 }
 };
 
-const scoopTime = .31;
-const sprayTime = .65;
-const waterTravel = .43;
+// 每簇三片叶的自由端。模型和动作共用同一位置，吃掉外侧一片后才够下一片。
+export function browseLeafTip(index,blade){
+  const p=savannaPoints.leaves[index],inward=2-blade,side=index===0?-1:1;
+  return {x:p.x+side*inward*.075,y:p.y+inward*.056,z:p.z-inward*.047};
+}
+
+const scoopTime = .53;
+const sprayTime = 1.24;
+export const savannaWaterArc={flight:.43,height:.61};
+const waterTravel = savannaWaterArc.flight;
 const mouthContact = .55;
 const leafTravel = .47;
 const leafFallPoints = [{ x: 18.22, y: .387, z: 6.63 }, { x: 20.83, y: .645, z: 6.87 }];
 const maxLeaves = 3;
 const restYaw = -.64;
 const elephantWalk = [{ x: 15.74, z: 4.92 }, savannaPoints.elephant];
-const giraffeWalk = [{ x: 19.43, z: 5.41 }, { x: 18.98, z: 5.38 }];
+const giraffeWalk = [{x:19.43,z:5.41},{x:19.98,z:5.16},{x:19.43,z:4.52},
+  {x:18.19,z:4.77},{x:17.94,z:5.23},{x:18.69,z:5.30}];
+const feedingStands=[{x:18.69,z:4.91},{x:19.64,z:4.90}];
 const lionWalk = [{ x: 21.345, z: 6.135 }, { x: 21.055, z: 6.135 }];
 const giraffeHoofStance = [
   { x: -.222, z: .324 }, { x: -.215, z: -.669 },
@@ -105,12 +114,12 @@ export function createSavanna(emit = () => {}) {
   let turnHoof = -1;
   let turnDirection = 0;
 
-  function walkRoutine(actor, route, routine, dt, ready, pace, strideSize, rest = 2.8) {
+  function walkRoutine(actor, route, routine, dt, ready, pace, strideSize, rest = 2.8, turnRate=5.2) {
     if (!ready || plainTime < routine.next) {
       actor.gait = mix(actor.gait, 0, Math.min(1, dt * 12));
       return false;
     }
-    if (walking(actor, route[routine.index], dt, pace, strideSize)) {
+    if (walking(actor, route[routine.index], dt, pace, strideSize,turnRate)) {
       routine.index = 1 - routine.index;
       routine.next = plainTime + idleDelay(rest);
     }
@@ -142,34 +151,36 @@ export function createSavanna(emit = () => {}) {
       // 若蹄声来自身后，先换脚转身；鼻尖从正面伸向斑马，避免高举在反方向。
       const bearingToZebra=bearing(elephant,zebra);
       const change=angleDelta(elephant.yaw,bearingToZebra-.44);
-      turnStep=clamp(change,-dt*3.3,dt*3.3);
+      turnStep=clamp(change,-dt*2.45,dt*2.45);
       elephant.yaw+=turnStep;
       elephant.stride+=Math.abs(turnStep)*2;
       if(Math.abs(change)<.1 && heard>.13)sniffAt=time;
     }
-    const hearing = Number.isFinite(hoofHeardAt) && (sniffAt===-Infinity||sniffAge<1.46);
-    elephant.listen = mix(elephant.listen,hearing?ease(heard/.18)*(sniffAt===-Infinity?1:1-ease((sniffAge-.58)/.53)):0,Math.min(1,dt*16));
-    elephant.sniff = mix(elephant.sniff,ease(sniffAge/.49)*(1-ease((sniffAge-.92)/.51)),Math.min(1,dt*16));
+    const hearing = Number.isFinite(hoofHeardAt) && (sniffAt===-Infinity||sniffAge<1.90);
+    elephant.listen = mix(elephant.listen,hearing?ease(heard/.24)*(sniffAt===-Infinity?1:1-ease((sniffAge-.87)/.67)):0,Math.min(1,dt*13));
+    elephant.sniff = mix(elephant.sniff,ease(sniffAge/.71)*(1-ease((sniffAge-1.18)/.70)),Math.min(1,dt*13));
     if(hearing)elephant.sniffSide=clamp(angleDelta(elephant.yaw,bearing(elephant,zebra))/.60,-1,1);
     elephant.scoop = elephant.lift = elephant.spray = elephant.call = 0;
-    elephant.call = pulse((time - elephantCallAt) / .78);
+    elephant.call = pulse((time - elephantCallAt) / 1.06);
     if (watering?.at === null) {
       // 取水位固定在水边；从当前站位走回去，对准水面，才开始下探长鼻。
-      if (walking(elephant, points.elephant, dt, .81, .75, 6.6)) {
+      if (walking(elephant, points.elephant, dt, .60, .75, 3.45)) {
         const turn = angleDelta(elephant.yaw, 0);
-        elephant.yaw += clamp(turn, -dt * 6.6, dt * 6.6);
+        elephant.yaw += clamp(turn, -dt * 3.45, dt * 3.45);
         if (Math.abs(turn) < .025) { elephant.yaw = 0; watering.at = time; }
       }
     } else {
-      walkRoutine(elephant, elephantWalk, elephantRoutine, dt, active && !watering && !hearing, .48, .75);
+      walkRoutine(elephant, elephantWalk, elephantRoutine, dt, active && !watering && !hearing, .33, .75,2.8,2.95);
       if(turnStep)elephant.gait=Math.min(.30,Math.abs(turnStep)*8);
     }
     if (watering && watering.at !== null) {
       const action = watering;
       const age = time - action.at;
       const target = points.flowers[action.index];
-      elephant.scoop = ease(age / scoopTime) * (1 - ease((age - scoopTime) / .21));
-      elephant.lift = ease((age - scoopTime) / (sprayTime - scoopTime)) * (1 - ease((age - .98) / .27));
+      // 鼻尖先贴住水面，停一小会才提起；最后一颗水珠出鼻后再放低。
+      const drinkEnd=scoopTime+.15,release=sprayTime+.59;
+      elephant.scoop = ease(age/scoopTime)*(1-ease((age-drinkEnd)/.43));
+      elephant.lift = ease((age-drinkEnd)/(sprayTime-drinkEnd))*(1-ease((age-release)/.53));
       if (!action.scooped && age >= scoopTime) {
         action.scooped = true;
         emit({ type: 'scoop', ...points.water });
@@ -180,7 +191,7 @@ export function createSavanna(emit = () => {}) {
       }
       if (action.sprayedAt !== null) {
         const flightAge = time - action.sprayedAt;
-        elephant.spray = 1 - ease((flightAge - .14) / .32);
+        elephant.spray = 1 - ease((flightAge - .58) / .42);
         // 动画开始时水仍在途中。只有本次水弧到达的花才变湿和展开。
         if (!action.hit && flightAge >= waterTravel) {
           action.hit = true;
@@ -194,7 +205,7 @@ export function createSavanna(emit = () => {}) {
           }
         }
       }
-      if (action.hit && age >= 1.26) {
+      if (action.hit && age >= release+.54) {
         watering = null;
         elephantRoutine.index = 0;
         elephantRoutine.next = plainTime + 2.65;
@@ -203,6 +214,10 @@ export function createSavanna(emit = () => {}) {
       }
     }
     const target = points.flowers[watering?.index ?? flowerChoice];
+    const dx=target.x-elephant.x,dz=target.z-elephant.z;
+    elephant.aimX=dx*Math.cos(elephant.yaw)-dz*Math.sin(elephant.yaw);
+    elephant.aimZ=dx*Math.sin(elephant.yaw)+dz*Math.cos(elephant.yaw);
+    elephant.aimY=target.y-elephant.y;
     const look = clamp(angleDelta(elephant.yaw, bearing(elephant, target)) / .63, -1, 1);
     elephant.look = mix(elephant.look, look, Math.min(1, dt * 9));
     for (const flower of flowers) {
@@ -227,12 +242,18 @@ export function createSavanna(emit = () => {}) {
     }
     if (browsing || !leaves[leafChoice].remaining) return;
     // 黄叶还在飞落或被狮子拨弄时，连点只摇动枝梢，避免上一片叶中途消失。
-    if (leafChoice===1 && time-bittenAt[1]<2.8) return;
-    const target = points.leaves[leafChoice];
+    if (leafChoice===1 && (fallenAt[1]!==-Infinity || lionPawing?.leaf)) return;
+    const target = browseLeafTip(leafChoice,leaves[leafChoice].remaining-1);
     const heading = bearing(giraffe, target);
     const turn = angleDelta(giraffe.yaw, heading);
-    const aligned = Math.abs(turn) < .95 && distance(giraffe, target) * Math.cos(turn) > .55;
-    browsing = { index: leafChoice, at: aligned ? time : null, heading, bit: false };
+    const gap=distance(giraffe,target);
+    // 只向叶子走到颈长可及处，不从远端一律回到同一站位。
+    const stand=gap>1.34?{
+      x:target.x+(giraffe.x-target.x)*1.12/gap,
+      z:Math.min(5.43,target.z+(giraffe.z-target.z)*1.12/gap)
+    }:gap<.55?feedingStands[leafChoice]:null;
+    const aligned = !stand && Math.abs(turn)<.95 && gap*Math.cos(turn)>.55;
+    browsing = { index: leafChoice, target, stand, at: aligned ? time : null, heading, bit: false };
     if (aligned) fixGiraffeReach(target);
   }
 
@@ -267,28 +288,29 @@ export function createSavanna(emit = () => {}) {
     return true;
   }
 
+  function walkGiraffeTo(target,dt,pace){
+    const gap = distance(giraffe, target);
+    if(gap<.013)return true;
+    const heading=bearing(giraffe,target);
+    const turn = angleDelta(giraffe.yaw, heading);
+    const turned=turnGiraffe(giraffe.yaw+clamp(turn,-dt*2.8,dt*2.8));
+    const speed=turned&&Math.abs(turn)<.26?Math.min(pace,Math.max(.10,gap*3.4)):0;
+    const travel = Math.min(gap, speed*dt);
+    giraffe.x = mix(giraffe.x, target.x, travel / gap);
+    giraffe.z = mix(giraffe.z, target.z, travel / gap);
+    giraffe.stride += travel * Math.PI * 2 / .95;
+    giraffe.gait = mix(giraffe.gait,speed/pace,Math.min(1,dt*12));
+    return false;
+  }
   function strollGiraffe(dt, ready) {
     if (!ready || plainTime < giraffeRoutine.next) {
       giraffe.gait = mix(giraffe.gait, 0, Math.min(1, dt * 12));
       return;
     }
-    const target = giraffeWalk[giraffeRoutine.index];
-    const gap = distance(giraffe, target);
-    if (gap < .013) {
-      giraffeRoutine.index = 1 - giraffeRoutine.index;
-      giraffeRoutine.next = plainTime + idleDelay(2.8);
-      return;
+    if(walkGiraffeTo(giraffeWalk[giraffeRoutine.index],dt,.46)){
+      giraffeRoutine.index=(giraffeRoutine.index+1)%giraffeWalk.length;
+      giraffeRoutine.next=plainTime+idleDelay(2.8);
     }
-    // 在树前几步斜走，胸口保持朝开阔草地，来回不用掉头半圈。
-    const heading = clamp(bearing(giraffe, target), -.86, .86);
-    const turn = angleDelta(giraffe.yaw, heading);
-    turnGiraffe(giraffe.yaw + clamp(turn, -dt * 3.4, dt * 3.4));
-    const pace = Math.abs(turn) < .25 ? Math.min(.43, Math.max(.09, gap * 3.4)) : 0;
-    const travel = Math.min(gap, pace * dt);
-    giraffe.x = mix(giraffe.x, target.x, travel / gap);
-    giraffe.z = mix(giraffe.z, target.z, travel / gap);
-    giraffe.stride += travel * Math.PI * 2 / .95;
-    giraffe.gait = mix(giraffe.gait, pace / .43, Math.min(1, dt * 12));
   }
 
   function stepGiraffe(dt, active) {
@@ -299,7 +321,11 @@ export function createSavanna(emit = () => {}) {
     if (!browsing) return;
     const action = browsing;
     if (action.at === null) {
-      // 先稳在这块地上转向叶子。将鼻吻硬拉向身体背后，会把整段颈部折过胸口。
+      // 远枝先走到树侧；够得到时稳住四蹄转向，避免伸颈穿过远处树干。
+      if(action.stand){
+        if(!walkGiraffeTo(action.stand,dt,.76))return;
+        action.stand=null;action.heading=bearing(giraffe,action.target);
+      }
       const remaining = angleDelta(giraffe.yaw, action.heading);
       const turned = clamp(remaining, -dt * 3.8, dt * 3.8);
       if (!turnGiraffe(giraffe.yaw + turned)) return;
@@ -307,7 +333,7 @@ export function createSavanna(emit = () => {}) {
       giraffe.gait = mix(giraffe.gait, .32 * clamp(Math.abs(remaining) / .60), Math.min(1, dt * 14));
       if (Math.abs(remaining - turned) > .025) return;
       if (!turnGiraffe(action.heading)) return;
-      fixGiraffeReach(points.leaves[action.index]);
+      fixGiraffeReach(action.target);
       action.at = time;
     }
     const age = time - action.at;
@@ -316,7 +342,7 @@ export function createSavanna(emit = () => {}) {
       action.bit = true;
       const index = action.index;
       const leaf = leaves[index];
-      const from = points.leaves[index];
+      const from = action.target;
       const to = leafFallPoints[index];
       bittenAt[index] = fallenAt[index] = time;
       leaf.remaining--;
@@ -367,7 +393,7 @@ export function createSavanna(emit = () => {}) {
     for (const leaf of leaves) {
       const age = time - bittenAt[leaf.index];
       leaf.bend = ease(age / .09) * (1 - ease((age - .12) / .64));
-      if (age >= 2.8) leaf.remaining = maxLeaves;
+      if (age >= 2.8 && browsing?.index!==leaf.index) leaf.remaining = maxLeaves;
       const travel = leaf.index === 1 ? .86 : leafTravel;
       if (fallenAt[leaf.index] === -Infinity || time - fallenAt[leaf.index] < travel) continue;
       fallenAt[leaf.index] = -Infinity;
@@ -455,7 +481,7 @@ export function createSavanna(emit = () => {}) {
     const sign = listening ? clamp(angleDelta(zebra.yaw, bearing(zebra, listenTarget)) / 1.2, -1, 1) : 0;
     zebra.listen = sign * listening;
     zebra.notice = listening;
-    zebra.sleep = clamp(zebra.sleep + dt * (night && !zebraRun ? 2.05 : -2.8));
+    zebra.sleep = sleepStep(zebra.sleep, night && !zebraRun, dt);
   }
 
   function tapLion() {

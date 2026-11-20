@@ -38,16 +38,16 @@ test('银眼鸟先叫，妈妈再侧耳、幼崽接着探头；重复点草不�
  s.tap('silvereye');play(s,.31);assert.ok(w.look>.24&&w.peek<.05);
  play(s,1.15);assert.ok(w.look>.98&&w.peek>.84);
 });
-test('点白天的洞出睡眠反馈，夜间先探头、再爬出来吃草；掘地兽进洞时头不穿过拱口',()=>{
+test('点夜晚的洞出睡眠反馈，白天先探头、再走进落叶闻甲虫；刺猬进洞时头不穿过拱口',()=>{
  const events=[],s=createEucalyptus(e=>events.push(e.type)),v=makeEucalyptusDiorama(new T.Scene());
- const b=s.ground.wombat;s.tap('wombat-den');assert.equal(events.at(-1),'wombat-den-sleep');assert.ok(!s.canTap('wombat'));
- play(s,2.5,true);assert.ok(s.canTap('wombat'));assert.equal(b.action,'peek');
- s.tap('wombat');const door=v.root.getObjectByName('拱形洞口'),word=new T.Vector3();let checked=0;
+ const b=s.ground.hedgehog;play(s,2.8,true);s.tap('hedgehog-den');assert.equal(events.at(-1),'hedgehog-den-sleep');assert.ok(!s.canTap('hedgehog'));
+ play(s,2.85,false);assert.ok(s.canTap('hedgehog'));assert.equal(b.action,'peek');
+ s.tap('hedgehog');const door=v.root.getObjectByName('拱形洞口'),word=new T.Vector3();let checked=0;
  for(let i=0;i<320;i++){
-  s.step(dt,true,true);v.tick(s);
+  s.step(dt,true,false);v.tick(s);
   if(b.action==='out'&&b.dist<.72){
-   for(const name of ['厚短的圆耳','宽扁的裸露鼻吻']){
-    const node=v.hintNodes.wombat.getObjectByName(name);
+   for(const name of ['短圆绒耳','湿亮的小鼻尖','层层交错的背刺']){
+    const node=v.hintNodes.hedgehog.getObjectByName(name);
     const pos=node.geometry.attributes.position;
     for(let p=0;p<pos.count;p+=5){
      node.localToWorld(word.fromBufferAttribute(pos,p));door.worldToLocal(word);
@@ -57,7 +57,11 @@ test('点白天的洞出睡眠反馈，夜间先探头、再爬出来吃草；�
    }
   }
  }
- assert.ok(checked>65);assert.ok(events.includes('wombat-graze'));assert.equal(b.action,'graze');
- s.tap('wombat');play(s,4.5,false);assert.equal(b.action,'den');assert.equal(b.visible,false);assert.ok(!s.canTap('wombat'));
+ assert.ok(checked>65);assert.ok(events.includes('hedgehog-forage'));assert.equal(b.action,'forage');
+ const beetle=v.root.getObjectByName('落叶边的金龟子');
+ assert.equal(beetle.visible,false,'觅食后甲虫从落叶边消失');
+ play(s,.15,true);s.tap('hedgehog-den');assert.notEqual(events.at(-1),'hedgehog-den-sleep');
+ play(s,4.5,true);v.tick(s);assert.equal(events.at(-1),'hedgehog-den-sleep');assert.equal(beetle.visible,true,'回窝后下次仍能再找到甲虫');
+ assert.equal(b.action,'den');assert.equal(b.visible,false);assert.ok(!s.canTap('hedgehog'));
  const before=s.ground.time;s.step(dt,false,true);assert.equal(s.ground.time,before);
 });

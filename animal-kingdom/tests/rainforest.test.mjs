@@ -89,7 +89,7 @@ test('地猴先能独立玩，入夜已落地果保留、地猴歇息，醒后�
   rain.tapDropBanana();
   advance(.55);
   rain.setNight(true);
-  advance(1.3);
+  advance(2.6);
   assert.equal(rain.dropBanana.phase, 'ground');
   assert.equal(rain.groundMonkey.sleep, 1);
   rain.tapGroundMonkey();
@@ -242,7 +242,7 @@ test('入夜猴子先落稳，清掉未摘果的预约，夜点只出休息反�
   advance(.32);
   rain.setNight(true);
   assert.equal(rain.monkey.sleep, 0);
-  advance(1.4);
+  advance(3.6);
   assert.equal(rain.monkey.site, 1);
   assert.equal(rain.monkey.sleep, 1);
   assert.equal(rain.monkey.tailGrip, 1);
@@ -273,13 +273,13 @@ test('树懒初见清醒，叶摸满才摘，送嘴后才嚼，闲置二十四�
   assert.ok(rain.sloth.chew > 0);
   advance(22.4);
   assert.equal(rain.sloth.sleep, 0);
-  advance(.83);
+  advance(1.85);
   const nap = events.find(event => event.type === 'sloth-nap');
   assert.ok(nap.time - touched >= 24 && nap.time - touched < 24.05);
   assert.ok(rain.sloth.sleep > .3);
   rain.tapLeaf();
   assert.ok(events.some(event => event.type === 'sleep' && event.animal === 'sloth'));
-  advance(3.17);
+  advance(5.2);
   assert.equal(rain.sloth.sleep, 0);
   assert.equal(rain.leaf.phase, 'branch');
   rain.tapLeaf();
@@ -290,7 +290,7 @@ test('树懒初见清醒，叶摸满才摘，送嘴后才嚼，闲置二十四�
 test('树懒入夜睡着，点时不移动叶片，天亮可继续摘', () => {
   const { rain, events, advance } = setup();
   rain.setNight(true);
-  advance(.78);
+  advance(2.52);
   assert.equal(rain.sloth.sleep, 1);
   rain.tapSloth();
   advance(.78);
@@ -383,7 +383,7 @@ test('树懒停歇时三个入口统一出 Zzz，入夜迟来的小摆不会传�
   rain.tapSlothBough();
   advance(.23);
   rain.setNight(true);
-  advance(.74);
+  advance(2.62);
   assert.equal(rain.sloth.sleep, 1);
   assert.equal(rain.sloth.sway, 0);
   assert.equal(rain.sloth.boughShake, 0);
@@ -467,7 +467,7 @@ test('短睡中的树懒留在枝下，只有清醒的巨嘴鸟吃果，夜晚�
   const { rain, events, advance } = setup();
   const start = () => rain.step(1 / 60, true);
   start();
-  advance(24.4);
+  advance(25.72);
   assert.ok(rain.sloth.sleep > .65);
   rain.tapBerry();
   advance(.50);
@@ -475,7 +475,7 @@ test('短睡中的树懒留在枝下，只有清醒的巨嘴鸟吃果，夜晚�
   assert.equal(rain.berry.owner, 'toucan');
   advance(3.4);
   rain.setNight(true);
-  advance(.55);
+  advance(2.5);
   assert.ok(rain.toucan.sleep > .9);
   const total = events.filter(event => event.type === 'berry-pick').length;
   rain.tapBerry();
@@ -498,6 +498,7 @@ test('抢果途中入夜，以果实是否已离枝决定停止或顺势接完',
     advance(2.7);
     assert.equal(rain.berry.phase, release ? 'spent' : 'branch');
     assert.equal(events.filter(event => event.type === 'sloth-berry-mouth').length, Number(release));
+    advance(2.5);
     assert.equal(rain.sloth.sleep, 1);
     assert.equal(rain.toucan.sleep, 1);
   }

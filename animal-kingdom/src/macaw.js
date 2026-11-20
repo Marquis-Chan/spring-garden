@@ -1,7 +1,7 @@
 import * as T from 'three';
 import {branch} from './grove-diorama.js';
 import {blink, closedShape, group, mesh, paintSphere, tube} from './savanna-actors.js';
-import {clamp, ease, mix} from './state.js';
+import {sleepStep, clamp, ease, mix} from './state.js';
 
 export const macawPerches=[
  {x:38.55,y:1.06,z:2.63,yaw:-.88},
@@ -48,18 +48,19 @@ export function createMacaw(emit=()=>{}){
   dt=clamp(dt,0,.05);age+=dt;bird.time+=dt;
   bird.flight=bird.flap=bird.bank=bird.stretch=bird.crouch=bird.fan=bird.bill=bird.preen=bird.bow=0;
   bird.look=.14*Math.sin(bird.time*.72)+.035*Math.sin(bird.time*1.6);
-  bird.sleep=clamp(bird.sleep+dt*(night&&bird.action!=='flight'?2:-3));
+  bird.sleep=sleepStep(bird.sleep,night&&bird.action!=='flight',dt);
   if(bird.action==='flight'){
    const p=clamp((age-.17)/1.24),hop=pulse(p),travel=ease(p),{from,to,site,banana}=trip;
-   // 飞行始终在栖枝的镜头一侧；起降两端沿切线拔高，给趾尖和长尾留出空间。
-   bird.x=mix(from.x,to.x,travel)-.85*hop;
-   bird.z=mix(from.z,to.z,travel)+.82*hop;
-   bird.y=mix(from.y,to.y,travel)+.89*hop;
+   // 从树懒脸前略向外绕，向上穿过两条栖枝之间的空隙。
+   const arcX=-.70,arcZ=.82;
+   bird.x=mix(from.x,to.x,travel)+arcX*hop;
+   bird.z=mix(from.z,to.z,travel)+arcZ*hop;
+   bird.y=mix(from.y,to.y,travel)+.95*hop;
    bird.flight=hop;bird.flap=Math.sin(p*Math.PI*10)*Math.min(1,hop*3);
    bird.stretch=clamp(hop*2.8);bird.fan=hop*.85;
    bird.crouch=.85*pulse(age/.17)+.75*pulse((age-1.41)/.23);
    const slope=6*p*(1-p),arcSlope=Math.PI*Math.cos(p*Math.PI);
-   const aim=Math.atan2((to.x-from.x)*slope-.85*arcSlope,(to.z-from.z)*slope+.82*arcSlope);
+   const aim=Math.atan2((to.x-from.x)*slope+arcX*arcSlope,(to.z-from.z)*slope+arcZ*arcSlope);
    bird.yaw=turn(turn(from.yaw,aim,ease(p/.32)),to.yaw,ease((p-.56)/.44));
    bird.bank=.14*Math.sin(2*Math.PI*p);
    if(age>=1.64){
@@ -97,15 +98,15 @@ export function createMacaw(emit=()=>{}){
 }
 
 const mat=(colour,extra={})=>new T.MeshStandardMaterial({color:colour,roughness:.69,...extra});
-const blue=mat('#286f99'),teal=mat('#33889b'),deep=mat('#2b516d'),
+const blue=mat('#286f99'),teal=mat('#2f8eae'),deep=mat('#315b93'),scarlet=mat('#d74536'),vermilion=mat('#e75c42'),throat=mat('#bf3632'),amber=mat('#e3a732'),gold=mat('#f3c548'),ivory=mat('#ead3ad'),
  black=mat('#393b3e'),chin=mat('#33494a'),foot=mat('#666269'),
  skin=mat('#f2e8cb'),eyeGold=mat('#c18f4b'),white=mat('#fff8d7'),green=mat('#628f58'),tealLeaf=mat('#708f69');
 const sphere=new T.SphereGeometry(1,20,16);
 function oval(root,name,surface,x,y,z,w,h,d){
  return mesh(T,root,name,sphere,surface,[x,y,z],[w,h,d]);
 }
-const bodyTone=mat('#ffffff',{vertexColors:true}),warm=new T.Color('#e6aa34'),honey=new T.Color('#f6cd58'),
- sea=new T.Color('#2987a7'),shaded=new T.Color('#315975');
+const bodyTone=mat('#ffffff',{vertexColors:true}),warm=new T.Color('#ce4234'),honey=new T.Color('#f36548'),
+ sea=new T.Color('#bb343a'),shaded=new T.Color('#882e3d');
 const plumage=paintSphere(T,(x,y,z)=>warm.clone().lerp(honey,.42+.30*y)
  .lerp(sea,T.MathUtils.smoothstep(-z+.34*y,.02,.53))
  .lerp(shaded,T.MathUtils.smoothstep(-z,.52,.99)*.38));
@@ -114,44 +115,42 @@ const billShape=closedShape(T,[[0,.016,.076,.061],[.052,.037,.082,.088],[.103,.0
 
 // 两对前后相向的趾包围短圆枝，转头和梳羽只带动躯干，不会把脚爪挪离栖枝。
 function makeBird(root){
- const actor=group(T,root,'蓝黄金刚鹦鹉'),trunk=group(T,actor,'肩胸'),head=group(T,trunk,'额颊与上喙');
- mesh(T,trunk,'金黄前胸与蓝背',plumage,bodyTone,[0,0,-.018],[.158,.204,.213]);
- oval(head,'蓝色头顶',teal,0,.005,-.028,.141,.141,.149);
- oval(head,'绿色额冠',green,0,.061,.035,.127,.089,.115);
- oval(head,'黑色喉带',chin,0,-.064,.054,.117,.079,.104);
+ const actor=group(T,root,'绯红金刚鹦鹉'),trunk=group(T,actor,'肩胸'),head=group(T,trunk,'额颊与上喙');
+ mesh(T,trunk,'绯红前胸与深红背羽',plumage,bodyTone,[0,0,-.018],[.158,.204,.213]);
+ oval(head,'绯红头顶',scarlet,0,.005,-.028,.141,.141,.149);
+ oval(head,'朱红额羽',vermilion,0,.061,.035,.127,.089,.115);
+ oval(head,'红色喉羽',throat,0,-.064,.054,.117,.079,.104);
  const gaze=[];
  for(const side of [-1,1]){
   const face=group(T,head,'裸露的奶白色脸颊',[side*.103,.008,.046]);face.rotation.y=side*.42;
   oval(face,'脸颊',skin,0,0,.005,.048,.094,.104);
-  for(let i=0;i<3;i++)tube(T,face,'面部短黑羽纹',[[side*.033,-.044+i*.023,.062],
-   [side*.045,-.051+i*.025,.026],[side*.047,-.045+i*.023,-.014]],.004,black,8);
   const eye=group(T,face,'金色眼圈',[side*.039,.038,.044]);
   oval(eye,'眼圈',eyeGold,0,0,0,.020,.027,.024);
   oval(eye,'瞳仁',black,side*.012,0,.008,.014,.021,.017);
   oval(eye,'眼神光',white,side*.022,.006,.015,.005,.006,.005);
   gaze.push(eye);
  }
- mesh(T,head,'向下弯曲的黑色上喙',billShape,black,[0,-.008,.110]);
+ mesh(T,head,'向下弯曲的象牙色上喙',billShape,ivory,[0,-.008,.110]);
  const jaw=group(T,head,'短下喙',[0,-.061,.105]);
  oval(jaw,'下喙',chin,0,0,.057,.065,.045,.080);
  const wings=[];
  for(const side of [-1,1]){
-  const shoulder=group(T,trunk,'蓝翼肩',[side*.112,.051,-.035]);
-  oval(shoulder,'羽肩',blue,side*.128,0,-.054,.183,.066,.105);
+  const shoulder=group(T,trunk,'绯红翼肩',[side*.112,.051,-.035]);
+  oval(shoulder,'绯红肩羽',scarlet,side*.128,0,-.054,.183,.066,.105);
   const wrist=group(T,shoulder,'可折起的翼腕',[side*.222,-.014,-.042]);
   for(let i=0;i<6;i++){
    const feather=oval(wrist,'初级飞羽',i%3===1?teal:deep,side*(.122-.011*i),-.015-i*.002,
     -.015-i*.028,.206-i*.016,.019,.030);
    feather.rotation.y=side*(.17+.085*i);
   }
-  for(let i=0;i<4;i++)oval(shoulder,'层叠的覆羽',i%2?blue:teal,
-   side*(.114+i*.032),.035-i*.009,-.086-i*.011,.089,.021,.038);
+  for(let i=0;i<4;i++)oval(shoulder,'层叠的金黄覆羽',i%2?gold:amber,
+   side*(.157+i*.032),.046-i*.006,-.064-i*.021,.101,.024,.041);
   wings.push({shoulder,wrist,side});
  }
  const tail=group(T,trunk,'长楔形尾羽',[0,-.018,-.142]),plumes=[];
  for(let i=-2;i<=2;i++){
   const half=.332-Math.abs(i)*.056;
-  const feather=oval(tail,'窄蓝尾翎',i===0?teal:i%2?blue:deep,i*.033,0,-half, .035,.014,half+.035);
+  const feather=oval(tail,'渐长的红蓝尾羽',i===0?vermilion:Math.abs(i)===1?scarlet:blue,i*.033,0,-half, .035,.014,half+.035);
   plumes.push({feather,i});
  }
  const legs=[];
@@ -210,5 +209,10 @@ export function makeMacawDiorama(scene,groundAt){
   }
  }
  const {actor,pose,legs}=makeBird(root);pose({...createMacaw().bird});
- return {root,bird:actor,feet:legs,tick(state){pose(state.bird);}};
+ return {root,bird:actor,feet:legs,tick(state,voice){
+  const s=state.bird;
+  if(voice==null||s.sleep>.1){pose(s);return;}
+  // 再点起飞时，仍根据尚在播放的实录张喙；梳羽的自然咬合单独保留。
+  pose({...s,bill:s.action==='preen'?Math.max(s.bill,voice):voice});
+ }};
 }

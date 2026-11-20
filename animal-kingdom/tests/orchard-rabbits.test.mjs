@@ -72,7 +72,7 @@ test('跳到一半切夜先落稳再趴下，睡着点击出睡眠反馈，白�
   family.setNight(true);
   advance(.10);
   assert.equal(rabbit.sleep, 0);
-  advance(1.8);
+  advance(3.4);
   assert.equal(rabbit.sleep, 1);
   assert.equal(other.sleep, 1);
   assert.equal(rabbit.y, groundHeight(rabbit.x, rabbit.z));
@@ -123,7 +123,7 @@ test('已有短跳先落地再去萝卜；途中切夜双方各落稳归位，�
   advance(.2);
   assert.ok(family.rabbits.some(r=>r.air>0));
   family.setNight(true);
-  advance(3.2);
+  advance(5.3);
   assert.equal(family.carrot.phase,'ready');
   assert.equal(family.carrot.round,0);
   assert.equal(family.carrot.winner,0);

@@ -1,4 +1,4 @@
-import { clamp, idleClockRate, ease, idleDelay, mix } from './state.js';
+import {sleepStep,  clamp, idleClockRate, ease, idleDelay, mix } from './state.js';
 
 export const rainPoints = {
   monkeyBranches: [{ x: 34.76, y: 1.42, z: .14 }, { x: 35.61, y: 1.64, z: -.53 }],
@@ -48,7 +48,8 @@ function localPoint(actor, point, prefix) {
   actor[prefix + 'Z'] = dx * s + dz * c;
 }
 
-export function createRainforest(emit = () => {}, { groundAt = () => .38 } = {}) {
+export function createRainforest(emit = () => {}, { groundAt = () => .38, soundClock } = {}) {
+  const callClock=soundClock??(()=>time);
   const points = rainPoints;
   const monkey = {
     ...points.monkeyBranches[0], yaw: -.22, time: 0, site: 0, crouch: 0, air: 0, flight: 0, land: 0,
@@ -327,7 +328,7 @@ export function createRainforest(emit = () => {}, { groundAt = () => .38 } = {})
       }
     }
     monkey.land = 1 - ease((time - monkeyLandAt) / .22);
-    monkey.sleep = clamp(monkey.sleep + dt * (night && !monkeyMove && !monkeyFood && monkeyPluckAt === null ? 2.1 : -2.8));
+    monkey.sleep = sleepStep(monkey.sleep, night && !monkeyMove && !monkeyFood && monkeyPluckAt === null, dt);
   }
 
   function stepDroppedBanana() {
@@ -462,7 +463,7 @@ export function createRainforest(emit = () => {}, { groundAt = () => .38 } = {})
       }
       actor.crouch = .79 * actor.reach;
     }
-    actor.sleep = clamp(actor.sleep + dt * (night && groundFoodAt === null ? 2.3 : -2.8));
+    actor.sleep = sleepStep(actor.sleep, night && groundFoodAt === null, dt);
     sampleGroundMonkey();
   }
 
@@ -598,7 +599,7 @@ export function createRainforest(emit = () => {}, { groundAt = () => .38 } = {})
     }
     if (berryRace?.sloth) stepSlothBerry(berryRace);
     const resting = (night || slothNapUntil !== null) && !slothBusy() && !slothCrawl;
-    sloth.sleep = clamp(sloth.sleep + dt * (resting ? 2.25 : -2.9));
+    sloth.sleep = sleepStep(sloth.sleep, resting, dt);
   }
 
   function tapToucan() {
@@ -622,7 +623,7 @@ export function createRainforest(emit = () => {}, { groundAt = () => .38 } = {})
   // 招呼声先响完，巨嘴鸟看向发声的栖枝，再张喙应一声。
   function answerMacaw(point,delay=2.55) {
     if(night)return;
-    macawReply={point:position(point),at:time,replyAt:time+delay,called:false};
+    macawReply={point:position(point),at:time,replyAt:callClock()+delay,called:false};
   }
 
   function tapBerry() {
@@ -796,13 +797,14 @@ export function createRainforest(emit = () => {}, { groundAt = () => .38 } = {})
       toucan.look = direction * .67 * watch;
     }
     if(macawReply){
-      const reply=macawReply;
-      if(!active||time>reply.replyAt+(reply.called ? .88 : 2.8))macawReply=null;
+      const reply=macawReply,now=callClock();
+      // 两声之间的留白跟随实录时钟，即使绘制帧率偏低也不会被拉长。
+      if(!active||now>reply.replyAt+(reply.called ? .88 : 2.8))macawReply=null;
       else if(!toucanMove&&!berryRace?.toucan&&!berryQueued){
-        const glance=ease((time-reply.at)/.30)*(reply.called?1-ease((time-reply.replyAt-.30)/.58):1);
+        const glance=ease((time-reply.at)/.30)*(reply.called?1-ease((now-reply.replyAt-.30)/.58):1);
         toucan.look=clamp(angleDelta(toucan.yaw,bearing(toucan,reply.point)),-.78,.78)*glance;
-        if(!reply.called&&time>=reply.replyAt){
-          reply.called=true;reply.replyAt=time;toucanCallAt=time;
+        if(!reply.called&&now>=reply.replyAt){
+          reply.called=true;reply.replyAt=now;toucanCallAt=time;
           emit({type:'toucan-call',reason:'macaw'});
         }
       }
@@ -810,7 +812,7 @@ export function createRainforest(emit = () => {}, { groundAt = () => .38 } = {})
     toucan.land = 1 - ease((time - toucanLandAt) / .22);
     if (berryRace?.toucan) stepToucanBerry(berryRace);
     const resting = night && !toucanMove && !berryRace?.toucan;
-    toucan.sleep = clamp(toucan.sleep + dt * (resting ? 2.2 : -3.1));
+    toucan.sleep = sleepStep(toucan.sleep, resting, dt);
   }
 
   function setNight(value) {

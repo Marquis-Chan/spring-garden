@@ -1,4 +1,4 @@
-import { clamp, ease, idleClockRate, idleTravelRate, mix } from './state.js';
+import {sleepStep,  clamp, ease, idleClockRate, idleTravelRate, mix } from './state.js';
 
 const residentLane = {x:27.36,z:9.32,rx:.26,rz:.14};
 export const duckCove = {x:29.80,z:8.82,lipX:29.34};
@@ -118,7 +118,7 @@ export function createRiverNeighbors(emit, {waterY}) {
       duck.headUp=Math.max(.93*calling,.72*answer);
       duck.call=calling;
       duck.wing=.25*answer;
-      duck.sleep=clamp(duck.sleep+dt*(night&&!returningToCover?2.4:-3.1));
+      duck.sleep=sleepStep(duck.sleep,night&&!returningToCover,dt);
       duck.time=time+index*.84;
     }
   }

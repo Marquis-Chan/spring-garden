@@ -1,4 +1,4 @@
-import { clamp, idleClockRate, ease, idleDelay, idleTravelRate, mix } from './state.js';
+import {sleepStep,  clamp, idleClockRate, ease, idleDelay, idleTravelRate, mix } from './state.js';
 
 export const coastWaterY = .42;
 const shoreTop = .65;
@@ -409,7 +409,7 @@ export function createCoast(emit = () => {}) {
     }
     actor.yaw += turn(actor.yaw, yaw) * Math.min(1, dt * 13);
     actor.land = 1 - ease((time - landedAt[index]) / .24);
-    actor.sleep = clamp(actor.sleep + dt * (night && actor.phase === 'land' ? 2.35 : -2.9));
+    actor.sleep = sleepStep(actor.sleep, night && actor.phase === 'land', dt);
     sampleFeet(actor);
   }
 
