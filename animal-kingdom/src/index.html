@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#e7ebc8"><title>春日小花园 · 动物王国</title>
-<meta name="description" content="春日小花园的 3D 动物探索游戏：拖动连续大地图，走近十处栖息地，探索企鹅潮池和北极熊冰岸。">
+<meta name="description" content="春日小花园的 3D 动物探索游戏：拖动连续大地图，走近十一处栖息地，和考拉、小鳄鱼、金刚鹦鹉一起玩。">
 <style>/* CSS */</style>
 </head>
 <body>
@@ -32,7 +32,7 @@
   <div id="cloud-art" aria-hidden="true">
    <svg viewBox="0 0 184 92"><defs><linearGradient id="cloud-foam" x2="0" y2="1" gradientUnits="objectBoundingBox"><stop stop-color="#fffbed"/><stop offset="1" stop-color="#d6e5df"/></linearGradient></defs><path id="cloud-body" d="M6 61q0-23 26-23Q36 16 63 17 75 -1 97 12q21 3 26 26 31-7 47 8 13 16-1 31-8 9-32 9H38Q5 86 6 61Z" fill="url(#cloud-foam)" /><path d="M40 38q5-13 20-13m20-8q16-7 31 13" fill="none" stroke="#fffef2" stroke-width="5" opacity=".65" stroke-linecap="round"/></svg>
   </div>
-  <canvas id="stage" aria-label="动物王国，可向四周拖动，探索池塘、林缘、果园、草原、河岸、亚洲树林、雨林、企鹅湾、冰岸和海底"></canvas>
+  <canvas id="stage" aria-label="动物王国，可向四周拖动，探索池塘、林缘、果园、草原、河岸、亚洲树林、桉树林、雨林、企鹅湾、冰岸和海底"></canvas>
   <div id="atlas-waymarks" role="group" aria-label="大地图上的场景入口"></div>
   <div id="sleep-mark" aria-hidden="true" hidden><span>Z</span><span>z</span><span>z</span></div>
   <div id="sky-hand">
@@ -74,6 +74,9 @@
    <button type="button" id="enter-ice" class="waymark" aria-label="走近北极熊的冰洞" hidden>
     <svg viewBox="0 0 44 44" aria-hidden="true"><path d="M4 31 9 20 16 15 22 9l9 7 9 15-9 4-18 1Z" fill="#9dcbd1"/><path d="m9 20 7-5 6-6 8 7-7-1-5 5-4-1-3 4Z" fill="#f1faf8"/><path d="M16 32c0-8 3-12 8-12s8 6 8 12" fill="#578592"/><circle cx="20" cy="26" r="2.3" fill="#e5eddf"/><circle cx="29" cy="26" r="2.3" fill="#e5eddf"/><path d="M18 32c0-8 13-8 13 0Z" fill="#fff3de"/><circle cx="25" cy="30" r="1.4" fill="#4e5957"/></svg>
    </button>
+   <button type="button" id="enter-eucalyptus" class="waymark" aria-label="走近考拉的桉树林" hidden>
+    <svg viewBox="0 0 44 44" aria-hidden="true"><g fill="#849b95" stroke="#607d75" stroke-width="1.4"><circle cx="9" cy="16" r="7"/><circle cx="35" cy="16" r="7"/><ellipse cx="22" cy="23" rx="13.5" ry="12"/></g><ellipse cx="22" cy="28" rx="7" ry="5" fill="#e1e5cb"/><g fill="#344747"><circle cx="16" cy="22" r="1.6"/><circle cx="28" cy="22" r="1.6"/><path d="M22 20c2.7 0 4 5 4 7.2 0 2.5-8 2.5-8 0 0-2.2 1.3-7.2 4-7.2z"/></g></svg>
+   </button>
    <button type="button" id="overview" class="waymark" aria-label="回到全景" hidden>
      <svg viewBox="0 0 40 40" aria-hidden="true"><path fill="#7c9d62" d="M6 26c2-4 6-4 9-7 4-5 10-6 13-3 4 2 7 4 7 9 0 4-5 8-13 9-8 1-17-1-16-8Z"/><path fill="#7bb8b4" d="M19 25c0 3-5 6-8 4-4-3 5-9 8-4Z"/><path fill="#557c52" d="M28 22h-2v-5l-5 2 6-10 7 10-6-2z"/><path d="M20 29c3-4 5-3 7-7" stroke="#f0d7a0" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
    </button>
@@ -105,5 +108,10 @@
 <!-- Toco toucan: Fabrício Grigolin, CC BY 4.0; https://commons.wikimedia.org/wiki/File:Toco_Toucan_call_(Ramphastos_toco).ogg — 7.15–9.50 s excerpt, filtered and faded. -->
 <!-- African penguin: Favaro L, Gamba M, Alfieri C, Pessani D, McElligott A. Scientific Reports 5, 17255 (2015), Supplementary Audio S1. https://doi.org/10.1038/srep17255 ; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/ — filtered and faded contact call presented twice at original pitch. -->
 <!-- Humpback whale and bottlenose dolphin field recordings: NOAA Fisheries, Northeast Fisheries Science Center, Passive Acoustics Branch. Meno-song-NOAA-PAGroup-13 and Tutr-multisound-NOAA-PAGroup-03, respectively. https://www.fisheries.noaa.gov/national/science-data/sounds-ocean-mammals — natural-pitch excerpts, filtered, normalized and faded. -->
+<!-- New wildlife recordings, mono PCM excerpts. Original pitch, filtered, level matched and faded for this game.
+Nile crocodile: T. Chabert et al., Scientific Reports 5 (2015), supplementary audio no. 1, first natural call (35.5 cm juvenile), 0.58–1.23 s repeated with pauses. CC BY 4.0. https://doi.org/10.1038/srep15547
+Koala: B. D. Charlton et al., PLOS ONE (2011), Movie S1, Andy at Lone Pine Koala Sanctuary, 11.68–14.76 s. CC BY. https://doi.org/10.1371/journal.pone.0020329.s001
+Blue-and-yellow macaw (Ara ararauna): Hans Lütgens, Museum für Naturkunde Berlin, Tierstimmenarchiv TSA:Ara_ararauna_Lue_54_2_1, 9.35–12.43 s. Adapted recording licensed CC BY-SA 3.0 DE https://creativecommons.org/licenses/by-sa/3.0/de/ . https://suche.tierstimmenarchiv.de/search/showdetails.html?unique_identifier=TSA:Ara_ararauna_Lue_54_2_1
+Silvereye (Zosterops lateralis): Crown Copyright, Department of Conservation (NZ), CC BY 4.0 https://creativecommons.org/licenses/by/4.0/ . https://www.doc.govt.nz/footer-links/copyright/ . Silvereye/wax-eye song, Apple Valley Road, Nelson, 3.07–6.15 s. https://www.doc.govt.nz/nature/native-animals/birds/bird-songs-and-calls/ -->
 <!-- Polar bear (Ursus maritimus), Günter Tembrock, Tierstimmenarchiv, Museum für Naturkunde Berlin, 1993-01-30. TSA:Ursus_maritimus_V_1879_17_2. https://suche.tierstimmenarchiv.de/search/showdetails.html?unique_identifier=TSA:Ursus_maritimus_V_1879_17_2 . Source and adapted polar-bear.wav: CC BY-SA 3.0 https://creativecommons.org/licenses/by-sa/3.0/ . Original-pitch excerpt 7.76–10.34 s, band-limited, noise reduced, normalized and faded. -->
 <script>/* AUDIO */</script><script>/* GAME */</script></body></html>

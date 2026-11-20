@@ -110,6 +110,7 @@ export function createRainforest(emit = () => {}, { groundAt = () => .38 } = {})
   let toucanMove = null;
   let toucanLandAt = -Infinity;
   let toucanCallAt = -Infinity;
+  let macawReply = null;
   let toucanWatchAt = -Infinity;
   let toucanNext = 4.65;
   let toucanPending = false;
@@ -605,6 +606,7 @@ export function createRainforest(emit = () => {}, { groundAt = () => .38 } = {})
       if (!toucanMove && !berryRace?.toucan) emit({ type: 'sleep', animal: 'toucan' });
       return;
     }
+    macawReply = null;
     if (toucanMove?.quiet) {
       toucanPending = true;
       return;
@@ -615,6 +617,12 @@ export function createRainforest(emit = () => {}, { groundAt = () => .38 } = {})
     toucanNext = routineTime + 7.2;
     toucanMove = { at: time, index: 1 - toucan.site, from: position(toucan), jumped: false };
     emit({ type: 'toucan-call' });
+  }
+
+  // 招呼声先响完，巨嘴鸟看向发声的栖枝，再张喙应一声。
+  function answerMacaw(point,delay=2.55) {
+    if(night)return;
+    macawReply={point:position(point),at:time,replyAt:time+delay,called:false};
   }
 
   function tapBerry() {
@@ -748,7 +756,7 @@ export function createRainforest(emit = () => {}, { groundAt = () => .38 } = {})
     toucan.flight = toucan.flap = toucan.reach = toucan.hold = toucan.beakOpen = 0;
     toucan.call = night ? 0 : pulse((time - toucanCallAt) / .82);
     let heading = toucan.site===0?-.93:.70;
-    if (active && !night && !toucanMove && !berryRace && !berryQueued && time - toucanWatchAt > .88 && routineTime >= toucanNext) {
+    if (active && !night && !macawReply && !toucanMove && !berryRace && !berryQueued && time - toucanWatchAt > .88 && routineTime >= toucanNext) {
       toucanMove = { at: time, index: 1 - toucan.site, from: position(toucan), jumped: false, quiet: true };
       toucanNext = routineTime + idleDelay(8.2);
     }
@@ -787,6 +795,18 @@ export function createRainforest(emit = () => {}, { groundAt = () => .38 } = {})
       const direction = Math.sign(angleDelta(toucan.yaw, bearing(toucan, points.slothBough)));
       toucan.look = direction * .67 * watch;
     }
+    if(macawReply){
+      const reply=macawReply;
+      if(!active||time>reply.replyAt+(reply.called ? .88 : 2.8))macawReply=null;
+      else if(!toucanMove&&!berryRace?.toucan&&!berryQueued){
+        const glance=ease((time-reply.at)/.30)*(reply.called?1-ease((time-reply.replyAt-.30)/.58):1);
+        toucan.look=clamp(angleDelta(toucan.yaw,bearing(toucan,reply.point)),-.78,.78)*glance;
+        if(!reply.called&&time>=reply.replyAt){
+          reply.called=true;reply.replyAt=time;toucanCallAt=time;
+          emit({type:'toucan-call',reason:'macaw'});
+        }
+      }
+    }
     toucan.land = 1 - ease((time - toucanLandAt) / .22);
     if (berryRace?.toucan) stepToucanBerry(berryRace);
     const resting = night && !toucanMove && !berryRace?.toucan;
@@ -813,6 +833,7 @@ export function createRainforest(emit = () => {}, { groundAt = () => .38 } = {})
     toucanWatchAt = -Infinity;
     toucanCallAt = -Infinity;
     toucanPending = false;
+    macawReply = null;
     berryQueued = false;
     if (berryRace && berry.phase === 'branch') berryRace = null;
     // 未脱离枝的食物留在枝上；已经拿在手里的食物照常送嘴。
@@ -847,6 +868,6 @@ export function createRainforest(emit = () => {}, { groundAt = () => .38 } = {})
   return {
     monkey, groundMonkey, sloth, toucan, bananas, dropBanana, leaf, berry, get time() { return time; },
     setNight, step, tapMonkey, tapGroundMonkey, tapBanana, tapDropBanana, tapMonkeyBough, tapSloth, tapSlothBough,
-    tapLeaf, tapToucan, tapBerry
+    tapLeaf, tapToucan, tapBerry, answerMacaw
   };
 }

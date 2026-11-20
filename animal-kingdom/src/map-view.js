@@ -17,7 +17,7 @@ export const habitats={
  pond:{x:0,z:.35,r:5},grove:{x:10.2,z:.55,r:5},orchard:{x:4.5,z:7.55,r:4.1},
  savanna:{x:18.55,z:5.9,r:5.5},river:{x:27.8,z:8,r:5.3},asia:{x:21,z:-.75,r:5.5},
  rainforest:{x:36.9,z:.2,r:5.5},coast:{x:36.7,z:14.2,r:5.35},ice:{x:43.7,z:21.9,r:4.5},
- ocean:{x:54.8,z:16.1,r:6}
+ ocean:{x:54.8,z:16.1,r:6},eucalyptus:{x:29,z:-1,r:3.7}
 };
 
 // 总图路牌沿用世界坐标，放在各处的空地或水边，给动物和可玩的物件留出位置。
@@ -25,7 +25,7 @@ export const atlasWaymarks={
  pond:{x:-2.85,z:3.69},grove:{x:12.5,z:2.67},orchard:{x:6.95,z:8.45},
  savanna:{x:19.8,z:9.35},river:{x:25.35,z:10.5},asia:{x:23.8,z:1.92},
  rainforest:{x:39.1,z:3.55},coast:{x:39.8,z:13.15},ice:{x:43,z:25.45},
- ocean:{x:56.8,z:19.8}
+ ocean:{x:56.8,z:19.8},eucalyptus:{x:31.4,z:1.34}
 };
 const mapEdges=[[-1.3,-1.8],[37.8,-1.8],[56.2,13.8],[56.2,18.2],[44.5,23.15],
  [41.6,23.15],[3.4,9.35],[-1.3,3.9]];
@@ -78,6 +78,10 @@ export const adjacentPortals={
 
 export function viewFor(mode,ratio) {
  const portrait=ease((1.2-ratio)/.62);
+ if(mode==='eucalyptus')return {
+  x:29,y:mix(2.32,1.82,portrait),z:-1,height:Math.max(6.45,mix(10.4,5.95,portrait)/ratio),
+  azimuth:mix(-.07,-.14,portrait),elevation:mix(.24,.34,portrait)
+ };
  if(mode==='overview')return {
   x:mix(4.68,4.88,portrait),y:mix(.92,1.30,portrait),z:mix(2.64,3.03,portrait),
   height:Math.max(11.72,mix(18.2,18.8,portrait)/ratio),

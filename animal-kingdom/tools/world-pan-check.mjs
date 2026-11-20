@@ -14,6 +14,7 @@ const stops = [
   ['pond','frog','events','call'], ['orchard','orchard.dog','orchard.events','dog-call'],
   ['grove','woodland.fox','woodland.events','fox-call'], ['savanna','savanna.zebra','savanna.events','zebra-call'],
   ['asia','asia.tiger','asia.events','tiger-call'], ['river','river.rhino','river.events','rhino-call'],
+  ['eucalyptus','eucalyptus.koala','eucalyptus.events','koala-call'],
   ['rainforest','rainforest.groundMonkey','rainforest.events','monkey-call'],
   ['coast','coast.penguins.0','coast.events','penguin-call'], ['ice','ice.bear','ice.events','polar-bear-call'],
   ['ocean','ocean.animals.whale','ocean.events','ocean-whale']

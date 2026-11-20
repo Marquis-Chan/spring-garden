@@ -59,3 +59,11 @@ The WAVs are processed clips, not the original source files. The frog source MP3
 - Duckling (duckling.wav): Alexander / Orange Free Sounds, [Duckling Sound Effect](https://orangefreesounds.com/duckling-sound-effect/), [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/). Edited excerpt with low-frequency cleanup and fades. The recording is included for non-commercial use only; replace or remove it for commercial redistribution.
 
 Where Creative Commons license names are abbreviated above, see [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/), [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/), [CC BY-SA 3.0 DE](https://creativecommons.org/licenses/by-sa/3.0/de/) and [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
+
+## v0.5.3 recordings
+
+New wildlife recordings, mono PCM excerpts. Original pitch, filtered, level matched and faded for this game.
+Nile crocodile: T. Chabert et al., Scientific Reports 5 (2015), supplementary audio no. 1, first natural call (35.5 cm juvenile), 0.58–1.23 s repeated with pauses. CC BY 4.0. https://doi.org/10.1038/srep15547
+Koala: B. D. Charlton et al., PLOS ONE (2011), Movie S1, Andy at Lone Pine Koala Sanctuary, 11.68–14.76 s. CC BY. https://doi.org/10.1371/journal.pone.0020329.s001
+Blue-and-yellow macaw (Ara ararauna): Hans Lütgens, Museum für Naturkunde Berlin, Tierstimmenarchiv TSA:Ara_ararauna_Lue_54_2_1, 9.35–12.43 s. Adapted recording licensed CC BY-SA 3.0 DE https://creativecommons.org/licenses/by-sa/3.0/de/ . https://suche.tierstimmenarchiv.de/search/showdetails.html?unique_identifier=TSA:Ara_ararauna_Lue_54_2_1
+Silvereye (Zosterops lateralis): Crown Copyright, Department of Conservation (NZ), CC BY 4.0 https://creativecommons.org/licenses/by/4.0/ . https://www.doc.govt.nz/footer-links/copyright/ . Silvereye/wax-eye song, Apple Valley Road, Nelson, 3.07–6.15 s. https://www.doc.govt.nz/nature/native-animals/birds/bird-songs-and-calls/

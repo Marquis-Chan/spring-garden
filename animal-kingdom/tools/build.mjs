@@ -6,7 +6,7 @@ const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const read=f=>fs.readFileSync(path.join(root,f),'utf8').replace(/\r\n/g,'\n');
 const result=await build({entryPoints:[path.join(root,'src/game.js')],bundle:true,format:'iife',platform:'browser',target:'es2022',minify:true,write:false,legalComments:'inline'});
 const recordingNames=['frog','bird','dog','cat','bee','elephant','giraffe','zebra','lion','hippo','rhino','fox','squirrel','woodpecker','duckling',
- 'bear','polar-bear','tiger','peacock','owl','monkey','toucan','penguin','whale','dolphin'];
+ 'bear','polar-bear','tiger','peacock','owl','monkey','toucan','penguin','whale','dolphin','croc','koala','silvereye','macaw'];
 const recordings=Object.fromEntries(recordingNames.map(name=>[name,fs.readFileSync(path.join(root,'assets',name+'.wav')).toString('base64')]));
 const template=read('src/index.html');
 const licenseNotice=[read('../LICENSE'),read('node_modules/three/LICENSE')].join('\n\n');

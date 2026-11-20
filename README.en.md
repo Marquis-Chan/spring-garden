@@ -2,13 +2,13 @@
 
 [中文](README.md) · **English**
 
-Spring Garden v0.5.2 rebuilds the original animal game as a quiet 3D world for young children and their families. Tap an animal or drag the map and explore at your own pace. There are no scores or levels to beat.
+Spring Garden v0.5.3 rebuilds the original animal game as a quiet 3D world for young children and their families. Tap an animal or drag the map and explore at your own pace. There are no scores or levels to beat.
 
 **[Play online](https://marquis-chan.github.io/spring-garden/)** · **[Download for offline play](https://github.com/Marquis-Chan/spring-garden/releases/latest/download/spring-garden.html)** · [Release history](https://github.com/Marquis-Chan/spring-garden/releases)
 
 ## What to explore
 
-- Drag a continuous map and visit ten habitats: the pond, grove, orchard, savanna, riverbank, Asian woodland, rainforest, coast, ice shore and ocean.
+- Drag a continuous map and visit eleven habitats: the pond, grove, orchard, savanna, riverbank, Asian woodland, rainforest, coast, ice shore, ocean and eucalyptus grove.
 
 - Watch tadpoles find the frog, tap the orchard rabbits, or see a toucan and a sloth reach for the same berry.
 
@@ -17,6 +17,8 @@ Spring Garden v0.5.2 rebuilds the original animal game as a quiet 3D world for y
 The offline edition is a single HTML file. Open it in a modern browser with WebGL 2 support. Try Chrome or Edge with hardware acceleration enabled if 3D does not start. Sound becomes available after the first interaction; no installation or account is needed.
 
 Meet crabs and silver fish in the penguin tidepool, or invite a polar bear out of its ice cave.
+
+v0.5.3 adds a young crocodile, a koala and silvereye in a eucalyptus grove, and a blue-and-yellow macaw in the rainforest.
 
 ## Classic edition
 

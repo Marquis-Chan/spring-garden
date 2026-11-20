@@ -13,7 +13,7 @@ const url = process.argv[3]
 const sizes = [[1440, 900], [430, 740], [390, 844], [740, 430]].filter(([width]) =>
   !process.env.POND_TEST_WIDTH || width === Number(process.env.POND_TEST_WIDTH));
 assert.ok(sizes.length, 'POND_TEST_WIDTH 须为受测视口宽度之一');
-const places = ['pond', 'grove', 'orchard', 'savanna', 'river', 'asia', 'rainforest', 'coast', 'ice', 'ocean'];
+const places = ['pond', 'grove', 'orchard', 'savanna', 'river', 'asia', 'rainforest', 'coast', 'ice', 'ocean', 'eucalyptus'];
 
 await fs.mkdir(output, { recursive: true });
 const browser = await chromium.launch({
@@ -305,7 +305,7 @@ async function tour(width, height) {
       await view('overview');
       await checkShared(await read(), parked, 1, `${mode} 返回全景`);
     }
-    if (record.entries.length !== places.length) assert.fail('未完成十处入口');
+    if (record.entries.length !== places.length) assert.fail('有场景入口尚未走到');
 
     phase = '返回池塘切回白天，再查果园和云朵';
     await view('pond');
