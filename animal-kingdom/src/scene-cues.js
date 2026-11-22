@@ -1,5 +1,6 @@
 export const sceneCues = {
   eucalyptus: [{kind:'wallaby'}, {kind:'gum-leaves'}, {kind:'wallaby-grass'}, {kind:'silvereye'}, {kind:'gum-bough'}, {kind:'hedgehog-den'}, {kind:'hedgehog'}, {kind:'koala'}],
+  ranch: [{kind:'ranch-hay'}, {kind:'ranch-lamb',index:0}, {kind:'ranch-grain'}, {kind:'ranch-dog',index:0}],
   bamboo: [{kind:'panda-bamboo'}, {kind:'panda-slope'}, {kind:'panda-mother'}, {kind:'panda-left'}, {kind:'panda-right'}],
   pond: [{kind:'duckling',index:0}, {kind:'site'}],
   ice: [{kind:'ice-fish'}, {kind:'ice-cave'}, {kind:'polar-bear'}],

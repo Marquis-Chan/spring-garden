@@ -1,4 +1,5 @@
 import {sleepStep,  clamp, idleClockRate, ease, idleDelay, mix } from './state.js';
+import {createCorgiWalk} from './corgi-walk.js';
 
 export const orchardPoints = {
   floor: .38,
@@ -38,6 +39,7 @@ export function createOrchard(emit = () => {}) {
   const apples = points.apples.map((point, id) => ({ ...point, id, phase: 'branch', rotation: 0 }));
   const appleMoves = apples.map(() => null);
   const dog = { ...points.dog, yaw: -.15, time: 0, stride: 0, gait: 0, sniff: 0, bark: 0, sleep: 0 };
+  const advanceDogFeet=createCorgiWalk(dog);
   const cat = { ...points.cat, yaw: -.09, time: 0, stride: 0, gait: 0, stretch: 0, look: 0, lookDown: 0, lookUp: 0, paw: 0, sleep: 0 };
   const butterfly = {...insectAt(points.butterfly[0], 0, true),sleep:0};
   const bees = [{ ...insectAt(points.hiveIdle, null, true), hiveIdle: true }, insectAt(points.hive, null, false)];
@@ -152,14 +154,15 @@ export function createOrchard(emit = () => {}) {
   }
 
   function turnDog(target, dt) {
-    dog.yaw += angleDelta(dog.yaw, bearing(dog, target)) * Math.min(1, dt * 12);
+    dog.yaw += clamp(angleDelta(dog.yaw, bearing(dog, target)), -2.65*dt, 2.65*dt);
   }
 
   function walkDog(target, keepDistance, dt) {
     const gap = distance(dog, target);
     turnDog(target, dt);
     if (gap <= keepDistance) return 0;
-    const travel = Math.min(2.75 * dt, gap - keepDistance);
+    const alignment=Math.max(0,Math.cos(angleDelta(dog.yaw,bearing(dog,target))));
+    const travel = Math.min(1.52 * dt * alignment**4, gap - keepDistance);
     const step = travel / gap;
     const from = position(dog);
     dog.x = mix(dog.x, target.x, step);
@@ -197,6 +200,7 @@ export function createOrchard(emit = () => {}) {
   }
 
   function stepDog(dt, daily) {
+    const previousYaw=dog.yaw;
     let travel = 0;
     dog.bark = night ? 0 : pulse((time - dogCallAt) / .52);
     dog.sniff = night ? 0 : pulse((time - sniffAt) / .90);
@@ -225,8 +229,8 @@ export function createOrchard(emit = () => {}) {
       const age = dayTime - (dogRoutine.next - idleDelay(1.8));
       dog.sniff = pulse((age - .12) / 1.25) * .78;
     }
-    dog.stride += travel * 12;
-    const gait = dt ? clamp((travel - wandering) / (dt * 2.75) + wandering / (dt * .95)) : 0;
+    advanceDogFeet(dt);
+    const gait = dt ? clamp((travel+.30*Math.abs(dog.yaw-previousYaw)) / (dt * .66)) : 0;
     dog.gait = mix(dog.gait, gait, Math.min(1, dt * 11));
     dog.sleep = sleepStep(dog.sleep, night, dt);
   }

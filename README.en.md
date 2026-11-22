@@ -2,13 +2,13 @@
 
 [中文](README.md) · **English**
 
-Spring Garden v0.5.5 rebuilds the original animal game as a quiet 3D world for young children and their families. Tap an animal or drag the map and explore at your own pace. There are no scores or levels to beat.
+Spring Garden v0.5.6 rebuilds the original animal game as a quiet 3D world for young children and their families. Tap an animal or drag the map and explore at your own pace. There are no scores or levels to beat.
 
 **[Play online](https://marquis-chan.github.io/spring-garden/)** · **[Download for offline play](https://github.com/Marquis-Chan/spring-garden/releases/latest/download/spring-garden.html)** · [Release history](https://github.com/Marquis-Chan/spring-garden/releases)
 
 ## What to explore
 
-- Drag a continuous map and visit twelve habitats: the pond, grove, orchard, savanna, riverbank, Asian woodland, rainforest, coast, ice shore, ocean, eucalyptus grove and bamboo grove.
+- Drag a continuous map and visit thirteen habitats: the pond, grove, orchard, savanna, riverbank, Asian woodland, rainforest, coast, ice shore, ocean, eucalyptus grove, bamboo grove and ranch.
 
 - Watch tadpoles find the frog, tap the orchard rabbits, or see a toucan and a sloth reach for the same berry.
 
@@ -18,7 +18,7 @@ The offline edition is a single HTML file. Open it in a modern browser with WebG
 
 Meet crabs and silver fish in the penguin tidepool, or invite a polar bear out of its ice cave.
 
-v0.5.5 refines panda feeding, savanna movement, day/night transitions and cameras, with updated scarlet macaw, hedgehog, mallard and polar bear recordings.
+v0.5.6 adds Spring Ranch: feed cows, watch lambs jump, scatter grain for the chicken family, and meet the patrolling corgi. Corgi walking has also been refined.
 
 ## Classic edition
 

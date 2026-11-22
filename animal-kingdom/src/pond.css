@@ -63,10 +63,9 @@ button[hidden]{display:none}
 #overview{order:-1;border-radius:50%}
 #overview:not([aria-current]){background:#f8f3dd}
 @media(max-width:760px){#places{gap:5px}}
-@media(max-width:665px){
+@media(max-width:704px){
  #places{--space:clamp(2px,1vw,6px);display:grid;grid-template-columns:repeat(14,calc((var(--badge) - var(--space))/2));grid-auto-rows:var(--badge);gap:5px var(--space);padding-inline:3px;min-height:calc(var(--badge)*2 + 21px)}
  #places .waymark{grid-column:span 2}
- #places #enter-rainforest{grid-column:2 / span 2}
 }
 @media(max-width:335px){
  #places{--space:1px}

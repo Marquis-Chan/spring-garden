@@ -53,7 +53,8 @@ try{
   }
   async function parkCloudAwayFromSun(){
    const light=await page.locator('#sun').boundingBox();
-   await dragCloud({x:width*.70,y:light.y+light.height/2-3});
+   // 竖屏果园右侧的地平线高于太阳中心，向右上方的天空拖才能松手停住。
+   await dragCloud({x:width*.70,y:Math.min(light.y+light.height/2-3,height*.03)});
    await wait(()=>{const s=window.pondInspect();return s.cloud.pin&&s.cloud.x>.62&&s.shade<.12;});
   }
   await page.goto(url);
@@ -68,8 +69,7 @@ try{
   await dragCloud({x:light.x+light.width/2,y:light.y+light.height/2-3});
   await wait(()=>{const s=window.pondInspect();return s.cloud.pin&&s.shade>.63;});
   await capture('02a-orchard-shade');
-  await dragCloud({x:width*.56,y:light.y+light.height/2-3});
-  await wait(()=>window.pondInspect().shade<.13);
+  await parkCloudAwayFromSun();
   const start=await read();
   assert.equal(start.orchard.apples.filter(a=>a.phase==='branch').length,3);
   for(const a of start.orchard.apples){

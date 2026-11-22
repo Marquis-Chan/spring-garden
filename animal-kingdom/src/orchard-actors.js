@@ -1,3 +1,5 @@
+import {corgiLegs} from './corgi-walk.js';
+
 function group(T, parent, name, position = [0, 0, 0]) {
   const result = new T.Group();
   result.name = name;
@@ -124,29 +126,137 @@ function blinking(time, period, length) {
   return phase > period - length ? 1 - 0.94 * Math.sin(Math.PI * (phase - period + length) / length) : 1;
 }
 
+// 截面之间平滑放样，保留胸深、腰腹和臀部各自的轮廓。
+function roundedSections(T,sections){
+  const curves=[0,1].map(start=>new T.CatmullRomCurve3(
+    sections.map(r=>new T.Vector3(...(start?[r[2],r[3],0]:[r[0],r[1],0]))),false,'catmullrom',.42));
+  const count=(sections.length-1)*4;
+  return Array.from({length:count+1},(_,i)=>{
+    const center=curves[0].getPoint(i/count),size=curves[1].getPoint(i/count);
+    return [center.x,center.y,size.x,size.y];
+  });
+}
+
+// 一条连续的毛皮从肩或髋包到腕、跗部。后膝向前，飞节向后；白袜随小腿一起弯曲。
+function corgiLeg(T,root,leg,sphere,cream,painted){
+  const {side,front,x,z}=leg,name=(side>0?'Left':'Right')+(front?' front':' rear')+' dog';
+  const profile=front?
+    [[.010,.022],[.063,.088],[.068,.090],[.052,.063],[.042,.046],[.034,.037],[.030,.030]]:
+    [[.014,.024],[.079,.118],[.081,.111],[.060,.082],[.044,.054],[.032,.037],[.029,.029]];
+  const sides=16,rows=(profile.length-1)*3+1,positions=new T.Float32BufferAttribute(new Float32Array(rows*sides*3),3);
+  positions.setUsage(T.DynamicDrawUsage);
+  const angles=Array.from({length:sides},(_,i)=>[Math.cos(2*Math.PI*i/sides),Math.sin(2*Math.PI*i/sides)]);
+  const colors=[],indices=[],gold=new T.Color('#ca8953'),sock=new T.Color('#f4dfb9');
+  const radii=new T.CatmullRomCurve3(profile.map(([a,b])=>new T.Vector3(a,b,0)),false,'catmullrom',.43);
+  const sizes=radii.getPoints(rows-1);
+  sizes.forEach((_,row)=>{
+    const color=gold.clone().lerp(sock,T.MathUtils.smoothstep(row/3+(front?1:0),2.3,4.6));
+    angles.forEach((_,i)=>{
+      colors.push(color.r,color.g,color.b);
+      if(row+1===rows)return;
+      const a=row*sides+i,b=row*sides+(i+1)%sides;
+      indices.push(a,b,a+sides,b,b+sides,a+sides);
+    });
+  });
+  const geo=new T.BufferGeometry();geo.setAttribute('position',positions);geo.setIndex(indices);
+  geo.setAttribute('color',new T.Float32BufferAttribute(colors,3));
+  const skin=mesh(T,root,name+' coat',geo,painted);skin.frustumCulled=false;
+  const paw=group(T,root,name+' paw');
+  const spine=new T.CatmullRomCurve3(profile.map(()=>new T.Vector3()),false,'catmullrom',.4);
+  const center=new T.Vector3(),tangent=new T.Vector3(),lateral=new T.Vector3(),lengthwise=new T.Vector3();
+  mesh(T,paw,'Weight-bearing pad',sphere,cream,[0,0,.013],[front?.050:.053,.043,.070]);
+  for(const toe of [-1,0,1])mesh(T,paw,'Toe',sphere,cream,[toe*.024,-.011,.056-.006*Math.abs(toe)],[.018,.026,.032]);
+  return (foot,bodyY,rest,ground)=>{
+    const px=T.MathUtils.lerp(foot?.localX??x,x+side*.047,rest),pz=T.MathUtils.lerp(foot?.localZ??z,z+(front?.095:.075),rest);
+    const fy=.043+ground+(1-rest)*(foot?.up??0),lift=fy-.043-ground;
+    const hipY=bodyY+(front?.040:.047),dz=pz-z;
+    const jointZ=z+(front?-.040:.071)+dz*.43+(front?-.24:.29)*lift;
+    const jointY=hipY+(fy-hipY)*.48+lift*.17;
+    const hockZ=pz-(front?.014:.050)-lift*.16;
+    const hockY=fy+(hipY-fy)*(front?.245:.255);
+    const midX=(px+x)*.5;
+    const rings=[
+      [x-side*.045,hipY+.050,z-.024],[x-side*.023,hipY,z-.016],
+      [x,(hipY+jointY)*.5,(z+jointZ)*.5],
+      [midX,jointY,jointZ],[midX,(jointY+hockY)*.5,(jointZ+hockZ)*.5],
+      [px,hockY,hockZ],[px,fy+.003,pz-.011]
+    ];
+    rings.forEach((p,i)=>spine.points[i].set(...p));
+    for(let r=0;r<rows;r++){
+      const t=r/(rows-1);spine.getPoint(t,center);spine.getTangent(t,tangent);
+      lateral.set(1,0,0).addScaledVector(tangent,-tangent.x).normalize();
+      lengthwise.crossVectors(tangent,lateral);
+      angles.forEach(([c,s],i)=>{
+        const w=c*sizes[r].x,h=s*sizes[r].y;
+        positions.setXYZ(r*sides+i,center.x+w*lateral.x+h*lengthwise.x,
+          center.y+w*lateral.y+h*lengthwise.y,center.z+w*lateral.z+h*lengthwise.z);
+      });
+    }
+    positions.needsUpdate=true;geo.computeVertexNormals();geo.computeBoundingSphere();
+    paw.position.set(px,fy,pz);paw.rotation.set((foot?.pitch??0)*(1-rest),side*(.024+.10*rest),0);
+  };
+}
+
+// 眼睛顺着颊骨的斜面生长。眼圈、虹膜、瞳孔和眼神光共用缓凸的眼面。
+function corgiEye(T,head,sign,depth,material,ink){
+  const ex=sign*.141,ey=.057,rx=.046,ry=.034,rows=14,segments=48;
+  const coords=[],colors=[],faces=[],position=[];
+  const rim=new T.Color('#39291e'),iris=new T.Color('#95633b'),pupil=new T.Color('#30251f'),shine=new T.Color('#fff5da');
+  const shade=new T.Color(),smooth=T.MathUtils.smoothstep;
+  for(let row=0;row<=rows;row++)for(let j=0;j<segments;j++){
+    const r=row/rows,a=2*Math.PI*j/segments,u=r*Math.cos(a),v=r*Math.sin(a);
+    const x=ex+rx*u,dy=ry*v*(1-.20*u*u)-sign*.003*u;
+    const bulge=.0014+.011*(1-r*r);
+    coords.push([x,dy,bulge]);
+    position.push(x,ey+dy,depth(x,ey+dy)+bulge);
+    const radius=Math.hypot((u+sign*.05)*1.25,v*.94);
+    shade.copy(iris).multiplyScalar(.90-.17*v).lerp(rim,.90*smooth(radius,.74,.96))
+      .lerp(pupil,1-smooth(radius,.43,.56)).lerp(rim,smooth(r,.88,.99));
+    const fleck=Math.hypot((u+.22)*.92,v-.31);
+    shade.lerp(shine,1-smooth(fleck,.105,.18));
+    colors.push(shade.r,shade.g,shade.b);
+    if(row<rows){const n=row*segments+j,k=row*segments+(j+1)%segments;faces.push(n,n+segments,k+segments,n,k+segments,k);}
+  }
+  const geo=new T.BufferGeometry(),attr=new T.Float32BufferAttribute(position,3);
+  geo.setAttribute('position',attr);geo.setAttribute('color',new T.Float32BufferAttribute(colors,3));geo.setIndex(faces);geo.computeVertexNormals();
+  const eye=mesh(T,head,'Almond eye',geo,material);
+  const fold=cord(T,head,'Resting eyelid',[-1,-.5,0,.5,1].map(u=>{
+    const x=ex+rx*u,y=ey-.006*(1-u*u)+sign*.0035*u;
+    return [x,y,depth(x,y)+.002];
+  }),.0038,ink);
+  let previous=1;
+  return (sleep,blink)=>{
+    const aperture=(1-sleep)*blink;
+    eye.visible=aperture>.055;fold.visible=aperture<.20;
+    if(!eye.visible||Math.abs(previous-aperture)<.004)return;
+    previous=aperture;
+    coords.forEach(([x,dy,h],i)=>{
+      const y=ey+dy*aperture;
+      attr.setXYZ(i,x,y,depth(x,y)+.0014+(h-.0014)*aperture);
+    });
+    attr.needsUpdate=true;geo.computeVertexNormals();
+  };
+}
+
 export function makeCorgi(T) {
   const root = group(T, null, 'Orchard corgi');
   const body = group(T, root, 'Dog body', [0, 0.376, -0.074]);
   const head = group(T, body, 'Dog head', [0, 0.188, 0.377]);
   const muzzle = group(T, head, 'Dog muzzle', [0, -0.050, 0.198]);
-  const jaw = group(T, muzzle, 'Dog jaw', [0, -0.054, -0.063]);
+  const jaw = group(T, muzzle, 'Dog jaw', [0, -0.031, -0.063]);
   const tail = group(T, body, 'Dog tail', [0, 0.034, -0.544]);
   const sphere = new T.SphereGeometry(1, 20, 14);
   const small = new T.SphereGeometry(1, 14, 9);
   const painted = clay(T, '#ffffff', 0.63, true);
-  const caramel = clay(T, '#cf935c');
   const cream = clay(T, '#f4e1bd');
-  const russet = clay(T, '#bd7d4c');
-  const peach = clay(T, '#d7a48e', 0.73);
-  const nose = clay(T, '#493a32', 0.39);
+  const nose = clay(T, '#302824', 0.52);
   const mouth = clay(T, '#744339');
   const tongue = clay(T, '#d87f73', 0.54);
-  const amber = clay(T, '#9f7047', 0.53);
-  const glint = clay(T, '#fff2d2', 0.46);
   const color = new T.Color();
   const white = new T.Color('#f5e5c5');
   const gold = new T.Color('#d99556');
   const toasted = new T.Color('#ae6e40');
+  const honey=new T.Color('#edb478'),freckle=clay(T,'#a58264');
   const s = T.MathUtils.smoothstep;
 
   function coat(x, y, z) {
@@ -154,113 +264,155 @@ export function makeCorgi(T) {
       (1 - s(y, 0.10, 0.248));
     const belly = 1 - s(y, -0.225, -0.055);
     return color.copy(gold).lerp(toasted, s(y, 0.055, 0.24) * 0.79)
-      .lerp(white, Math.max(bib * 0.96, belly));
+      .lerp(white, Math.max(bib * 0.98, belly));
   }
 
-  function face(x, y, z) {
-    const blaze = (1 - s(Math.abs(x), 0.021, 0.076)) * s(z, 0.09, 0.199);
-    return color.copy(gold).lerp(toasted, s(y, 0.055, 0.193) * 0.63)
-      .lerp(white, Math.max(blaze * 0.90, 1 - s(y, -0.125, -0.026)));
+  function face(x,y,z){
+    const width=.015+.024*s(z,.04,.20)+.058*s(z,.17,.29);
+    const blaze=(1-s(Math.abs(x-.005*Math.sin(z*23)),width-.008,width+.008))*s(z,-.12,.05);
+    const edge=-.068+.093*s(Math.abs(x),.066,.245)+.048*s(z,.13,.25)+.013*Math.cos(z*26);
+    const cheeks=(1-s(y,edge-.015,edge+.018))*s(z,-.14,.025);
+    const brow=Math.exp(-(((Math.abs(x)-.141)/.054)**2+((y-.105)/.028)**2))*s(z,.02,.12);
+    return color.copy(gold).lerp(toasted,.46*s(y,.08,.20)).lerp(honey,brow*.73).lerp(white,Math.max(blaze,cheeks));
   }
 
-  mesh(T, body, 'Long low back and chest', sculpt(T, [
+  mesh(T, body, 'Long low back and chest', sculpt(T, roundedSections(T,[
     [-0.591, -0.016, 0.009, 0.012], [-0.558, -0.013, 0.116, 0.132],
-    [-0.477, -0.005, 0.207, 0.189], [-0.359, 0.009, 0.257, 0.217],
-    [-0.211, 0.021, 0.280, 0.237], [-0.044, 0.024, 0.282, 0.246],
-    [0.134, 0.032, 0.282, 0.247], [0.284, 0.044, 0.271, 0.241],
-    [0.384, 0.054, 0.219, 0.204], [0.456, 0.057, 0.137, 0.147],
+    [-0.477, 0.019, 0.190, 0.160], [-0.359, 0.028, 0.210, 0.182],
+    [-0.211, 0.061, 0.182, 0.155], [-0.044, 0.046, 0.191, 0.176],
+    [0.134, 0.025, 0.226, 0.212], [0.284, 0.027, 0.231, 0.222],
+    [0.384, 0.064, 0.198, 0.192], [0.456, 0.077, 0.130, 0.143],
     [0.492, 0.061, 0.055, 0.071], [0.505, 0.059, 0.013, 0.018],
-  ], 28, coat), painted);
-  mesh(T, head, 'Corgi broad forehead', sculpt(T, [
-    [-0.199, -0.008, 0.015, 0.020], [-0.169, 0, 0.135, 0.137],
-    [-0.096, 0.019, 0.229, 0.176], [-0.009, 0.020, 0.249, 0.187],
-    [0.089, 0.013, 0.221, 0.166], [0.165, -0.001, 0.179, 0.134],
-    [0.209, -0.019, 0.139, 0.103], [0.243, -0.027, 0.082, 0.071],
-    [0.264, -0.033, 0.015, 0.020],
-  ], 28, face), painted);
-  mesh(T, muzzle, 'Cream muzzle', sculpt(T, [
-    [-0.089, -0.007, 0.053, 0.037], [-0.058, 0.004, 0.119, 0.071],
-    [-0.018, 0.008, 0.131, 0.066], [0.043, 0.009, 0.109, 0.053],
-    [0.110, 0.013, 0.079, 0.040], [0.151, 0.013, 0.052, 0.028],
-    [0.167, 0.011, 0.012, 0.010],
-  ], 24), cream);
-  mesh(T, muzzle, 'Rounded nose', small, nose, [0, 0.025, 0.140], [0.070, 0.048, 0.045]);
-  mesh(T, jaw, 'Lower lip', sphere, cream, [0, -0.006, 0.096], [0.100, 0.035, 0.110]);
-  const mouthGap = mesh(T, jaw, 'Inner mouth', sphere, mouth, [0, 0.019, 0.104], [0.074, 0.024, 0.076]);
+  ]), 40, coat), painted);
+  // 宽额、颊骨和收起的口吻共用一张皮，白斑随颊部自然转折。
+  const headSections=roundedSections(T,[
+    [-.206,.012,.022,.025],[-.174,.013,.160,.139],[-.111,.017,.231,.172],
+    [-.022,.022,.256,.170],[.068,.017,.242,.163],[.125,.007,.217,.141],
+    [.162,-.004,.184,.114],[.196,-.024,.149,.087],[.226,-.040,.126,.064],
+    [.268,-.046,.109,.049],[.311,-.049,.090,.041],[.346,-.044,.062,.032],
+    [.361,-.043,.033,.020],
+  ]);
+  mesh(T,head,'Corgi broad forehead',sculpt(T,headSections,96,face),painted);
+  // 按脸部放样截面取前表面深度，使眼圈和嘴角从正面、侧面都贴在脸上。
+  function faceDepth(x,y){
+    let outside=1;
+    for(let i=headSections.length-1;i>=0;i--){
+      const [z,cy,w,h]=headSections[i],d=(x/w)**2+((y-cy)/h)**2-1;
+      if(d<=0){
+        const next=headSections[i+1];
+        return next?z+(next[0]-z)*(-d)/(outside-d):z;
+      }
+      outside=d;
+    }
+    return 0;
+  }
+  const leather=sculpt(T,roundedSections(T,[
+    [-.025,.004,.040,.023],[-.009,.007,.067,.033],[.012,.003,.071,.035],
+    [.028,-.001,.056,.030],[.039,-.002,.030,.021],[.042,-.004,.007,.010]
+  ]),36);
+  const noseVertices=leather.attributes.position;
+  for(let i=0;i<noseVertices.count;i++)noseVertices.setX(i,noseVertices.getX(i)*(.68+.32*s(noseVertices.getY(i),-.025,.019)));
+  leather.computeVertexNormals();
+  mesh(T,muzzle,'Rounded nose',leather,nose,[0,.010,.156]);
+  mesh(T,jaw,'Lower lip',sculpt(T,roundedSections(T,[
+    [-.030,-.004,.035,.023],[.020,-.004,.091,.034],[.085,-.012,.097,.031],
+    [.144,-.012,.077,.025],[.175,-.008,.046,.017],[.187,-.004,.011,.007]
+  ]),32),cream);
+  const throat=group(T,muzzle,'Mouth hinge',jaw.position.toArray());
+  const palateRows=[[-.052,.042],[-.012,.065],[.035,.088],[.085,.088],[.131,.077],[.161,.056],[.179,.028],[.182,.004]];
+  const cavity=new T.BufferGeometry(),inside=[],edges=[];
+  palateRows.forEach(([z,w],i)=>{
+    inside.push(-w,.020,z,w,.020,z,-w,.003,z,w,.003,z);
+    if(i===0)return;
+    const a=(i-1)*4,b=i*4;
+    edges.push(a,b,a+2,a+2,b,b+2,a+1,a+3,b+1,a+3,b+3,b+1,a,a+1,b,a+1,b+1,b,a+2,b+2,a+3,b+2,b+3,a+3);
+  });
+  const last=(palateRows.length-1)*4;edges.push(last,last+2,last+1,last+1,last+2,last+3);
+  const lining=new T.Float32BufferAttribute(inside,3);cavity.setAttribute('position',lining);cavity.setIndex(edges);
+  const inner=clay(T,'#56302d');inner.side=T.DoubleSide;
+  const mouthGap=mesh(T,throat,'Inner mouth',cavity,inner);
+  let lastOpening=-1;
+  function shapeMouth(angle){
+    if(Math.abs(angle-lastOpening)<.0008)return;
+    lastOpening=angle;const c=Math.cos(angle),s=Math.sin(angle);
+    palateRows.forEach(([z,w],i)=>{
+      for(let j=0;j<2;j++)lining.setXYZ(i*4+2+j,(j?1:-1)*w*.89,.003*c-z*s,z*c+.003*s);
+    });
+    lining.needsUpdate=true;cavity.computeVertexNormals();cavity.computeBoundingSphere();
+  }
   const tongueTip = mesh(T, jaw, 'Tongue', small, tongue, [0, 0.027, 0.137], [0.039, 0.015, 0.049]);
-  mesh(T, tail, 'Compact tail', sphere, caramel, [0, 0.050, -0.035], [0.087, 0.076, 0.116]);
-  mesh(T, tail, 'Cream tail tip', small, cream, [0, 0.067, -0.097], [0.077, 0.070, 0.060]);
+  mesh(T,tail,'Cream-tipped bobtail',sculpt(T,roundedSections(T,[
+    [-.156,.071,.009,.011],[-.132,.067,.053,.050],[-.072,.051,.076,.066],
+    [-.014,.033,.073,.067],[.048,.016,.048,.041],[.073,.012,.011,.014]
+  ]),24,(x,y,z)=>color.copy(white).lerp(gold,s(z+.11*y,-.12,-.062))),painted);
 
-  const outerEar = sculpt(T, [
-    [-0.020, 0, 0.044, 0.043], [0.020, -0.002, 0.103, 0.044],
-    [0.074, -0.008, 0.097, 0.042, 0.016], [0.138, -0.022, 0.071, 0.032, 0.029],
-    [0.205, -0.037, 0.046, 0.025, 0.043], [0.263, -0.052, 0.021, 0.013, 0.051],
-    [0.288, -0.064, 0.006, 0.006, 0.049],
-  ], 20).rotateX(-Math.PI / 2);
-  const earLining = sculpt(T, [
-    [0.042, -0.041, 0.014, 0.007, 0.009],
-    [0.079, -0.048, 0.067, 0.010, 0.017],
-    [0.136, -0.052, 0.046, 0.012, 0.031],
-    [0.194, -0.060, 0.031, 0.008, 0.041],
-    [0.244, -0.064, 0.010, 0.005, 0.050],
-  ], 16).rotateX(-Math.PI / 2);
+  // 一片耳廓同时塑出厚边和内凹的耳窝，宠物转耳时内外两面一起动。
+  const earRows=roundedSections(T,[
+    [-.045,0,.056,.036],[.005,.002,.095,.049],[.073,.014,.101,.046],
+    [.145,.024,.083,.036],[.207,.029,.057,.029],[.247,.031,.034,.022],
+    [.264,.030,.019,.014],[.271,.029,.005,.005]
+  ]);
+  const earSides=56,outerEar=sculpt(T,earRows,earSides);
+  const ep=outerEar.attributes.position,ec=new Float32Array(ep.count*3);
+  const earFur=new T.Color('#bd8251'),earRim=new T.Color('#daab78'),earPink=new T.Color('#cb9684'),canal=new T.Color('#987365');
+  for(let i=0;i<ep.count;i++){
+    const row=earRows[Math.min(earRows.length-1,Math.floor(i/earSides))];
+    const h=ep.getZ(i),across=ep.getX(i)/row[2],front=(row[1]-ep.getY(i))/row[3];
+    const cup=s(front,.62,.93)*s(h,.019,.085)*(1-s(h,.191,.249));
+    const center=1-Math.min(1,Math.abs(across));
+    ep.setX(i,ep.getX(i)+.045*s(h,-.025,.26));
+    ep.setY(i,ep.getY(i)+cup*center*.044);
+    color.copy(earFur).lerp(earRim,s(front,-.12,.32)).lerp(earPink,cup)
+      .lerp(canal,cup*(1-s(h,.068,.167))*center*.82);
+    ec.set([color.r,color.g,color.b],i*3);
+  }
+  outerEar.setAttribute('color',new T.BufferAttribute(ec,3));outerEar.computeVertexNormals();outerEar.rotateX(-Math.PI/2);
   const ears = [];
   const eyes = [];
-  const legs = [];
-
-  for (const sign of [-1, 1]) {
-    const side = sign < 0 ? 'Left' : 'Right';
-    const ear = group(T, head, side + ' pointed corgi ear', [sign * 0.164, 0.131, -0.062]);
-    mesh(T, ear, 'Orange ear', outerEar, russet).scale.x = sign;
-    mesh(T, ear, 'Pink ear lining', earLining, peach).scale.x = sign;
-    ears.push({ sign, ear });
-    eyes.push(eye(T, head, side + ' dog eye', [sign * 0.144, 0.045, 0.135],
-      sign * 0.61, small, amber, nose, glint, mouth));
-    mesh(T, head, side + ' cream cheek', small, cream,
-      [sign * 0.118, -0.075, 0.149], [0.097, 0.073, 0.087]);
-    for (const front of [true, false]) {
-      const name = side + (front ? ' front' : ' rear') + ' dog';
-      legs.push({ sign, front, place: leg(T, root, name, sphere, front ? cream : caramel,
-        cream, cream, [front ? 0.068 : 0.074, 0.043, front ? 0.079 : 0.086]) });
+  head.scale.set(.99,.95,1);
+  const legs=corgiLegs.map(leg=>corgiLeg(T,root,leg,small,cream,painted));
+  const ink=clay(T,'#332822');
+  // 在头部表面找到眼窝的真实深度，避免正看时虹膜和眼神光被额头遮住。
+  for(const sign of [-1,1]){
+    const side=sign>0?'Left':'Right';
+    const ear=group(T,head,side+' corgi ear',[sign*.164,.121,-.040]);
+    mesh(T,ear,'Cupped ear',outerEar,painted).scale.x=sign;ears.push({sign,ear});
+    eyes.push(corgiEye(T,head,sign,faceDepth,painted,ink));
+    mesh(T,muzzle,'Nostril',small,ink,[sign*.033,.012,.191],[.012,.006,.0025]).rotation.z=sign*.24;
+    for(const [x,y] of [[.070,-.061],[.086,-.056],[.080,-.067]]){
+      mesh(T,head,'Whisker root',small,freckle,[sign*x,y,faceDepth(x,y)+.0014],[.0028,.0024,.0021]);
     }
+    const lip=[[.014,-.084],[.042,-.084],[.074,-.080],[.104,-.070],[.122,-.058]];
+    cord(T,head,side+' muzzle crease',lip.map(([x,y])=>[sign*x,y,faceDepth(x,y)+.0018]),.0034,mouth);
   }
 
-  function pose({ time = 0, stride = 0, gait = 0, sniff = 0, bark = 0, sleep = 0 } = {}) {
+  function pose({ time = 0, stride = 0, gait = 0, sniff = 0, bark = 0, sleep = 0, feet,groundAt,x=0,z=0 } = {}) {
     const rest = s(sleep, 0, 1);
     const run = gait * (1 - rest);
     const noseDown = sniff * (1 - rest);
     const voice = bark * (1 - rest);
     const inhale = Math.sin(time * (4.2 - rest * 1.6)) * 0.005;
-    const bounce = Math.abs(Math.sin(stride)) * run * 0.025;
+    const bounce = Math.sin(stride*2) * run * 0.005;
     body.position.y = 0.376 - rest * 0.112 + inhale + bounce;
-    body.rotation.set(noseDown * 0.04 - voice * 0.052, 0, Math.sin(stride) * run * 0.041);
+    body.rotation.set(noseDown * 0.04 - voice * 0.052, 0, Math.sin(stride) * run * 0.014);
     head.position.set(rest * 0.039, 0.188 - noseDown * 0.130 - rest * 0.048, 0.377 - rest * 0.027);
     head.rotation.set(noseDown * 0.66 - voice * 0.16 + rest * 0.31 + run * Math.sin(stride * 2) * 0.033,
       rest * 0.27, rest * -0.16);
-    jaw.rotation.x = voice * 0.56;
-    mouthGap.visible = tongueTip.visible = voice > 0.08;
+    jaw.rotation.x=(1-rest)*(.105+.055*run+.012*Math.sin(time*2.6))*(1-noseDown)+voice*.36;
+    shapeMouth(jaw.rotation.x);mouthGap.visible=jaw.rotation.x>.020;tongueTip.visible=voice>.19;
     tail.rotation.set(rest * -0.19, Math.sin(time * (5 + run * 4)) * (0.14 + run * 0.38) * (1 - rest), 0);
     for (const { sign, ear } of ears) {
       ear.rotation.set(-0.08 - rest * 0.53 + run * Math.sin(stride + sign) * 0.062,
-        sign * 0.12, sign * (-0.11 - rest * 0.22));
+        sign * 0.19, sign * (-0.23 - rest * 0.19));
     }
     const blink = blinking(time, 4.9, 0.16);
     for (const closeEye of eyes) closeEye(rest, blink);
 
-    // 对角腿交替前摆，脚尖抬起时爪和肩／髋的关节仍相连。
-    for (const { sign, front, place } of legs) {
-      const phase = stride + ((sign < 0) === front ? 0 : Math.PI);
-      const step = Math.cos(phase) * run;
-      const up = Math.max(0, Math.sin(phase)) * run;
-      const z = front ? 0.278 : -0.438;
-      const x = sign * (front ? 0.166 : 0.170);
-      place([x, (front ? 0.299 : 0.290) - rest * 0.114 + bounce, z - 0.038],
-        [x + sign * rest * 0.074, 0.144 - rest * 0.052 + up * 0.062,
-          z + (front ? -0.019 : 0.082) + step * 0.060],
-        [x + sign * rest * 0.096, 0.043 + up * 0.108,
-          z + step * 0.141 + rest * (front ? 0.086 : 0.075)],
-        up * -0.20, sign * (0.09 + rest * 0.20));
-    }
+    const floor=groundAt?.(x,z)??0;
+    legs.forEach((place,i)=>{
+      const foot=feet?.[i],ground=groundAt&&foot?groundAt(foot.x,foot.z)-floor:0;
+      place(foot,body.position.y,rest,ground);
+    });
   }
 
   pose();

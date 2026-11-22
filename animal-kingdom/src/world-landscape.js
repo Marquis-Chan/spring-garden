@@ -21,6 +21,7 @@ const trails=[
  [[4,3.5],[6.2,3.9],[8.9,5.6],[12.3,6.1],[14.8,7.9],[19.2,8.6],[22.8,9.2],[24.1,9.55]],
  [[10.8,-.2],[13.2,.9],[15.8,.3],[18.8,1.6],[23,1.7],[26.8,1.9],[30.4,1.15],[33.7,2.1]],
  [[30.9,8.6],[31.7,9.9],[33.8,11.1],[34.2,12.3]],
+ [[6.2,.3],[5.4,-2.6],[6.7,-5.2],[8.2,-7.4],[8.7,-8.5],[7.9,-9.3]],
  [[18.8,1.6],[18.2,-1.8],[19.6,-4.1],[20.3,-6.4],[19.7,-8.6],[20.5,-10.3]]
 ];
 const segments=trails.flatMap(trail=>trail.slice(1).map(([x,z],i)=>{
@@ -37,6 +38,7 @@ function trailDistance(x,z){
 }
 const color=hex=>new T.Color(hex);
 const meadow=color('#93a869'),woods=color('#7c9f68'),dry=color('#c2b275'),bank=color('#94b09c');
+const pasture=color('#759866'),paddockPath=color('#b8aa7c');
 const trail=color('#cebf91'),sand=color('#dabf91'),wet=color('#a2b49b'),shallow=color('#72b6b2');
 const blue=color('#4e9cae'),deep=color('#4d8f9d'),snowWater=color('#82bdc4');
 const {pool}=riverPoints;
@@ -47,6 +49,13 @@ function paint(c,x,z){
  c.copy(meadow).lerp(woods,smooth(7,17,x)*(1-smooth(1.9,4.8,z))*.91)
   .lerp(dry,smooth(12,16,x)*smooth(.6,4,z)*.86)
   .lerp(bank,(1-smooth(1.45,3.35,marsh))*.89);
+ // 牧场中央留出低矮草坪，巡逻的小径缓缓弯向谷仓。
+ const pastureWeight=1-smooth(.63,1.16,Math.hypot((x-6.5)/6.3,(z+12)/5.4));
+ if(pastureWeight>0){
+  c.lerp(pasture,pastureWeight*(.68+.16*wave));
+  const lane=Math.abs(z+9.08-.18*Math.sin((x-6)*.67));
+  c.lerp(paddockPath,pastureWeight*.51*(1-smooth(.12,.62,lane)));
+ }
  c.lerp(trail,.32*(1-smooth(.12,.76+.14*wave,trailDistance(x,z))));
  c.lerp(sand,.70*(1-smooth(.93,1.14,pond))).lerp(shallow,1-smooth(.72,.96,pond));
  c.lerp(sand,.75*(1-smooth(.9,1.15,marsh))).lerp(shallow,1-smooth(.72,.98,marsh));
@@ -67,7 +76,8 @@ export function makeWorldLandscape(scene){
  for(let i=0;i<=along;i++){
   const x=mix(-32,87,i/along);
   const bambooValley=14*Math.exp(-((x-19)**2)/96);
-  const north=-7.2+1.2*Math.sin(x*.24-.80)+.55*Math.sin(x*.59)-smooth(35,49,x)*22-bambooValley;
+  const ranchValley=15.7*Math.exp(-((x-6.4)**2)/109);
+  const north=-7.2+1.2*Math.sin(x*.24-.80)+.55*Math.sin(x*.59)-smooth(35,49,x)*22-Math.max(bambooValley,ranchValley);
   const south=43+smooth(22,46,x)*20+.86*Math.cos(x*.29);
   for(let j=0;j<=across;j++){
    const z=mix(north,south,j/across);

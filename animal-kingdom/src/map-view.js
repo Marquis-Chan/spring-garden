@@ -17,7 +17,7 @@ export const habitats={
  pond:{x:0,z:.35,r:5},grove:{x:10.2,z:.55,r:5},orchard:{x:4.5,z:7.55,r:4.1},
  savanna:{x:18.55,z:5.9,r:5.5},river:{x:27.8,z:8,r:5.3},asia:{x:21,z:-.75,r:5.5},
  rainforest:{x:36.9,z:.2,r:5.5},coast:{x:36.7,z:14.2,r:5.35},ice:{x:43.7,z:21.9,r:4.5},
- ocean:{x:54.8,z:16.1,r:6},eucalyptus:{x:29,z:-1,r:3.7},bamboo:{x:19,z:-12,r:4.25}
+ ocean:{x:54.8,z:16.1,r:6},eucalyptus:{x:29,z:-1,r:3.7},bamboo:{x:19,z:-12,r:4.25},ranch:{x:6.5,z:-12,r:5.5}
 };
 
 // 总图路牌沿用世界坐标，放在各处的空地或水边，给动物和可玩的物件留出位置。
@@ -25,9 +25,9 @@ export const atlasWaymarks={
  pond:{x:-2.85,z:3.69},grove:{x:12.5,z:2.67},orchard:{x:6.95,z:8.45},
  savanna:{x:19.8,z:9.35},river:{x:25.35,z:10.5},asia:{x:23.8,z:1.92},
  rainforest:{x:39.1,z:3.55},coast:{x:39.8,z:13.15},ice:{x:43,z:25.45},
- ocean:{x:56.8,z:19.8},eucalyptus:{x:32.2,z:3.35},bamboo:{x:21.95,z:-9.12}
+ ocean:{x:56.8,z:19.8},eucalyptus:{x:32.2,z:3.35},bamboo:{x:21.95,z:-9.12},ranch:{x:11.15,z:-8.85}
 };
-const mapEdges=[[-1.3,-1.8],[13,-12.9],[18,-14.1],[22,-14.1],[37.8,-1.8],[56.2,13.8],[56.2,18.2],[44.5,23.15],
+const mapEdges=[[-2.4,-6.5],[1.8,-15],[9.4,-16.1],[22,-14.1],[37.8,-1.8],[56.2,13.8],[56.2,18.2],[44.5,23.15],
  [41.6,23.15],[3.4,9.35],[-1.3,3.9]];
 
 function onMap(x,z){
@@ -78,6 +78,10 @@ export const adjacentPortals={
 
 export function viewFor(mode,ratio) {
  const portrait=ease((1.2-ratio)/.62);
+ if(mode==='ranch')return {
+  x:6.5,y:mix(1.58,1.26,portrait),z:-12.2,height:Math.max(6.3,mix(10.45,9.35,portrait)/ratio),
+  azimuth:mix(-.04,-.065,portrait),elevation:mix(.35,.51,portrait)
+ };
  if(mode==='bamboo')return {
   x:19,y:mix(2.43,1.60,portrait),z:-12,height:Math.max(6.12,mix(9,6.65,portrait)/ratio),
   azimuth:mix(-.055,-.10,portrait),elevation:mix(.27,.38,portrait)

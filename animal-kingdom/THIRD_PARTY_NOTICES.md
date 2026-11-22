@@ -6,9 +6,9 @@ Game code and original game art are covered by the repository MIT license. Recor
 
 Three.js 0.180.0 is bundled under the [MIT license](https://github.com/mrdoob/three.js/blob/r180/LICENSE); the full license text is included in the standalone HTML. [esbuild](https://github.com/evanw/esbuild) is used at build time.
 
-## Recordings · v0.5.5
+## Recordings · v0.5.6
 
-Recordings are processed clips, not covered by the game's MIT license. Preserve their individual attribution and license when reusing them. This edition replaces the old duckling, polar bear and macaw clips; hedgehog replaces wombat. The former wombat asset is absent from the current build. Historical releases retain their original licenses.
+Recordings are processed clips, not covered by the game's MIT license. Preserve their individual attribution and license when reusing them. Historical releases retain their original terms; use this current list for the present build.
 
 - Frog: daveincamas, 200703101950PacificChorusFrogsSoloNR.wav, CC BY 4.0; https://freesound.org/people/daveincamas/sounds/32807/ — game excerpt processed and rearranged without pitch changes.
 
@@ -65,3 +65,5 @@ Recordings are processed clips, not covered by the game's MIT license. Preserve 
 - Giant panda (Ailuropoda melanoleuca), approximately two-year-old female waiting for food. Günter Tembrock, Tierstimmenarchiv, Museum für Naturkunde Berlin. TSA:Ailuropoda_melanoleuca_S_43_1_1. Excerpts 15.45–16.18, 28.46–29.22 and 36.60–37.45 s, pauses shortened, original pitch, filtered, levelled and faded. Original and adapted panda.wav: CC BY-SA 3.0 https://creativecommons.org/licenses/by-sa/3.0/ . https://suche.tierstimmenarchiv.de/search/showdetails.html?unique_identifier=TSA:Ailuropoda_melanoleuca_S_43_1_1&language=english
 
 - Grass rustle, not an animal call. "grass rustling.wav" by instinctual777, Freesound 636945. Original field recording of grass brushed by hand, excerpt 1.76–2.57 s, filtered, levelled and faded. CC0 1.0 https://creativecommons.org/publicdomain/zero/1.0/ . https://freesound.org/people/instinctual777/sounds/636945/
+
+- Ranch field recordings. Offline mono excerpts retain their original pitch and tempo. Edits: trimming, filtering, light background reduction, level matching and edge fades. ranch-cow.wav: "Lehmät ammuvat / Cows mooing in a small barn before milking" by YleArkisto (Yle), Vihti, Finland, 1995-05-20, 0.64–4.49 s. CC BY 4.0 https://creativecommons.org/licenses/by/4.0/ . https://freesound.org/people/YleArkisto/sounds/368632/ ranch-lamb.wav: "20070407.lambs.bleating.WAV" by dobroide, young lambs in a roofed sheepfold, 3.05–6.46 s. CC BY 4.0 https://creativecommons.org/licenses/by/4.0/ . https://freesound.org/people/dobroide/sounds/33639/ ranch-hen.wav: "20090503.hens.wav" by dobroide, hens clucking in a henhouse, 5.47–8.71 s. CC BY 4.0 https://creativecommons.org/licenses/by/4.0/ . https://freesound.org/people/dobroide/sounds/72268/ ranch-rooster.wav: "Rooster crows" by jsbarrett, a Black Jersey Giant rooster in a goat barn, 4.96–7.33 s. CC0 1.0 https://creativecommons.org/publicdomain/zero/1.0/ . https://freesound.org/people/jsbarrett/sounds/200334/ ranch-chick.wav: "Chicks Chirping" by GB01, bantam chicks, 12.97–16.07 s. CC BY 4.0 https://creativecommons.org/licenses/by/4.0/ . https://freesound.org/people/GB01/sounds/150293/

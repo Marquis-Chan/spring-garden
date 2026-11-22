@@ -43,6 +43,8 @@ import {makeWorldLandscape} from './world-landscape.js';
 import {createCroc,makeCrocView} from './croc.js';
 import {createMacaw,makeMacawDiorama} from './macaw.js';
 import {createEucalyptus,makeEucalyptusDiorama} from './eucalyptus.js';
+import {createRanch} from './ranch-state.js';
+import {makeRanchDiorama} from './ranch.js';
 import {bambooKinds,createBamboo,makeBambooDiorama} from './bamboo.js';
 import {createIce,icePoints,makeIceDiorama} from './ice.js';
 import {atlasNeighborhood,atlasWaymarks,blendView,dragAtlas,habitats,nearestHabitat,panView,placeCamera,viewFor} from './map-view.js';
@@ -152,6 +154,17 @@ function setup(renderer){
  const gumView=makeEucalyptusDiorama(scene);
  const gumKinds=['koala','silvereye','gum-leaves','gum-bough','wallaby','wallaby-grass','hedgehog-den','hedgehog'];
  const bambooView=makeBambooDiorama(scene);
+ const ranchEvents=[];
+ let restingRanchTarget=null;
+ const ranch=createRanch(event=>{
+  ranchEvents.push({...event,time:ranch.time});if(ranchEvents.length>90)ranchEvents.shift();
+  if(event.type==='ranch-call')audio.play(event.kind==='dog'?'dog':'ranch-'+event.kind);
+  if(event.type==='ranch-sleep'){
+   restingRanchTarget=ranchView.targets.find(t=>t.kind==='ranch-'+event.kind&&t.index===event.index);
+   sleeper='ranch';sleepAt=pond.time;notes.textContent='牧场里的小伙伴睡着了';
+  }
+ });
+ const ranchView=makeRanchDiorama(scene,ranch);
  const forest=makeGroveDiorama(scene,grovePoints);
  const garden=makeOrchardDiorama(scene,orchardPoints);
  const grassland=makeSavannaDiorama(scene,savannaPoints);
@@ -228,6 +241,7 @@ function setup(renderer){
   'drop-banana':canopy.hintNodes.dropBanana,'ocean-visitor':oceanView.hintNodes.visitor
  };
  const indexedHints={
+  ...ranchView.indexedHints,
   'ice-fish':iceView.hintNodes.fish,
   site:diorama.hintNodes.sites,grass:forest.hintNodes.grass,wood:timber.hintNodes.wood,
   litter:timber.hintNodes.litter,'squirrel-root':timber.hintNodes.roots,apple:garden.hintNodes.apple,
@@ -576,6 +590,10 @@ function setup(renderer){
   hoverPoint=null;hintIdleAt=pond.time;updateCursor(null);
   wakeTap=null;
   const fromMode=mode;
+  if(fromMode==='ranch'&&next!==fromMode){
+   for(const name of ['cow','lamb','rooster','hen','chick'])audio.stop('ranch-'+name);
+   audio.stop('dog');
+  }
   if(duckVoiceScene&&next!==duckVoiceScene&&next!=='overview'){audio.stop('duckling');duckVoiceScene=null;}
   if(fromMode==='overview'&&next==='overview')atlasPosition=null;
   if(fromMode==='river'&&next!=='river')river.returnToothbrush();
@@ -654,6 +672,13 @@ function setup(renderer){
    targets.push({kind,screen,w:Math.max(mw,w*px),h:Math.max(mh,h*px),index,show});
   };
   const pos=(actor,y=0,z=0)=>point(actor.x,actor.y+y,actor.z+z);
+  if(name==='ranch'){
+   for(const t of ranchView.targets){
+    add(t.kind,worldScreen(ranchView.point(t)),t.width,t.height,t.min,t.min,t.index);
+    if(t.body)add(t.kind,worldScreen(ranchView.point(t,true)),t.width,t.height,t.min,t.min,t.index,false);
+   }
+   return targets;
+  }
   if(name==='bamboo'){
    for(const kind of bambooKinds){
     const screen=worldScreen(bambooView.point(kind,fanPosition));
@@ -808,7 +833,7 @@ function setup(renderer){
  function resolve(x,y,targets=sceneTargets()){
   if(travel||y<playTop)return null;
   if(brushing())return {kind:'hippo-brush'};
-  if(mode==='bamboo'||mode==='eucalyptus'||mode==='overview'||mode==='grove'||mode==='orchard'||mode==='river'||mode==='rainforest'||mode==='asia'||mode==='ocean'){
+  if(mode==='ranch'||mode==='bamboo'||mode==='eucalyptus'||mode==='overview'||mode==='grove'||mode==='orchard'||mode==='river'||mode==='rainforest'||mode==='asia'||mode==='ocean'){
    const nearest=nearestTarget(x,y,targets);
    if(nearest)return nearest;
   }else{
@@ -863,7 +888,7 @@ function setup(renderer){
   hintCount=visible.length;
   let cue=null;
   const idle=pond.time-hintIdleAt;
-  if(pointer===null&&!quiet.matches&&idle>=3&&mode!=='overview'&&(!nightGoal||mode==='ocean'||mode==='eucalyptus')){
+  if(pointer===null&&!quiet.matches&&idle>=3&&mode!=='overview'&&(!nightGoal||mode==='ocean'||mode==='eucalyptus'||mode==='ranch')){
    // 海岸先提示下水的坡道，有企鹅在水里后改提示它自己的回岸石。
    const available=visible.filter(({kind,index})=>{
     if(kind==='site')return !pond.busy&&index!==pond.frog.site;
@@ -872,6 +897,7 @@ function setup(renderer){
    });
    let preferred;
    if(mode==='coast'&&coast.penguins.some(p=>p.phase==='swim'))preferred='coast-stone';
+   if(mode==='ranch'&&nightGoal)preferred='ranch-dog';
    if(mode==='eucalyptus'&&nightGoal)preferred='hedgehog-den';
    cue=sceneCue(mode,idle,available,preferred);
    if(cue)hintCue={kind:cue.target.kind,index:cue.target.index,strength:cue.strength};
@@ -886,7 +912,7 @@ function setup(renderer){
   if(brushing())next='toothbrush';
   else if(gesture?.moving)next='pan';
   else if(pointer!==null||intent?.kind==='water'||intent?.kind==='river-water'||intent?.kind==='coast-water')next='water';
-  else if((intent?.kind==='site'&&intent.index===1)||['sloth-leaf','sloth-bough','gum-leaves','gum-bough','panda-bamboo'].includes(intent?.kind))next='leaf';
+  else if((intent?.kind==='site'&&intent.index===1)||['sloth-leaf','sloth-bough','gum-leaves','gum-bough','panda-bamboo','ranch-hay'].includes(intent?.kind))next='leaf';
   else if(intent)next=['grass','river-grass','litter','tiger-tuft','lion-grass','wallaby-grass','panda-slope'].includes(intent.kind)?'grass':'animal';
   if(cursor!==next){cursor=next;canvas.dataset.cursor=next;}
  }
@@ -940,6 +966,7 @@ function setup(renderer){
   if(animal&&waking.has(animal)){wakeTap={animal,intent};return;}
   if(intent.kind==='frog')pond.tapFrog();
   if(gumKinds.includes(intent.kind))gum.tap(intent.kind);
+  if(intent.kind.startsWith('ranch-'))ranch.tap(intent.kind.slice(6),intent.index??0);
   if(bambooKinds.includes(intent.kind))bamboo.tap(intent.kind);
   if(intent.kind==='macaw')macaw.tap();
   if(intent.kind==='croc')croc.tap();
@@ -1195,7 +1222,7 @@ function setup(renderer){
   woodland.setNight(Boolean(nightGoal));
   asia.setNight(Boolean(nightGoal));
   rainforest.setNight(Boolean(nightGoal));macaw.setNight(Boolean(nightGoal));
-  coast.setNight(Boolean(nightGoal));
+  coast.setNight(Boolean(nightGoal));ranch.setNight(Boolean(nightGoal));
   if(nightGoal){
    sunArt.classList.toggle('full',++nightVisits%2===0);
    audio.stop('bird');
@@ -1207,6 +1234,7 @@ function setup(renderer){
    audio.stop('toucan');
    audio.stop('macaw');audio.stop('silvereye');
    audio.stop('panda');
+   for(const kind of ['cow','lamb','rooster','hen','chick'])audio.stop('ranch-'+kind);
    audio.stop('penguin');
   }else sleepAt=-Infinity;
   sun.setAttribute('aria-label',nightGoal?'切换到白天':'切换到夜晚');
@@ -1257,6 +1285,7 @@ function setup(renderer){
  function showSleep(animal){
   const progress=(pond.time-sleepAt)/1.48;
   let restTime=nightGoal;
+  if(sleeper==='ranch')restTime=onStage('ranch')&&nightGoal;
   if(sleeper==='hedgehog-den')restTime=onStage('eucalyptus')&&nightGoal;
   if(sleeper==='koala')restTime=onStage('eucalyptus')&&gum.koala.sleep>.48;
   if(sleeper==='silvereye')restTime=onStage('eucalyptus')&&gum.bird.sleep>.48;
@@ -1265,13 +1294,17 @@ function setup(renderer){
   if(sleeper==='owl')restTime=!nightGoal;
   if(sleeper==='sloth')restTime=rainforest.sloth.sleep>.48;
   if(travel||!restTime||progress>=1){sleepMark.hidden=true;return;}
-  const offset=sleeper==='zebra'?1.16:sleeper==='peacock'?.77:sleeper.startsWith('penguin-')?.85:.51;
+  const inPasture=sleeper==='ranch';
+  const offset=inPasture?0:sleeper==='zebra'?1.16:sleeper==='peacock'?.77:sleeper.startsWith('penguin-')?.85:.51;
   const p=point(animal.x,animal.y+offset,animal.z);
   sleepMark.hidden=p.x<0||p.x>width||p.y<35||p.y>height;
   if(sleepMark.hidden)return;
-  const x=p.x+(sleeper==='zebra'?Math.max(-31,8-p.x):p.x>width-65?-58:13);
-  const y=p.y-37-(quiet.matches?0:progress*22);
-  sleepMark.style.transform='translate('+x+'px,'+y+'px)';
+  const smallMark=inPasture&&(width<710||restingRanchTarget?.kind==='ranch-chick');
+  const gap=inPasture?4:13,scale=smallMark?.61:1;
+  const x=p.x+(sleeper==='zebra'?Math.max(-31,8-p.x):p.x>width-65?-55*scale:gap);
+  const y=p.y-(inPasture?31*scale:37)-(quiet.matches?0:progress*(inPasture?7:22));
+  sleepMark.style.transformOrigin='top left';
+  sleepMark.style.transform='translate('+x+'px,'+y+'px) scale('+scale+')';
   sleepMark.style.opacity=String(mix(.36,1,ease(progress/.12))*(1-ease((progress-.58)/.42)));
  }
  function render(now){
@@ -1289,6 +1322,7 @@ function setup(renderer){
   ice.step(dt,active('ice'));
   gum.step(dt,active('eucalyptus'),Boolean(nightGoal));
   bamboo.step(dt,active('bamboo'),Boolean(nightGoal));
+  ranch.step(dt,active('ranch'),Boolean(nightGoal));
   croc.step(dt,active('river'),river.waves);macaw.step(dt,active('rainforest'));
   if(mode!=='ocean')weather(dt);
   drawSkyBirds(dt);
@@ -1333,7 +1367,8 @@ function setup(renderer){
   const seeOcean=onStage('ocean'),seeRiver=onStage('river');
   const mapLayer=mode==='overview'||travel?.fromMode==='overview';
   const seeGum=onStage('eucalyptus');
-  const seeBamboo=onStage('bamboo'),seeContinuousGround=seeGum||seeBamboo;
+  const seeBamboo=onStage('bamboo'),seeRanch=onStage('ranch'),seeContinuousGround=seeGum||seeBamboo||seeRanch;
+  ranchView.root.visible=seeRanch;if(seeRanch)ranchView.tick();
   landscape.root.visible=mapLayer||seeContinuousGround;
   gumView.root.visible=seeGum;if(seeGum)gumView.tick(gum);
   bambooView.root.visible=seeBamboo;if(seeBamboo)bambooView.tick(bamboo);
@@ -1434,7 +1469,8 @@ function setup(renderer){
   const sleeperDuck=sleepingDucks?.[Number(sleeper.at(-1))];
   const sleeperRabbit=sleeper.startsWith('orchard-rabbit-')?family.rabbits[Number(sleeper.at(-1))]:null;
   let newSleeper=null;
-  if(sleeper==='hive')newSleeper=orchardPoints.hive;
+  if(sleeper==='ranch'&&restingRanchTarget)newSleeper=ranchView.point(restingRanchTarget);
+  else if(sleeper==='hive')newSleeper=orchardPoints.hive;
   else if(gumKinds.includes(sleeper))newSleeper=gumView.point(sleeper,fanPosition);
   else if(bambooKinds.includes(sleeper))newSleeper=bambooView.point(sleeper,fanPosition);
   else if(sleeper==='macaw')newSleeper=macaw.bird;
@@ -1466,6 +1502,7 @@ function setup(renderer){
    target:pond.target&&{...pond.target},busy:pond.busy,greetingCount:pond.greetingCount,events:events.map(e=>({...e})),audio:audio.inspect(),
    view:{mode,moving:!!travel,panX,panY,...rig},hintCount,hintCue,
    atlas:mode==='overview'?{x:rig.x,z:rig.z,focus:atlasFocus,visible:[...atlasVisible]}:null,
+   ranch:{targets:ranchView.targets.map(t=>({...t.state,kind:t.kind,index:t.index,screen:worldScreen(ranchView.point(t)),bodyScreen:t.body?worldScreen(ranchView.point(t,true)):null})),events:ranchEvents.map(e=>({...e}))},
    bamboo:{...Object.fromEntries(bambooKinds.map((kind,i)=>[kind,{...bamboo.bears[i],screen:worldScreen(bambooView.point(kind,fanPosition))}])),play:{...bamboo.play},
     events:bambooEvents.map(e=>({...e}))},
    eucalyptus:{...Object.fromEntries(gumKinds.map(kind=>[kind,{screen:worldScreen(gumView.point(kind,fanPosition)),clickable:gum.canTap(kind)}])),

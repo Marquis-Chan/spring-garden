@@ -8,6 +8,20 @@ import {grovePoints} from '../src/grove-state.js';
 import {woodlandPoints} from '../src/woodland-state.js';
 import {riverPoints} from '../src/river-state.js';
 import {makeDiorama} from '../src/diorama.js';
+import {makeWorldLandscape,worldSurfaceHeight} from '../src/world-landscape.js';
+import {createRanch} from '../src/ranch-state.js';
+
+test('牧场的围栏、食物和动物脚下都有连续地面承接阴影',()=>{
+ const {ground}=makeWorldLandscape(new Scene()),ranch=createRanch();
+ const origin=habitats.ranch,down=new Vector3(0,-1,0);
+ const positions=[...ranch.animals,...ranch.props,{x:-4.85,z:-2.91},{x:4.77,z:-3.30}];
+ for(const point of positions){
+  const x=origin.x+point.x,z=origin.z+point.z;
+  const hit=new Raycaster(new Vector3(x,4,z),down).intersectObject(ground,false)[0];
+  assert.ok(hit,'牧场北侧的地面须完整覆盖 '+[x,z]);
+  assert.ok(Math.abs(hit.point.y-worldSurfaceHeight(x,z))<.025);
+ }
+});
 
 const actors=[
  [-1.67,.75,-.48],[1.93,-.17,1.23],[8.6,1.27,1.25],[10.1,2.61,-.95],

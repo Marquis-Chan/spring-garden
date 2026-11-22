@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#e7ebc8"><title>春日小花园 · 动物王国</title>
-<meta name="description" content="春日小花园的 3D 动物探索游戏：走近十二处栖息地，陪熊猫接竹叶，看刺猬探嗅，听绯红金刚鹦鹉与巨嘴鸟应答。">
+<meta name="description" content="春日小花园的 3D 动物探索游戏：走近十三处栖息地，在春日牧场喂牛、看小羊跳跃，陪鸡群啄食，听真实动物声音。">
 <style>/* CSS */</style>
 </head>
 <body>
@@ -80,6 +80,9 @@
    <button type="button" id="enter-bamboo" class="waymark" aria-label="走近三只大熊猫的竹林" hidden>
     <svg viewBox="0 0 44 44" aria-hidden="true"><g fill="#394944"><circle cx="10" cy="11" r="6.5"/><circle cx="34" cy="11" r="6.5"/></g><ellipse cx="22" cy="23" rx="16" ry="14" fill="#fff5df" stroke="#968f70" stroke-width="1.4"/><g fill="#394944"><ellipse cx="15.2" cy="21" rx="4.6" ry="6" transform="rotate(30 15.2 21)"/><ellipse cx="28.8" cy="21" rx="4.6" ry="6" transform="rotate(-30 28.8 21)"/><path d="M18.5 27q3.5-2 7 0-.5 3-3.5 3.5-3-.5-3.5-3.5"/></g><g fill="#fff5df"><circle cx="16.3" cy="20" r="1.2"/><circle cx="27.7" cy="20" r="1.2"/></g></svg>
    </button>
+   <button type="button" id="enter-ranch" class="waymark" aria-label="走进奶牛和小羊的牧场" hidden>
+    <svg viewBox="0 0 44 44" aria-hidden="true"><path d="m7 20 3-9 12-7 12 7 3 9v16H7Z" fill="#bf6552"/><path d="m4 20 5-11L22 2l13 7 5 11-3 1-5-10-10-5-10 5-5 10Z" fill="#486761"/><path d="M14 23h16v13H14Z" fill="#784a40"/><path d="m15 24 14 11m0-11L15 35m7-12v13" fill="none" stroke="#f5dfb7" stroke-width="2"/><circle cx="22" cy="15" r="3" fill="#f5dfb7"/></svg>
+   </button>
    <button type="button" id="overview" class="waymark" aria-label="回到全景" hidden>
      <svg viewBox="0 0 40 40" aria-hidden="true"><path fill="#7c9d62" d="M6 26c2-4 6-4 9-7 4-5 10-6 13-3 4 2 7 4 7 9 0 4-5 8-13 9-8 1-17-1-16-8Z"/><path fill="#7bb8b4" d="M19 25c0 3-5 6-8 4-4-3 5-9 8-4Z"/><path fill="#557c52" d="M28 22h-2v-5l-5 2 6-10 7 10-6-2z"/><path d="M20 29c3-4 5-3 7-7" stroke="#f0d7a0" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
    </button>
@@ -121,4 +124,10 @@ Silvereye (Zosterops lateralis): Crown Copyright, Department of Conservation (NZ
 <!-- Hedgehog snuffling, recorded indoors by soundmary, Freesound, "hedgehog.mp3", 2013-07-22, 3.43–6.57 s. Original and adapted hedgehog.wav licensed CC BY 4.0 https://creativecommons.org/licenses/by/4.0/ . https://freesound.org/people/soundmary/sounds/194938/ . These three excerpts retain their original pitch, with noise reduction, level matching and fades. -->
 <!-- Giant panda (Ailuropoda melanoleuca), approximately two-year-old female waiting for food. Günter Tembrock, Tierstimmenarchiv, Museum für Naturkunde Berlin. TSA:Ailuropoda_melanoleuca_S_43_1_1. Excerpts 15.45–16.18, 28.46–29.22 and 36.60–37.45 s, pauses shortened, original pitch, filtered, levelled and faded. Original and adapted panda.wav: CC BY-SA 3.0 https://creativecommons.org/licenses/by-sa/3.0/ . https://suche.tierstimmenarchiv.de/search/showdetails.html?unique_identifier=TSA:Ailuropoda_melanoleuca_S_43_1_1&language=english -->
 <!-- Grass rustle, not an animal call. "grass rustling.wav" by instinctual777, Freesound 636945. Original field recording of grass brushed by hand, excerpt 1.76–2.57 s, filtered, levelled and faded. CC0 1.0 https://creativecommons.org/publicdomain/zero/1.0/ . https://freesound.org/people/instinctual777/sounds/636945/ -->
+<!-- Ranch field recordings. Offline mono excerpts retain their original pitch and tempo. Edits: trimming, filtering, light background reduction, level matching and edge fades.
+ranch-cow.wav: "Lehmät ammuvat / Cows mooing in a small barn before milking" by YleArkisto (Yle), Vihti, Finland, 1995-05-20, 0.64–4.49 s. CC BY 4.0 https://creativecommons.org/licenses/by/4.0/ . https://freesound.org/people/YleArkisto/sounds/368632/
+ranch-lamb.wav: "20070407.lambs.bleating.WAV" by dobroide, young lambs in a roofed sheepfold, 3.05–6.46 s. CC BY 4.0 https://creativecommons.org/licenses/by/4.0/ . https://freesound.org/people/dobroide/sounds/33639/
+ranch-hen.wav: "20090503.hens.wav" by dobroide, hens clucking in a henhouse, 5.47–8.71 s. CC BY 4.0 https://creativecommons.org/licenses/by/4.0/ . https://freesound.org/people/dobroide/sounds/72268/
+ranch-rooster.wav: "Rooster crows" by jsbarrett, a Black Jersey Giant rooster in a goat barn, 4.96–7.33 s. CC0 1.0 https://creativecommons.org/publicdomain/zero/1.0/ . https://freesound.org/people/jsbarrett/sounds/200334/
+ranch-chick.wav: "Chicks Chirping" by GB01, bantam chicks, 12.97–16.07 s. CC BY 4.0 https://creativecommons.org/licenses/by/4.0/ . https://freesound.org/people/GB01/sounds/150293/ -->
 <script>/* AUDIO */</script><script>/* GAME */</script></body></html>
